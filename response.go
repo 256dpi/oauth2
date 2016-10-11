@@ -5,10 +5,8 @@ import (
 	"strconv"
 )
 
-const BearerToken = "bearer"
-
 type Response struct {
-	TokenType    string            `json:"token_type"`
+	TokenType    TokenType         `json:"token_type"`
 	AccessToken  string            `json:"access_token"`
 	ExpiresIn    int               `json:"expires_in"`
 	RefreshToken string            `json:"refresh_token,omitempty"`
@@ -18,7 +16,7 @@ type Response struct {
 
 func NewBearerTokenResponse(accessToken string, expiresIn int) *Response {
 	return &Response{
-		TokenType:   BearerToken,
+		TokenType:   Bearer,
 		AccessToken: accessToken,
 		ExpiresIn:   expiresIn,
 	}
@@ -28,7 +26,7 @@ func (r *Response) Map() map[string]string {
 	m := make(map[string]string)
 
 	// add token type
-	m["token_type"] = r.TokenType
+	m["token_type"] = string(r.TokenType)
 
 	// add access token
 	m["access_token"] = r.AccessToken
@@ -42,8 +40,8 @@ func (r *Response) Map() map[string]string {
 	}
 
 	// add scope
-	if len(r.Scope) > 0 {
-		m["scope"] = r.Scope
+	if r.Scope != nil {
+		m["scope"] = r.Scope.String()
 	}
 
 	// add extra fields

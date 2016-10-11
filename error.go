@@ -3,6 +3,7 @@ package oauth2
 import (
 	"fmt"
 	"net/http"
+	"encoding/json"
 )
 
 type ErrorCode struct {
@@ -15,7 +16,7 @@ func (c ErrorCode) String() string {
 }
 
 func (c ErrorCode) MarshalJSON() ([]byte, error) {
-	return []byte(c.Name), nil
+	return json.Marshal(c.Name)
 }
 
 var (
@@ -71,6 +72,19 @@ type Error struct {
 	ExtraFields map[string]string `json:",inline"`
 }
 
+func ErrorWithCode(code ErrorCode, description ...string) error {
+	// get optional description
+	desc := ""
+	if len(description) > 0 {
+		desc = description[0]
+	}
+
+	return &Error{
+		Code:        code,
+		Description: desc,
+	}
+}
+
 func (e *Error) Error() string {
 	return fmt.Sprintf("%s: %s", e.Code, e.Description)
 }
@@ -102,19 +116,6 @@ func (e *Error) Map() map[string]string {
 	}
 
 	return m
-}
-
-func ErrorWithCode(code ErrorCode, description ...string) error {
-	// get optional description
-	desc := ""
-	if len(description) > 0 {
-		desc = description[0]
-	}
-
-	return &Error{
-		Code:        code,
-		Description: desc,
-	}
 }
 
 func WriteError(w http.ResponseWriter, err error) error {

@@ -56,3 +56,24 @@ func TestScopeIncludes(t *testing.T) {
 	assert.True(t, s1.Includes(s2))
 	assert.False(t, s2.Includes(s1))
 }
+
+func TestScopeMarshalJSON(t *testing.T) {
+	s := Scope([]string{"foo", "bar"})
+	buf, _ := s.MarshalJSON()
+	assert.Equal(t, `"foo bar"`, string(buf))
+}
+
+func TestResponseType(t *testing.T) {
+	matrix := []struct {
+		rt ResponseType
+		kn bool
+	}{
+		{"foo", false},
+		{"token", true},
+		{"code", true},
+	}
+
+	for _, i := range matrix {
+		assert.Equal(t, i.kn, i.rt.Known())
+	}
+}
