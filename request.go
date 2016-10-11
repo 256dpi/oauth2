@@ -25,7 +25,7 @@ func ParseAccessRequest(req *http.Request) (*AccessRequest, error) {
 	}
 
 	// get grant type and scope
-	grantType := req.PostForm.Get("grant_type")
+	grantType := GrantType(req.PostForm.Get("grant_type"))
 	scope := ParseScope(req.PostForm.Get("scope"))
 
 	// TODO: Support client id and client secret in body form?
@@ -44,7 +44,7 @@ func ParseAccessRequest(req *http.Request) (*AccessRequest, error) {
 	refreshToken := req.PostForm.Get("refresh_token")
 
 	return &AccessRequest{
-		GrantType:    GrantType(grantType),
+		GrantType:    grantType,
 		Scope:        scope,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
