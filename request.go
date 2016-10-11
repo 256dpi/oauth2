@@ -3,6 +3,7 @@ package oauth2
 import (
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type GrantType string
@@ -33,9 +34,59 @@ func (t GrantType) Extension() bool {
 	return err == nil
 }
 
+type Scope []string
+
+func (s Scope) Contains(str string) bool {
+	for _, i := range s {
+		if i == str {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s Scope) Includes(scope Scope) bool {
+	for _, i := range scope {
+		if !s.Contains(i) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s Scope) String() string {
+	return strings.Join(s, " ")
+}
+
+func (s Scope) MarshalJSON() ([]byte, error) {
+	return []byte(s.String()), nil
+}
+
+func ParseScope(str string) Scope {
+	// split string
+	list := strings.Split(str, " ")
+
+	// prepare result
+	var res []string
+
+	// process items
+	for _, item := range list {
+		// trim whitespace
+		item = strings.TrimSpace(item)
+
+		if item != "" {
+			res = append(res, item)
+		}
+	}
+
+	return Scope(res)
+}
+
 type AccessRequest struct {
 	GrantType    GrantType
-	Scope        string
+	Scope        Scope
 	ClientID     string
 	ClientSecret string
 	Username     string
@@ -61,7 +112,7 @@ func ParseAccessRequest(req *http.Request) (*AccessRequest, error) {
 
 	// get grant type and scope
 	grantType := req.PostForm.Get("grant_type")
-	scope := req.PostForm.Get("scope")
+	scope := ParseScope(req.PostForm.Get("scope"))
 
 	// TODO: Support client id and client secret in body form?
 

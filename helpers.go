@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 func WriteJSON(w http.ResponseWriter, doc interface{}, status int) error {
@@ -47,24 +46,4 @@ func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string) 
 	// finish response
 	_, err = w.Write(nil)
 	return err
-}
-
-func separate(str string) []string {
-	// split string
-	list := strings.Split(str, " ")
-
-	// prepare result
-	var res []string
-
-	// process items
-	for _, item := range list {
-		// trim whitespace
-		item = strings.TrimSpace(item)
-
-		if item != "" {
-			list = append(list, item)
-		}
-	}
-
-	return res
 }
