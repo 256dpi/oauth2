@@ -1,9 +1,9 @@
 package oauth2
 
 import (
+	"encoding/json"
 	"net/url"
 	"strings"
-	"encoding/json"
 )
 
 type TokenType string

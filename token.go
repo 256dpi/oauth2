@@ -76,7 +76,7 @@ func ParseToken(secret []byte, str string) (*Token, error) {
 
 	// construct token
 	token := &Token{
-		Key: key,
+		Key:       key,
 		Signature: signature,
 	}
 

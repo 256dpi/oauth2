@@ -1,9 +1,9 @@
 package oauth2
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"encoding/json"
 )
 
 type ErrorCode struct {
