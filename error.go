@@ -14,6 +14,10 @@ func (c ErrorCode) String() string {
 	return c.Name
 }
 
+func (c ErrorCode) MarshalJSON() ([]byte, error) {
+	return []byte(c.Name), nil
+}
+
 var (
 	// The request is missing a required parameter, includes an invalid
 	// parameter value, includes a parameter more than once, or is otherwise
@@ -60,10 +64,11 @@ var (
 )
 
 type Error struct {
-	Code        ErrorCode `json:"error"`
-	Description string    `json:"error_description,omitempty"`
-	URI         string    `json:"error_uri,omitempty"`
-	State       string    `json:"state,omitempty"`
+	Code        ErrorCode         `json:"error"`
+	Description string            `json:"error_description,omitempty"`
+	URI         string            `json:"error_uri,omitempty"`
+	State       string            `json:"state,omitempty"`
+	ExtraFields map[string]string `json:",inline"`
 }
 
 func (e *Error) Error() string {
@@ -89,6 +94,11 @@ func (e *Error) Map() map[string]string {
 	// add uri
 	if len(e.URI) > 0 {
 		m["error_uri"] = e.URI
+	}
+
+	// add extra fields
+	for k, v := range e.ExtraFields {
+		m[k] = v
 	}
 
 	return m
