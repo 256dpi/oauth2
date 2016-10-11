@@ -75,14 +75,21 @@ func ParseToken(secret []byte, str string) (*Token, error) {
 	}
 
 	// construct token
-	token := TokenFromKey(secret, key)
+	token := &Token{
+		Key: key,
+		Signature: signature,
+	}
 
 	// validate signatures
-	if !token.Equal(signature) {
-		return nil, ErrorWithCode(InvalidRequest, "Token key does not match signature")
+	if !token.Valid(secret) {
+		return nil, ErrorWithCode(InvalidRequest, "Invalid token supplied")
 	}
 
 	return token, nil
+}
+
+func (t *Token) Valid(secret []byte) bool {
+	return TokenFromKey(secret, t.Key).Equal(t.Signature)
 }
 
 func (t *Token) Equal(signature []byte) bool {
