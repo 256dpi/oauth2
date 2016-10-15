@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/gonfire/oauth2"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -30,6 +31,7 @@ type token struct {
 	username  string
 	signature string
 	expiresAt time.Time
+	scope     oauth2.Scope
 }
 
 var accessTokens = make(map[string]token)

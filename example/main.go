@@ -2,11 +2,16 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gonfire/oauth2"
 )
 
 var secret = []byte("abcd1234abcd1234")
+
+var tokenLifespan = time.Hour
+
+var allowedScope = oauth2.ParseScope("foo bar")
 
 func main() {
 	// add endpoints

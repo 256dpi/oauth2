@@ -51,7 +51,7 @@ func handlePasswordFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	}
 
 	// check scope
-	if req.Scope != "foo" {
+	if !allowedScope.Includes(req.Scope) {
 		oauth2.WriteErrorWithCode(w, oauth2.InvalidScope)
 		return
 	}
@@ -60,7 +60,7 @@ func handlePasswordFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	at, rt, res := createTokensAndResponse(req)
 
 	// save tokens
-	saveTokens(at, rt, req.ClientID, req.Username)
+	saveTokens(at, rt, req.Scope, req.ClientID, req.Username)
 
 	// write response
 	oauth2.WriteResponse(w, res)
@@ -68,7 +68,7 @@ func handlePasswordFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 
 func handleClientCredentialsFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// check scope
-	if req.Scope != "foo" {
+	if !allowedScope.Includes(req.Scope) {
 		oauth2.WriteErrorWithCode(w, oauth2.InvalidScope)
 		return
 	}
@@ -77,7 +77,7 @@ func handleClientCredentialsFlow(w http.ResponseWriter, req *oauth2.AccessTokenR
 	at, rt, res := createTokensAndResponse(req)
 
 	// save tokens
-	saveTokens(at, rt, req.ClientID, "")
+	saveTokens(at, rt, req.Scope, req.ClientID, "")
 
 	// write response
 	oauth2.WriteResponse(w, res)
@@ -94,29 +94,30 @@ func handleRefreshTokenFlow(w http.ResponseWriter, req *oauth2.AccessTokenReques
 	// get stored refresh token by signature
 	storedRefreshToken, found := refreshTokens[refreshToken.Signature]
 	if !found {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: ok?
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
 		return
 	}
 
 	// validate ownership
-	if storedRefreshToken.clientID != req.ClientID || storedRefreshToken.username != req.Username {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: ok?
+	if storedRefreshToken.clientID != req.ClientID {
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
 		return
 	}
 
-	// validate expiration
-	if storedRefreshToken.expiresAt.Before(time.Now()) {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: ok?
+	// validate scope and expiration
+	if !storedRefreshToken.scope.Includes(req.Scope) || storedRefreshToken.expiresAt.Before(time.Now()) {
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
 		return
 	}
-
-	// TODO: Validate scopes to match.
 
 	// issue new access and refresh token
 	at, rt, res := createTokensAndResponse(req)
 
 	// save tokens
-	saveTokens(at, rt, storedRefreshToken.clientID, storedRefreshToken.username)
+	saveTokens(at, rt, req.Scope, storedRefreshToken.clientID, storedRefreshToken.username)
+
+	// delete used refresh token
+	delete(refreshTokens, refreshToken.Signature)
 
 	// write response
 	oauth2.WriteResponse(w, res)
@@ -136,9 +137,9 @@ func createTokensAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oa
 	}
 
 	// prepare response
-	res := oauth2.NewBearerTokenResponse(accessToken, 3600)
+	res := oauth2.NewBearerTokenResponse(accessToken, tokenLifespan/time.Second)
 
-	// set granted scopes
+	// set granted scope
 	res.Scope = req.Scope
 
 	// set refresh token
@@ -147,13 +148,14 @@ func createTokensAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oa
 	return accessToken, refreshToken, res
 }
 
-func saveTokens(accessToken, refreshToken *oauth2.Token, clientID, username string) {
+func saveTokens(accessToken, refreshToken *oauth2.Token, scope *oauth2.Scope, clientID, username string) {
 	// save access token
 	accessTokens[accessToken.SignatureString()] = token{
 		clientID:  clientID,
 		username:  username,
 		signature: accessToken.SignatureString(),
-		expiresAt: time.Now().Add(time.Hour),
+		expiresAt: time.Now().Add(tokenLifespan),
+		scope:     scope,
 	}
 
 	// save refresh token
@@ -161,6 +163,7 @@ func saveTokens(accessToken, refreshToken *oauth2.Token, clientID, username stri
 		clientID:  clientID,
 		username:  username,
 		signature: refreshToken.SignatureString(),
-		expiresAt: time.Now().Add(time.Hour),
+		expiresAt: time.Now().Add(tokenLifespan),
+		scope:     scope,
 	}
 }
