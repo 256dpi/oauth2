@@ -6,10 +6,6 @@ import (
 	"strings"
 )
 
-type TokenType string
-
-const Bearer TokenType = "bearer"
-
 type GrantType string
 
 func (t GrantType) Password() bool {

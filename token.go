@@ -56,20 +56,6 @@ func GenerateToken(secret []byte, length int) (*Token, error) {
 	return TokenFromKey(secret, key), nil
 }
 
-func ExtractToken(secret []byte, r *http.Request) (*Token, error) {
-	// read header
-	h := r.Header.Get("Authorization")
-
-	// split header
-	s := strings.SplitN(h, " ", 2)
-	if len(s) != 2 || !strings.EqualFold(s[0], string(Bearer)) {
-		return nil, ErrorWithCode(InvalidRequest, "Malformed or missing authorization header")
-	}
-
-	// parse extracted token
-	return ParseToken(secret, s[1])
-}
-
 func ParseToken(secret []byte, str string) (*Token, error) {
 	// split dot separated key and signature
 	s := strings.Split(str, ".")

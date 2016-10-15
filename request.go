@@ -2,7 +2,7 @@ package oauth2
 
 import "net/http"
 
-type AccessRequest struct {
+type AccessTokenRequest struct {
 	GrantType    GrantType
 	Scope        Scope
 	ClientID     string
@@ -12,7 +12,7 @@ type AccessRequest struct {
 	RefreshToken string
 }
 
-func ParseAccessRequest(req *http.Request) (*AccessRequest, error) {
+func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	// check method
 	if req.Method != "POST" {
 		return nil, ErrorWithCode(InvalidRequest, "Invalid HTTP method")
@@ -43,7 +43,7 @@ func ParseAccessRequest(req *http.Request) (*AccessRequest, error) {
 	// get refresh token
 	refreshToken := req.PostForm.Get("refresh_token")
 
-	return &AccessRequest{
+	return &AccessTokenRequest{
 		GrantType:    grantType,
 		Scope:        scope,
 		ClientID:     clientID,
@@ -54,7 +54,7 @@ func ParseAccessRequest(req *http.Request) (*AccessRequest, error) {
 	}, nil
 }
 
-func (r *AccessRequest) Confidential() bool {
+func (r *AccessTokenRequest) Confidential() bool {
 	return len(r.ClientID) > 0 && len(r.ClientSecret) > 0
 }
 

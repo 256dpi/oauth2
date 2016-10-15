@@ -14,9 +14,9 @@ type Response struct {
 	ExtraFields  map[string]string `json:",inline"`
 }
 
-func NewBearerTokenResponse(accessToken string, expiresIn int) *Response {
+func NewResponse(tokenType, accessToken string, expiresIn int) *Response {
 	return &Response{
-		TokenType:   Bearer,
+		TokenType:   tokenType,
 		AccessToken: accessToken,
 		ExpiresIn:   expiresIn,
 	}

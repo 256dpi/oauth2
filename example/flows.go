@@ -9,7 +9,7 @@ import (
 
 func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse oauth2 token request
-	req, err := oauth2.ParseAccessRequest(r)
+	req, err := oauth2.ParseAccessTokenRequest(r)
 	if err != nil {
 		oauth2.WriteError(w, err)
 		return
@@ -42,7 +42,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handlePasswordFlow(w http.ResponseWriter, req *oauth2.AccessRequest) {
+func handlePasswordFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// authenticate resource owner
 	hash, found := users[req.Username]
 	if !found || !sameHash(hash, req.Password) {
@@ -66,7 +66,7 @@ func handlePasswordFlow(w http.ResponseWriter, req *oauth2.AccessRequest) {
 	oauth2.WriteResponse(w, res)
 }
 
-func handleClientCredentialsFlow(w http.ResponseWriter, req *oauth2.AccessRequest) {
+func handleClientCredentialsFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// check scope
 	if req.Scope != "foo" {
 		oauth2.WriteErrorWithCode(w, oauth2.InvalidScope)
@@ -83,7 +83,7 @@ func handleClientCredentialsFlow(w http.ResponseWriter, req *oauth2.AccessReques
 	oauth2.WriteResponse(w, res)
 }
 
-func handleRefreshTokenFlow(w http.ResponseWriter, req *oauth2.AccessRequest) {
+func handleRefreshTokenFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// parse refresh token
 	refreshToken, err := oauth2.ParseToken(secret, req.RefreshToken)
 	if err != nil {
@@ -122,7 +122,7 @@ func handleRefreshTokenFlow(w http.ResponseWriter, req *oauth2.AccessRequest) {
 	oauth2.WriteResponse(w, res)
 }
 
-func createTokensAndResponse(req *oauth2.AccessRequest) (*oauth2.Token, *oauth2.Token, *oauth2.Response) {
+func createTokensAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oauth2.Token, *oauth2.Response) {
 	// generate new access token
 	accessToken, err := oauth2.GenerateToken(secret, 32)
 	if err != nil {
