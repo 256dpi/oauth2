@@ -110,7 +110,7 @@ func handleRefreshTokenFlow(w http.ResponseWriter, req *oauth2.AccessRequest) {
 		return
 	}
 
-	// TODO: Validate scopes.
+	// TODO: Validate scopes to match.
 
 	// issue new access and refresh token
 	at, rt, res := createTokensAndResponse(req)
