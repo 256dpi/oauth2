@@ -61,7 +61,7 @@ func TestRedirectTokenResponse(t *testing.T) {
 }
 
 func TestNewAuthorizationCodeResponse(t *testing.T) {
-	res := NewAuthorizationCodeResponse("foo")
+	res := NewCodeResponse("foo")
 	assert.Equal(t, "foo", res.Code)
 	assert.Equal(t, map[string]string{
 		"code": "foo",
@@ -69,7 +69,7 @@ func TestNewAuthorizationCodeResponse(t *testing.T) {
 }
 
 func TestAuthorizationCodeResponseMap(t *testing.T) {
-	res := NewAuthorizationCodeResponse("foo")
+	res := NewCodeResponse("foo")
 	res.State = "bar"
 
 	assert.Equal(t, map[string]string{
@@ -80,9 +80,9 @@ func TestAuthorizationCodeResponseMap(t *testing.T) {
 
 func TestRedirectAuthorizationCodeResponse(t *testing.T) {
 	rec := httptest.NewRecorder()
-	res := NewAuthorizationCodeResponse("foo")
+	res := NewCodeResponse("foo")
 
-	err := RedirectAuthorizationCodeResponse(rec, "http://example.com?bar=baz", res)
+	err := RedirectCodeResponse(rec, "http://example.com?bar=baz", res)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "http://example.com?bar=baz&code=foo", rec.HeaderMap.Get("Location"))

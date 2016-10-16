@@ -85,7 +85,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth
 	}
 
 	// prepare response
-	res := oauth2.NewAuthorizationCodeResponse(authorizationCode.String())
+	res := oauth2.NewCodeResponse(authorizationCode.String())
 
 	// set state
 	res.State = req.State
@@ -100,5 +100,5 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth
 	}
 
 	// write response
-	oauth2.RedirectAuthorizationCodeResponse(w, req.RedirectURI, res)
+	oauth2.RedirectCodeResponse(w, req.RedirectURI, res)
 }

@@ -60,18 +60,18 @@ func RedirectTokenResponse(w http.ResponseWriter, uri string, res *TokenResponse
 	return Redirect(w, uri, res.Map(), true)
 }
 
-type AuthorizationCodeResponse struct {
+type CodeResponse struct {
 	Code  string `json:"code"`
 	State string `json:"state,omitempty"`
 }
 
-func NewAuthorizationCodeResponse(code string) *AuthorizationCodeResponse {
-	return &AuthorizationCodeResponse{
+func NewCodeResponse(code string) *CodeResponse {
+	return &CodeResponse{
 		Code: code,
 	}
 }
 
-func (r *AuthorizationCodeResponse) Map() map[string]string {
+func (r *CodeResponse) Map() map[string]string {
 	m := make(map[string]string)
 
 	// add code
@@ -85,6 +85,6 @@ func (r *AuthorizationCodeResponse) Map() map[string]string {
 	return m
 }
 
-func RedirectAuthorizationCodeResponse(w http.ResponseWriter, uri string, res *AuthorizationCodeResponse) error {
+func RedirectCodeResponse(w http.ResponseWriter, uri string, res *CodeResponse) error {
 	return Redirect(w, uri, res.Map(), false)
 }
