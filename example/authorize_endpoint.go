@@ -51,7 +51,7 @@ func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest
 	}
 
 	// prepare response
-	res := oauth2.NewBearerTokenResponse(accessToken, tokenLifespan/time.Second)
+	res := oauth2.NewBearerTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
 
 	// set granted scope
 	res.Scope = req.Scope
@@ -68,7 +68,7 @@ func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest
 	}
 
 	// write response
-	oauth2.WriteResponseRedirect(w, res, req.RedirectURI)
+	oauth2.WriteTokenResponseRedirect(w, req.RedirectURI, res)
 }
 
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
@@ -85,7 +85,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth
 	}
 
 	// prepare response
-	res := oauth2.NewAuthorizationCodeResponse(authorizationCode)
+	res := oauth2.NewAuthorizationCodeResponse(authorizationCode.String())
 
 	// set state
 	res.State = req.State
@@ -100,5 +100,5 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth
 	}
 
 	// write response
-	oauth2.WriteResponseRedirect(w, res, req.RedirectURI)
+	oauth2.WriteAuthorizationCodeResponseRedirect(w, req.RedirectURI, res)
 }

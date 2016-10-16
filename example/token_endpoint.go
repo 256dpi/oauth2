@@ -44,8 +44,8 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// authenticate resource owner
-	hash, found := users[req.Username]
-	if !found || !sameHash(hash, req.Password) {
+	owner, found := users[req.Username]
+	if !found || !sameHash(owner.secret, req.Password) {
 		oauth2.WriteErrorWithCode(w, oauth2.AccessDenied)
 		return
 	}
@@ -63,7 +63,7 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oau
 	saveTokens(at, rt, req.Scope, req.ClientID, req.Username)
 
 	// write response
-	oauth2.WriteResponse(w, res)
+	oauth2.WriteTokenResponse(w, res)
 }
 
 func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
@@ -80,7 +80,7 @@ func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	saveTokens(at, rt, req.Scope, req.ClientID, "")
 
 	// write response
-	oauth2.WriteResponse(w, res)
+	oauth2.WriteTokenResponse(w, res)
 }
 
 func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
@@ -92,7 +92,7 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	}
 
 	// get stored authorization code by signature
-	storedAuthorizationCode, found := authorizationCodes[authorizationCode.Signature]
+	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
 		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
 		return
@@ -130,10 +130,10 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	saveTokens(at, rt, req.Scope, req.ClientID, "")
 
 	// delete used authorization code
-	delete(authorizationCodes, authorizationCode.Signature)
+	delete(authorizationCodes, authorizationCode.SignatureString())
 
 	// write response
-	oauth2.WriteResponseRedirect(w, redirectURI, res)
+	oauth2.WriteTokenResponseRedirect(w, redirectURI, res)
 }
 
 func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
@@ -145,7 +145,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 	}
 
 	// get stored refresh token by signature
-	storedRefreshToken, found := refreshTokens[refreshToken.Signature]
+	storedRefreshToken, found := refreshTokens[refreshToken.SignatureString()]
 	if !found {
 		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
 		return
@@ -170,10 +170,10 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 	saveTokens(at, rt, req.Scope, req.ClientID, storedRefreshToken.username)
 
 	// delete used refresh token
-	delete(refreshTokens, refreshToken.Signature)
+	delete(refreshTokens, refreshToken.SignatureString())
 
 	// write response
-	oauth2.WriteResponse(w, res)
+	oauth2.WriteTokenResponse(w, res)
 }
 
 func createTokensAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oauth2.Token, *oauth2.TokenResponse) {
@@ -190,18 +190,18 @@ func createTokensAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oa
 	}
 
 	// prepare response
-	res := oauth2.NewBearerTokenResponse(accessToken, tokenLifespan/time.Second)
+	res := oauth2.NewBearerTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
 
 	// set granted scope
 	res.Scope = req.Scope
 
 	// set refresh token
-	res.RefreshToken = refreshToken
+	res.RefreshToken = refreshToken.String()
 
 	return accessToken, refreshToken, res
 }
 
-func saveTokens(accessToken, refreshToken *oauth2.Token, scope *oauth2.Scope, clientID, username string) {
+func saveTokens(accessToken, refreshToken *oauth2.Token, scope oauth2.Scope, clientID, username string) {
 	// save access token
 	accessTokens[accessToken.SignatureString()] = token{
 		clientID:  clientID,

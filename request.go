@@ -53,8 +53,19 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	// get refresh token
 	refreshToken := req.PostForm.Get("refresh_token")
 
-	// get redirect URI
-	redirectURI := req.PostForm.Get("redirect_uri")
+	// get redirect uri
+	redirectURIString, err := url.QueryUnescape(req.Form.Get("redirect_uri"))
+	if err != nil {
+		return nil, ErrorWithCode(InvalidRequest, "Missing redirect URI")
+	}
+
+	// validate redirect uri if present
+	if len(redirectURIString) > 0 {
+		redirectURI, err := url.ParseRequestURI(redirectURIString)
+		if err != nil || redirectURI.Fragment != "" {
+			return nil, ErrorWithCode(InvalidRequest, "Invalid redirect URI")
+		}
+	}
 
 	// get code
 	code := req.PostForm.Get("code")
@@ -67,7 +78,7 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 		Username:     username,
 		Password:     password,
 		RefreshToken: refreshToken,
-		RedirectURI:  redirectURI,
+		RedirectURI:  redirectURIString,
 		Code:         code,
 	}, nil
 }
@@ -80,7 +91,7 @@ type AuthorizationRequest struct {
 	ResponseType ResponseType
 	Scope        []string
 	ClientID     string
-	RedirectURI  url.URL
+	RedirectURI  string
 	State        string
 }
 
@@ -130,7 +141,7 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 		ResponseType: ResponseType(responseType),
 		Scope:        scope,
 		ClientID:     clientID,
-		RedirectURI:  redirectURI,
+		RedirectURI:  redirectURIString,
 		State:        state,
 	}, nil
 }

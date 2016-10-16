@@ -58,6 +58,14 @@ func (r *TokenResponse) Map() map[string]string {
 	return m
 }
 
+func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
+	return WriteJSON(w, res, http.StatusOK)
+}
+
+func WriteTokenResponseRedirect(w http.ResponseWriter, uri string, res *TokenResponse) error {
+	return WriteRedirect(w, uri, nil, res.Map())
+}
+
 type AuthorizationCodeResponse struct {
 	Code  string `json:"code"`
 	State string `json:"state,omitempty"`
@@ -83,10 +91,10 @@ func (r *AuthorizationCodeResponse) Map() map[string]string {
 	return m
 }
 
-func WriteResponse(w http.ResponseWriter, res *TokenResponse) error {
+func WriteAuthorizationCodeResponse(w http.ResponseWriter, res *AuthorizationCodeResponse) error {
 	return WriteJSON(w, res, http.StatusOK)
 }
 
-func WriteResponseRedirect(w http.ResponseWriter, uri string, res *TokenResponse) error {
+func WriteAuthorizationCodeResponseRedirect(w http.ResponseWriter, uri string, res *AuthorizationCodeResponse) error {
 	return WriteRedirect(w, uri, nil, res.Map())
 }
