@@ -70,16 +70,10 @@ type Error struct {
 	State       string    `json:"state,omitempty"`
 }
 
-func ErrorWithCode(code ErrorCode, description ...string) error {
-	// get optional description
-	desc := ""
-	if len(description) > 0 {
-		desc = description[0]
-	}
-
+func ErrorWithCode(code ErrorCode, description string) error {
 	return &Error{
 		Code:        code,
-		Description: desc,
+		Description: description,
 	}
 }
 
@@ -119,28 +113,28 @@ func WriteError(w http.ResponseWriter, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
-		anError = ErrorWithCode(ServerError).(*Error)
+		anError = ErrorWithCode(ServerError, "").(*Error)
 	}
 
 	// write error response
 	return WriteJSON(w, anError, anError.Code.Status)
 }
 
-func WriteErrorWithCode(w http.ResponseWriter, code ErrorCode, description ...string) error {
-	return WriteError(w, ErrorWithCode(code, description...))
+func WriteErrorWithCode(w http.ResponseWriter, code ErrorCode, description string) error {
+	return WriteError(w, ErrorWithCode(code, description))
 }
 
 func WriteErrorRedirect(w http.ResponseWriter, uri string, err error, useFragment bool) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
-		anError = ErrorWithCode(ServerError).(*Error)
+		anError = ErrorWithCode(ServerError, "").(*Error)
 	}
 
 	// write redirect
 	return WriteRedirect(w, uri, anError.Map(), useFragment)
 }
 
-func WriteErrorRedirectWithCode(w http.ResponseWriter, uri string, useFragment bool, code ErrorCode, description ...string) error {
-	return WriteErrorRedirect(w, uri, ErrorWithCode(code, description...), useFragment)
+func WriteErrorRedirectWithCode(w http.ResponseWriter, uri string, useFragment bool, code ErrorCode, description string) error {
+	return WriteErrorRedirect(w, uri, ErrorWithCode(code, description), useFragment)
 }

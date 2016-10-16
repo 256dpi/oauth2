@@ -24,7 +24,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	// authenticate client
 	client, found := clients[req.ClientID]
 	if !found || !sameHash(client.secret, req.ClientSecret) {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidClient)
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidClient, "")
 		return
 	}
 
@@ -38,7 +38,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if req.GrantType.RefreshToken() {
 		handleRefreshTokenGrant(w, req)
 	} else {
-		oauth2.WriteError(w, oauth2.ErrorWithCode(oauth2.UnsupportedGrantType))
+		oauth2.WriteError(w, oauth2.ErrorWithCode(oauth2.UnsupportedGrantType, ""))
 	}
 }
 
@@ -46,13 +46,13 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oau
 	// authenticate resource owner
 	owner, found := users[req.Username]
 	if !found || !sameHash(owner.secret, req.Password) {
-		oauth2.WriteErrorWithCode(w, oauth2.AccessDenied)
+		oauth2.WriteErrorWithCode(w, oauth2.AccessDenied, "")
 		return
 	}
 
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidScope)
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidScope, "")
 		return
 	}
 
@@ -69,7 +69,7 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oau
 func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidScope)
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidScope, "")
 		return
 	}
 
@@ -94,19 +94,19 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	// get stored authorization code by signature
 	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest, "") // TODO: Correct error?
 		return
 	}
 
 	// validate ownership
 	if storedAuthorizationCode.clientID != req.ClientID {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest, "") // TODO: Correct error?
 		return
 	}
 
 	// validate scope and expiration
 	if !storedAuthorizationCode.scope.Includes(req.Scope) || storedAuthorizationCode.expiresAt.Before(time.Now()) {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest, "") // TODO: Correct error?
 		return
 	}
 
@@ -116,7 +116,7 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	// validate redirect uri
 	if req.RedirectURI != "" {
 		if storedAuthorizationCode.redirectURI != req.RedirectURI {
-			oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+			oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest, "") // TODO: Correct error?
 		}
 
 		// overwrite redirect uri
@@ -147,19 +147,19 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 	// get stored refresh token by signature
 	storedRefreshToken, found := refreshTokens[refreshToken.SignatureString()]
 	if !found {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest, "") // TODO: Correct error?
 		return
 	}
 
 	// validate ownership
 	if storedRefreshToken.clientID != req.ClientID {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest, "") // TODO: Correct error?
 		return
 	}
 
 	// validate scope and expiration
 	if !storedRefreshToken.scope.Includes(req.Scope) || storedRefreshToken.expiresAt.Before(time.Now()) {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest, "") // TODO: Correct error?
 		return
 	}
 

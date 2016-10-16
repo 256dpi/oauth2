@@ -17,7 +17,7 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 	// get client
 	client, found := clients[req.ClientID]
 	if !found {
-		oauth2.WriteErrorWithCode(w, oauth2.InvalidClient)
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidClient, "")
 		return
 	}
 
@@ -33,14 +33,14 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if req.ResponseType.Code() {
 		handleAuthorizationCodeGrantAuthorization(w, req)
 	} else {
-		oauth2.WriteError(w, oauth2.ErrorWithCode(oauth2.UnsupportedResponseType))
+		oauth2.WriteError(w, oauth2.ErrorWithCode(oauth2.UnsupportedResponseType, ""))
 	}
 }
 
 func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteErrorRedirectWithCode(w, req.RedirectURI, true, oauth2.InvalidScope)
+		oauth2.WriteErrorRedirectWithCode(w, req.RedirectURI, true, oauth2.InvalidScope, "")
 		return
 	}
 
@@ -74,7 +74,7 @@ func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteErrorRedirectWithCode(w, req.RedirectURI, false, oauth2.InvalidScope)
+		oauth2.WriteErrorRedirectWithCode(w, req.RedirectURI, false, oauth2.InvalidScope, "")
 		return
 	}
 
