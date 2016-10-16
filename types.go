@@ -8,6 +8,10 @@ import (
 
 type GrantType string
 
+func (t GrantType) String() string {
+	return string(t)
+}
+
 func (t GrantType) Password() bool {
 	return t == "password"
 }
@@ -85,6 +89,10 @@ func (s Scope) MarshalJSON() ([]byte, error) {
 }
 
 type ResponseType string
+
+func (t ResponseType) String() string {
+	return string(t)
+}
 
 func (t ResponseType) Token() bool {
 	return t == "token"

@@ -21,6 +21,7 @@ func TestGrantType(t *testing.T) {
 	}
 
 	for _, i := range matrix {
+		assert.Equal(t, string(i.gt), i.gt.String())
 		assert.Equal(t, i.kn, i.gt.Known())
 		assert.Equal(t, i.ex, i.gt.Extension())
 	}
@@ -74,6 +75,7 @@ func TestResponseType(t *testing.T) {
 	}
 
 	for _, i := range matrix {
+		assert.Equal(t, string(i.rt), i.rt.String())
 		assert.Equal(t, i.kn, i.rt.Known())
 	}
 }
