@@ -64,11 +64,10 @@ var (
 )
 
 type Error struct {
-	Code        ErrorCode         `json:"error"`
-	Description string            `json:"error_description,omitempty"`
-	URI         string            `json:"error_uri,omitempty"`
-	State       string            `json:"state,omitempty"`
-	ExtraFields map[string]string `json:",inline"`
+	Code        ErrorCode `json:"error"`
+	Description string    `json:"error_description,omitempty"`
+	URI         string    `json:"error_uri,omitempty"`
+	State       string    `json:"state,omitempty"`
 }
 
 func ErrorWithCode(code ErrorCode, description ...string) error {
@@ -111,11 +110,6 @@ func (e *Error) Map() map[string]string {
 	// add uri
 	if len(e.URI) > 0 {
 		m["error_uri"] = e.URI
-	}
-
-	// add extra fields
-	for k, v := range e.ExtraFields {
-		m[k] = v
 	}
 
 	return m
