@@ -48,7 +48,7 @@ func WriteRedirect(w http.ResponseWriter, uri string, queryParams, fragmentParam
 		}
 
 		// encode fragment
-		redirectURI.Fragment = q.Encode()
+		redirectURI.Fragment = f.Encode()
 	}
 
 	// set location
