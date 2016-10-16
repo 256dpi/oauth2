@@ -40,7 +40,7 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteErrorRedirect(w, req.RedirectURI, true, oauth2.InvalidScope(""))
+		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.InvalidScope(""))
 		return
 	}
 
@@ -74,7 +74,7 @@ func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteErrorRedirect(w, req.RedirectURI, false, oauth2.InvalidScope(""))
+		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.InvalidScope(""))
 		return
 	}
 

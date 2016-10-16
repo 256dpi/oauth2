@@ -160,7 +160,7 @@ func WriteError(w http.ResponseWriter, err error) error {
 	return Write(w, anError, anError.Status)
 }
 
-func WriteErrorRedirect(w http.ResponseWriter, uri string, useFragment bool, err error) error {
+func RedirectError(w http.ResponseWriter, uri string, useFragment bool, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
@@ -168,5 +168,5 @@ func WriteErrorRedirect(w http.ResponseWriter, uri string, useFragment bool, err
 	}
 
 	// write redirect
-	return WriteRedirect(w, uri, anError.Map(), useFragment)
+	return Redirect(w, uri, anError.Map(), useFragment)
 }

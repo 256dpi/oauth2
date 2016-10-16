@@ -57,7 +57,7 @@ func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
 }
 
 func WriteTokenResponseRedirect(w http.ResponseWriter, uri string, res *TokenResponse) error {
-	return WriteRedirect(w, uri, res.Map(), true)
+	return Redirect(w, uri, res.Map(), true)
 }
 
 type AuthorizationCodeResponse struct {
@@ -86,5 +86,5 @@ func (r *AuthorizationCodeResponse) Map() map[string]string {
 }
 
 func WriteAuthorizationCodeResponseRedirect(w http.ResponseWriter, uri string, res *AuthorizationCodeResponse) error {
-	return WriteRedirect(w, uri, res.Map(), false)
+	return Redirect(w, uri, res.Map(), false)
 }

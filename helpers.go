@@ -19,7 +19,7 @@ func Write(w http.ResponseWriter, obj interface{}, status int) error {
 	return json.NewEncoder(w).Encode(obj)
 }
 
-func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string, useFragment bool) error {
+func Redirect(w http.ResponseWriter, uri string, params map[string]string, useFragment bool) error {
 	// parse redirect uri
 	redirectURI, err := url.ParseRequestURI(uri)
 	if err != nil {

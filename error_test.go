@@ -75,7 +75,7 @@ func TestWriteErrorRedirect(t *testing.T) {
 	err1 := InvalidRequest("foo")
 	rec := httptest.NewRecorder()
 
-	err2 := WriteErrorRedirect(rec, "http://example.com", false, err1)
+	err2 := RedirectError(rec, "http://example.com", false, err1)
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "http://example.com?error=invalid_request&error_description=foo", rec.HeaderMap.Get("Location"))
@@ -97,7 +97,7 @@ func TestWriteErrorRedirectFallback(t *testing.T) {
 	err1 := errors.New("foo")
 	rec := httptest.NewRecorder()
 
-	err2 := WriteErrorRedirect(rec, "http://example.com", false, err1)
+	err2 := RedirectError(rec, "http://example.com", false, err1)
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "http://example.com?error=server_error", rec.HeaderMap.Get("Location"))

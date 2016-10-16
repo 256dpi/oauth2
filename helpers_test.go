@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWriteJSON(t *testing.T) {
+func TestWrite(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	err := Write(rec, "foo", http.StatusOK)
@@ -27,10 +27,17 @@ func TestWriteJSON(t *testing.T) {
 	}, rec.HeaderMap)
 }
 
-func TestWriteRedirectQuery(t *testing.T) {
+func TestRedirect(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	err := WriteRedirect(rec, "http://example.com?foo=bar", map[string]string{
+	err := Redirect(rec, "foo", nil, false)
+	assert.Error(t, err)
+}
+
+func TestRedirectQuery(t *testing.T) {
+	rec := httptest.NewRecorder()
+
+	err := Redirect(rec, "http://example.com?foo=bar", map[string]string{
 		"baz": "qux",
 	}, false)
 	assert.NoError(t, err)
@@ -42,10 +49,10 @@ func TestWriteRedirectQuery(t *testing.T) {
 	}, rec.HeaderMap)
 }
 
-func TestWriteRedirectFragment(t *testing.T) {
+func TestRedirectFragment(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	err := WriteRedirect(rec, "http://example.com?foo=bar", map[string]string{
+	err := Redirect(rec, "http://example.com?foo=bar", map[string]string{
 		"baz": "qux",
 	}, true)
 	assert.NoError(t, err)
@@ -56,11 +63,4 @@ func TestWriteRedirectFragment(t *testing.T) {
 			"http://example.com?foo=bar#baz=qux",
 		},
 	}, rec.HeaderMap)
-}
-
-func TestWriteRedirectError(t *testing.T) {
-	rec := httptest.NewRecorder()
-
-	err := WriteRedirect(rec, "foo", nil, false)
-	assert.Error(t, err)
 }
