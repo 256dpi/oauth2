@@ -129,7 +129,11 @@ func WriteError(w http.ResponseWriter, err error) error {
 	return WriteJSON(w, anError, anError.Code.Status)
 }
 
-func WriteErrorRedirect(w http.ResponseWriter, err error, uri string) error {
+func WriteErrorWithCode(w http.ResponseWriter, code ErrorCode, description ...string) error {
+	return WriteError(w, ErrorWithCode(code, description...))
+}
+
+func WriteErrorRedirect(w http.ResponseWriter, uri string, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
@@ -137,9 +141,9 @@ func WriteErrorRedirect(w http.ResponseWriter, err error, uri string) error {
 	}
 
 	// write redirect
-	return WriteRedirect(w, uri, anError.Map())
+	return WriteRedirect(w, uri, anError.Map(), nil)
 }
 
-func WriteErrorWithCode(w http.ResponseWriter, code ErrorCode, description ...string) error {
-	return WriteError(w, ErrorWithCode(code, description...))
+func WriteErrorRedirectWithCode(w http.ResponseWriter, uri string, code ErrorCode, description ...string) error {
+	return WriteErrorRedirect(w, uri, ErrorWithCode(code, description...))
 }

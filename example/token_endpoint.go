@@ -22,8 +22,8 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate client
-	hash, found := clients[req.ClientID]
-	if !found || !sameHash(hash, req.ClientSecret) {
+	client, found := clients[req.ClientID]
+	if !found || !sameHash(client.secret, req.ClientSecret) {
 		oauth2.WriteErrorWithCode(w, oauth2.InvalidClient)
 		return
 	}

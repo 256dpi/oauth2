@@ -11,6 +11,7 @@ type Response struct {
 	ExpiresIn    int               `json:"expires_in"`
 	RefreshToken string            `json:"refresh_token,omitempty"`
 	Scope        Scope             `json:"scope,omitempty"`
+	State        string            `json:"state,omitempty"`
 	ExtraFields  map[string]string `json:",inline"`
 }
 
@@ -39,9 +40,14 @@ func (r *Response) Map() map[string]string {
 		m["refresh_token"] = r.RefreshToken
 	}
 
-	// add scope
+	// add scope if present
 	if r.Scope != nil {
 		m["scope"] = r.Scope.String()
+	}
+
+	// add state if present
+	if len(r.State) > 0 {
+		m["state"] = r.State
 	}
 
 	// add extra fields
@@ -57,5 +63,5 @@ func WriteResponse(w http.ResponseWriter, res *Response) error {
 }
 
 func WriteResponseRedirect(w http.ResponseWriter, res *Response, uri string) error {
-	return WriteRedirect(w, uri, res.Map())
+	return WriteRedirect(w, uri, nil, res.Map())
 }

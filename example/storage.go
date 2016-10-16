@@ -8,14 +8,16 @@ import (
 )
 
 type owner struct {
-	id     string
-	secret string
+	id          string
+	secret      []byte
+	redirectURI string
 }
 
 var clients = map[string]owner{
 	"client1": {
-		id:     "client1",
-		secret: mustHash("foo"),
+		id:          "client1",
+		secret:      mustHash("foo"),
+		redirectURI: "http://example.com/callback",
 	},
 }
 

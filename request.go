@@ -1,6 +1,9 @@
 package oauth2
 
-import "net/http"
+import (
+	"net/http"
+	"net/url"
+)
 
 type AccessTokenRequest struct {
 	GrantType    GrantType
@@ -24,8 +27,13 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 		return nil, ErrorWithCode(InvalidRequest, "Malformed query parameters or body form")
 	}
 
-	// get grant type and scope
-	grantType := GrantType(req.PostForm.Get("grant_type"))
+	// get grant type
+	grantType := req.PostForm.Get("grant_type")
+	if grantType == "" {
+		return nil, ErrorWithCode(InvalidRequest, "Missing grant type")
+	}
+
+	// get scope
 	scope := ParseScope(req.PostForm.Get("scope"))
 
 	// TODO: Support client id and client secret in body form?
@@ -44,7 +52,7 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	refreshToken := req.PostForm.Get("refresh_token")
 
 	return &AccessTokenRequest{
-		GrantType:    grantType,
+		GrantType:    GrantType(grantType),
 		Scope:        scope,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
@@ -62,7 +70,8 @@ type AuthorizationRequest struct {
 	ResponseType ResponseType
 	Scope        []string
 	ClientID     string
-	RedirectURI  string
+	RedirectURI  url.URL
+	State        string
 }
 
 func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error) {
@@ -77,5 +86,41 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 		return nil, ErrorWithCode(InvalidRequest, "Malformed query parameters or body form")
 	}
 
-	return nil, nil
+	// get response type
+	responseType := req.Form.Get("response_type")
+	if responseType == "" {
+		return nil, ErrorWithCode(InvalidRequest, "Missing response type")
+	}
+
+	// get scope
+	scope := ParseScope(req.Form.Get("scope"))
+
+	// get client id
+	clientID := req.Form.Get("client_id")
+	if clientID == "" {
+		return nil, ErrorWithCode(InvalidRequest, "Missing client ID")
+	}
+
+	// get redirect uri
+	redirectURIString, err := url.QueryUnescape(req.Form.Get("redirect_uri"))
+	if err != nil {
+		return nil, ErrorWithCode(InvalidRequest, "Missing redirect URI")
+	}
+
+	// parse redirect uri
+	redirectURI, err := url.ParseRequestURI(redirectURIString)
+	if err != nil || redirectURI.Fragment != "" {
+		return nil, ErrorWithCode(InvalidRequest, "Invalid redirect URI")
+	}
+
+	// get state
+	state := req.Form.Get("state")
+
+	return &AuthorizationRequest{
+		ResponseType: ResponseType(responseType),
+		Scope:        scope,
+		ClientID:     clientID,
+		RedirectURI:  redirectURI,
+		State:        state,
+	}, nil
 }

@@ -19,7 +19,7 @@ func WriteJSON(w http.ResponseWriter, doc interface{}, status int) error {
 	return json.NewEncoder(w).Encode(doc)
 }
 
-func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string) error {
+func WriteRedirect(w http.ResponseWriter, uri string, queryParams, fragmentParams map[string]string) error {
 	// parse redirect uri
 	redirectURI, err := url.Parse(uri)
 	if err != nil {
@@ -30,12 +30,26 @@ func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string) 
 	q := redirectURI.Query()
 
 	// add parameters
-	for k, v := range params {
+	for k, v := range queryParams {
 		q.Add(k, v)
 	}
 
 	// reset query
 	redirectURI.RawQuery = q.Encode()
+
+	// add fragment if present
+	if fragmentParams != nil {
+		// prepare fragment
+		f := make(url.Values)
+
+		// add parameters
+		for k, v := range fragmentParams {
+			f.Add(k, v)
+		}
+
+		// encode fragment
+		redirectURI.Fragment = q.Encode()
+	}
 
 	// set location
 	w.Header().Add("Location", redirectURI.String())
