@@ -68,7 +68,7 @@ func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest
 	}
 
 	// write response
-	oauth2.WriteTokenResponseRedirect(w, req.RedirectURI, res)
+	oauth2.RedirectTokenResponse(w, req.RedirectURI, res)
 }
 
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
@@ -100,5 +100,5 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth
 	}
 
 	// write response
-	oauth2.WriteAuthorizationCodeResponseRedirect(w, req.RedirectURI, res)
+	oauth2.RedirectAuthorizationCodeResponse(w, req.RedirectURI, res)
 }

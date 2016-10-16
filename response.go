@@ -56,7 +56,7 @@ func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
 	return Write(w, res, http.StatusOK)
 }
 
-func WriteTokenResponseRedirect(w http.ResponseWriter, uri string, res *TokenResponse) error {
+func RedirectTokenResponse(w http.ResponseWriter, uri string, res *TokenResponse) error {
 	return Redirect(w, uri, res.Map(), true)
 }
 
@@ -85,6 +85,6 @@ func (r *AuthorizationCodeResponse) Map() map[string]string {
 	return m
 }
 
-func WriteAuthorizationCodeResponseRedirect(w http.ResponseWriter, uri string, res *AuthorizationCodeResponse) error {
+func RedirectAuthorizationCodeResponse(w http.ResponseWriter, uri string, res *AuthorizationCodeResponse) error {
 	return Redirect(w, uri, res.Map(), false)
 }

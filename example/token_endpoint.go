@@ -133,7 +133,7 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	delete(authorizationCodes, authorizationCode.SignatureString())
 
 	// write response
-	oauth2.WriteTokenResponseRedirect(w, redirectURI, res)
+	oauth2.RedirectTokenResponse(w, redirectURI, res)
 }
 
 func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
