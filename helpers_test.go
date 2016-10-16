@@ -27,14 +27,27 @@ func TestWriteJSON(t *testing.T) {
 	}, rec.HeaderMap)
 }
 
-func TestWriteRedirect(t *testing.T) {
+func TestWriteRedirectQuery(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	err := WriteRedirect(rec, "http://example.com", map[string]string{
-		"foo": "bar",
-	}, map[string]string{
+	err := WriteRedirect(rec, "http://example.com?foo=bar", map[string]string{
 		"baz": "qux",
-	})
+	}, false)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, http.Header{
+		"Location": []string{
+			"http://example.com?baz=qux&foo=bar",
+		},
+	}, rec.HeaderMap)
+}
+
+func TestWriteRedirectFragment(t *testing.T) {
+	rec := httptest.NewRecorder()
+
+	err := WriteRedirect(rec, "http://example.com?foo=bar", map[string]string{
+		"baz": "qux",
+	}, true)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, http.Header{
@@ -47,6 +60,6 @@ func TestWriteRedirect(t *testing.T) {
 func TestWriteRedirectError(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	err := WriteRedirect(rec, "%", nil, nil)
+	err := WriteRedirect(rec, "%", nil, false)
 	assert.Error(t, err)
 }

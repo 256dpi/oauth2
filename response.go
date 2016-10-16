@@ -6,13 +6,12 @@ import (
 )
 
 type TokenResponse struct {
-	TokenType    string            `json:"token_type"`
-	AccessToken  string            `json:"access_token"`
-	ExpiresIn    int               `json:"expires_in"`
-	RefreshToken string            `json:"refresh_token,omitempty"`
-	Scope        Scope             `json:"scope,omitempty"`
-	State        string            `json:"state,omitempty"`
-	ExtraFields  map[string]string `json:",inline"`
+	TokenType    string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	Scope        Scope  `json:"scope,omitempty"`
+	State        string `json:"state,omitempty"`
 }
 
 func NewTokenResponse(tokenType, accessToken string, expiresIn int) *TokenResponse {
@@ -50,11 +49,6 @@ func (r *TokenResponse) Map() map[string]string {
 		m["state"] = r.State
 	}
 
-	// add extra fields
-	for k, v := range r.ExtraFields {
-		m[k] = v
-	}
-
 	return m
 }
 
@@ -63,13 +57,12 @@ func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
 }
 
 func WriteTokenResponseRedirect(w http.ResponseWriter, uri string, res *TokenResponse) error {
-	return WriteRedirect(w, uri, nil, res.Map())
+	return WriteRedirect(w, uri, res.Map(), true)
 }
 
 type AuthorizationCodeResponse struct {
-	Code        string            `json:"code"`
-	State       string            `json:"state,omitempty"`
-	ExtraFields map[string]string `json:",inline"`
+	Code  string `json:"code"`
+	State string `json:"state,omitempty"`
 }
 
 func NewAuthorizationCodeResponse(code string) *AuthorizationCodeResponse {
@@ -89,14 +82,9 @@ func (r *AuthorizationCodeResponse) Map() map[string]string {
 		m["state"] = r.State
 	}
 
-	// add extra fields
-	for k, v := range r.ExtraFields {
-		m[k] = v
-	}
-
 	return m
 }
 
 func WriteAuthorizationCodeResponseRedirect(w http.ResponseWriter, uri string, res *AuthorizationCodeResponse) error {
-	return WriteRedirect(w, uri, nil, res.Map())
+	return WriteRedirect(w, uri, res.Map(), false)
 }

@@ -137,7 +137,7 @@ func WriteErrorWithCode(w http.ResponseWriter, code ErrorCode, description ...st
 	return WriteError(w, ErrorWithCode(code, description...))
 }
 
-func WriteErrorRedirect(w http.ResponseWriter, uri string, err error) error {
+func WriteErrorRedirect(w http.ResponseWriter, uri string, err error, useFragment bool) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
@@ -145,9 +145,9 @@ func WriteErrorRedirect(w http.ResponseWriter, uri string, err error) error {
 	}
 
 	// write redirect
-	return WriteRedirect(w, uri, anError.Map(), nil)
+	return WriteRedirect(w, uri, anError.Map(), useFragment)
 }
 
-func WriteErrorRedirectWithCode(w http.ResponseWriter, uri string, code ErrorCode, description ...string) error {
-	return WriteErrorRedirect(w, uri, ErrorWithCode(code, description...))
+func WriteErrorRedirectWithCode(w http.ResponseWriter, uri string, useFragment bool, code ErrorCode, description ...string) error {
+	return WriteErrorRedirect(w, uri, ErrorWithCode(code, description...), useFragment)
 }

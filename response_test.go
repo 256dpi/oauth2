@@ -1,6 +1,8 @@
 package oauth2
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,9 +25,6 @@ func TestTokenResponseMap(t *testing.T) {
 	res.RefreshToken = "baz"
 	res.Scope = Scope([]string{"qux"})
 	res.State = "quuz"
-	res.ExtraFields = map[string]string{
-		"bla": "blup",
-	}
 
 	assert.Equal(t, map[string]string{
 		"token_type":    "foo",
@@ -34,8 +33,31 @@ func TestTokenResponseMap(t *testing.T) {
 		"refresh_token": "baz",
 		"scope":         "qux",
 		"state":         "quuz",
-		"bla":           "blup",
 	}, res.Map())
+}
+
+func TestWriteTokenResponse(t *testing.T) {
+	rec := httptest.NewRecorder()
+	res := NewTokenResponse("foo", "bar", 1)
+
+	err := WriteTokenResponse(rec, res)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.JSONEq(t, `{
+		"token_type": "foo",
+		"access_token": "bar",
+		"expires_in": 1
+	}`, rec.Body.String())
+}
+
+func TestWriteTokenResponseRedirect(t *testing.T) {
+	rec := httptest.NewRecorder()
+	res := NewTokenResponse("foo", "bar", 1)
+
+	err := WriteTokenResponseRedirect(rec, "http://example.com?baz=qux", res)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, "http://example.com?baz=qux#access_token=bar&expires_in=1&token_type=foo", rec.HeaderMap.Get("Location"))
 }
 
 func TestNewAuthorizationCodeResponse(t *testing.T) {
@@ -49,13 +71,19 @@ func TestNewAuthorizationCodeResponse(t *testing.T) {
 func TestAuthorizationCodeResponseMap(t *testing.T) {
 	res := NewAuthorizationCodeResponse("foo")
 	res.State = "bar"
-	res.ExtraFields = map[string]string{
-		"bla": "blup",
-	}
 
 	assert.Equal(t, map[string]string{
 		"code":  "foo",
 		"state": "bar",
-		"bla":   "blup",
 	}, res.Map())
+}
+
+func TestWriteAuthorizationCodeResponseRedirect(t *testing.T) {
+	rec := httptest.NewRecorder()
+	res := NewAuthorizationCodeResponse("foo")
+
+	err := WriteAuthorizationCodeResponseRedirect(rec, "http://example.com?bar=baz", res)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, "http://example.com?bar=baz&code=foo", rec.HeaderMap.Get("Location"))
 }
