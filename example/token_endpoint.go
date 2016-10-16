@@ -147,19 +147,19 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 	// get stored refresh token by signature
 	storedRefreshToken, found := refreshTokens[refreshToken.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidRequest("")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidGrant(""))
 		return
 	}
 
 	// validate ownership
 	if storedRefreshToken.clientID != req.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidRequest("")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidGrant(""))
 		return
 	}
 
 	// validate scope and expiration
 	if !storedRefreshToken.scope.Includes(req.Scope) || storedRefreshToken.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidRequest("")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidGrant(""))
 		return
 	}
 
