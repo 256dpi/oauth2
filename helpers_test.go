@@ -11,7 +11,7 @@ import (
 func TestWriteJSON(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	err := WriteJSON(rec, "foo", http.StatusOK)
+	err := Write(rec, "foo", http.StatusOK)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, http.Header{

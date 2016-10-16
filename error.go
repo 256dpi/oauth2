@@ -157,7 +157,7 @@ func WriteError(w http.ResponseWriter, err error) error {
 	}
 
 	// write error response
-	return WriteJSON(w, anError, anError.Status)
+	return Write(w, anError, anError.Status)
 }
 
 func WriteErrorRedirect(w http.ResponseWriter, uri string, useFragment bool, err error) error {

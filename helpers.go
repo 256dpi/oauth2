@@ -6,7 +6,7 @@ import (
 	"net/url"
 )
 
-func WriteJSON(w http.ResponseWriter, doc interface{}, status int) error {
+func Write(w http.ResponseWriter, obj interface{}, status int) error {
 	// set required headers
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.Header().Set("Cache-Control", "no-store")
@@ -16,7 +16,7 @@ func WriteJSON(w http.ResponseWriter, doc interface{}, status int) error {
 	w.WriteHeader(status)
 
 	// write error document
-	return json.NewEncoder(w).Encode(doc)
+	return json.NewEncoder(w).Encode(obj)
 }
 
 func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string, useFragment bool) error {

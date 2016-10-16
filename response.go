@@ -53,7 +53,7 @@ func (r *TokenResponse) Map() map[string]string {
 }
 
 func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
-	return WriteJSON(w, res, http.StatusOK)
+	return Write(w, res, http.StatusOK)
 }
 
 func WriteTokenResponseRedirect(w http.ResponseWriter, uri string, res *TokenResponse) error {
