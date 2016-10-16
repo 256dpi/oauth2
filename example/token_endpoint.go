@@ -30,19 +30,19 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// triage grant type
 	if req.GrantType.Password() {
-		handlePasswordFlow(w, req)
+		handleResourceOwnerPasswordCredentialsGrant(w, req)
 	} else if req.GrantType.ClientCredentials() {
-		handleClientCredentialsFlow(w, req)
+		handleClientCredentialsGrant(w, req)
 	} else if req.GrantType.AuthorizationCode() {
-		//TODO: handleAuthorizationCodeGrant(w, r, req)
+		handleAuthorizationCodeGrant(w, req)
 	} else if req.GrantType.RefreshToken() {
-		handleRefreshTokenFlow(w, req)
+		handleRefreshTokenGrant(w, req)
 	} else {
 		oauth2.WriteError(w, oauth2.ErrorWithCode(oauth2.UnsupportedGrantType))
 	}
 }
 
-func handlePasswordFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// authenticate resource owner
 	hash, found := users[req.Username]
 	if !found || !sameHash(hash, req.Password) {
@@ -66,7 +66,7 @@ func handlePasswordFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	oauth2.WriteResponse(w, res)
 }
 
-func handleClientCredentialsFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
 		oauth2.WriteErrorWithCode(w, oauth2.InvalidScope)
@@ -83,7 +83,11 @@ func handleClientCredentialsFlow(w http.ResponseWriter, req *oauth2.AccessTokenR
 	oauth2.WriteResponse(w, res)
 }
 
-func handleRefreshTokenFlow(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+
+}
+
+func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// parse refresh token
 	refreshToken, err := oauth2.ParseToken(secret, req.RefreshToken)
 	if err != nil {

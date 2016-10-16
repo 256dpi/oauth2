@@ -29,15 +29,15 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// triage grant type
 	if req.ResponseType.Token() {
-		handleImplicitFlow(w, req)
+		handleImplicitGrant(w, req)
 	} else if req.ResponseType.Code() {
-		handleAuthorizationCodeFlow(w, req)
+		handleAuthorizationCodeGrantAuthorization(w, req)
 	} else {
 		oauth2.WriteError(w, oauth2.ErrorWithCode(oauth2.UnsupportedResponseType))
 	}
 }
 
-func handleImplicitFlow(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
+func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
 		oauth2.WriteErrorRedirectWithCode(w, req.RedirectURI, oauth2.InvalidScope)
@@ -71,7 +71,7 @@ func handleImplicitFlow(w http.ResponseWriter, req *oauth2.AuthorizationRequest)
 	oauth2.WriteResponseRedirect(w, res, req.RedirectURI)
 }
 
-func handleAuthorizationCodeFlow(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
+func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
 		oauth2.WriteErrorRedirectWithCode(w, req.RedirectURI, oauth2.InvalidScope)
