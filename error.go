@@ -53,7 +53,6 @@ var (
 
 	// The resource owner or authorization server denied the request.
 	AccessDenied = ErrorCode{"access_denied", http.StatusForbidden}
-	// TODO: Correct status code?
 
 	// The authorization server encountered an unexpected condition that
 	// prevented it from fulfilling the request.
