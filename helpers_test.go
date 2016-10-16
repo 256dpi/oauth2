@@ -50,6 +50,7 @@ func TestWriteRedirectFragment(t *testing.T) {
 	}, true)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, "", rec.Body.String())
 	assert.Equal(t, http.Header{
 		"Location": []string{
 			"http://example.com?foo=bar#baz=qux",

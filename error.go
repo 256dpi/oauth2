@@ -1,80 +1,16 @@
 package oauth2
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-type ErrorCode struct {
-	Name   string
-	Status int
-}
-
-func (c ErrorCode) String() string {
-	return c.Name
-}
-
-func (c ErrorCode) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.Name)
-}
-
-var (
-	// The request is missing a required parameter, includes an invalid
-	// parameter value, includes a parameter more than once, or is otherwise
-	// malformed.
-	InvalidRequest = ErrorCode{"invalid_request", http.StatusBadRequest}
-
-	// Client authentication failed (e.g., unknown client, no client
-	// authentication included, or unsupported authentication method).
-	InvalidClient = ErrorCode{"invalid_client", http.StatusUnauthorized}
-	// TODO: Status code is not always unauthorized?
-
-	// The provided authorization grant (e.g., authorization code, resource
-	// owner credentials) or refresh token is invalid, expired, revoked, does
-	// not match the redirection URI used in the authorization request, or was
-	// issued to another client.
-	InvalidGrant = ErrorCode{"invalid_grant", http.StatusBadRequest}
-
-	// The requested scope is invalid, unknown, malformed, or exceeds the scope
-	// granted by the resource owner.
-	InvalidScope = ErrorCode{"invalid_scope", http.StatusBadRequest}
-
-	// The authenticated client is not authorized to use this authorization
-	// grant type or method to request and access token.
-	UnauthorizedClient = ErrorCode{"unauthorized_client", http.StatusUnauthorized}
-
-	// The authorization grant type is not supported by the authorization server.
-	UnsupportedGrantType = ErrorCode{"unsupported_grant_type", http.StatusBadRequest}
-
-	// The authorization server does not support obtaining an access token using
-	// this method.
-	UnsupportedResponseType = ErrorCode{"unsupported_response_type", http.StatusBadRequest}
-
-	// The resource owner or authorization server denied the request.
-	AccessDenied = ErrorCode{"access_denied", http.StatusForbidden}
-
-	// The authorization server encountered an unexpected condition that
-	// prevented it from fulfilling the request.
-	ServerError = ErrorCode{"server_error", http.StatusInternalServerError}
-
-	// The authorization server is currently unable to handle the request due
-	// to a temporary overloading or maintenance of the server.
-	TemporarilyUnavailable = ErrorCode{"temporarily_unavailable", http.StatusServiceUnavailable}
-)
-
 type Error struct {
-	Code        ErrorCode `json:"error"`
-	Description string    `json:"error_description,omitempty"`
-	URI         string    `json:"error_uri,omitempty"`
-	State       string    `json:"state,omitempty"`
-}
-
-func ErrorWithCode(code ErrorCode, description string) error {
-	return &Error{
-		Code:        code,
-		Description: description,
-	}
+	Status      int    `json:"-"`
+	Code        string `json:"error"`
+	Description string `json:"error_description,omitempty"`
+	URI         string `json:"error_uri,omitempty"`
+	State       string `json:"state,omitempty"`
 }
 
 func (e *Error) String() string {
@@ -89,7 +25,7 @@ func (e *Error) Map() map[string]string {
 	m := make(map[string]string)
 
 	// add name
-	m["error"] = e.Code.Name
+	m["error"] = e.Code
 
 	// add description
 	if len(e.Description) > 0 {
@@ -109,32 +45,128 @@ func (e *Error) Map() map[string]string {
 	return m
 }
 
+// The request is missing a required parameter, includes an invalid
+// parameter value, includes a parameter more than once, or is otherwise
+// malformed.
+func InvalidRequest(description string) *Error {
+	return &Error{
+		Status:      http.StatusBadRequest,
+		Code:        "invalid_request",
+		Description: description,
+	}
+}
+
+// Client authentication failed (e.g., unknown client, no client
+// authentication included, or unsupported authentication method).
+func InvalidClient(description string) *Error {
+	// TODO: Status code is not always unauthorized?
+	// TODO: How to return "WWW-Authenticate" header?
+
+	return &Error{
+		Status:      http.StatusUnauthorized,
+		Code:        "invalid_client",
+		Description: description,
+	}
+}
+
+// The provided authorization grant (e.g., authorization code, resource
+// owner credentials) or refresh token is invalid, expired, revoked, does
+// not match the redirection URI used in the authorization request, or was
+// issued to another client.
+func InvalidGrant(description string) *Error {
+	return &Error{
+		Status:      http.StatusBadRequest,
+		Code:        "invalid_grant",
+		Description: description,
+	}
+}
+
+// The requested scope is invalid, unknown, malformed, or exceeds the scope
+// granted by the resource owner.
+func InvalidScope(description string) *Error {
+	return &Error{
+		Status:      http.StatusBadRequest,
+		Code:        "invalid_scope",
+		Description: description,
+	}
+}
+
+// The authenticated client is not authorized to use this authorization
+// grant type or method to request and access token.
+func UnauthorizedClient(description string) *Error {
+	return &Error{
+		Status:      http.StatusBadRequest,
+		Code:        "unauthorized_client",
+		Description: description,
+	}
+}
+
+// The authorization grant type is not supported by the authorization server.
+func UnsupportedGrantType(description string) *Error {
+	return &Error{
+		Status:      http.StatusBadRequest,
+		Code:        "unsupported_grant_type",
+		Description: description,
+	}
+}
+
+// The authorization server does not support obtaining an access token using
+// this method.
+func UnsupportedResponseType(description string) *Error {
+	return &Error{
+		Status:      http.StatusBadRequest,
+		Code:        "unsupported_response_type",
+		Description: description,
+	}
+}
+
+// The resource owner or authorization server denied the request.
+func AccessDenied(description string) *Error {
+	return &Error{
+		Status:      http.StatusForbidden,
+		Code:        "access_denied",
+		Description: description,
+	}
+}
+
+// The authorization server encountered an unexpected condition that
+// prevented it from fulfilling the request.
+func ServerError(description string) *Error {
+	return &Error{
+		Status:      http.StatusInternalServerError,
+		Code:        "server_error",
+		Description: description,
+	}
+}
+
+// The authorization server is currently unable to handle the request due
+// to a temporary overloading or maintenance of the server.
+func TemporarilyUnavailable(description string) *Error {
+	return &Error{
+		Status:      http.StatusServiceUnavailable,
+		Code:        "temporarily_unavailable",
+		Description: description,
+	}
+}
+
 func WriteError(w http.ResponseWriter, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
-		anError = ErrorWithCode(ServerError, "").(*Error)
+		anError = ServerError("")
 	}
 
 	// write error response
-	return WriteJSON(w, anError, anError.Code.Status)
+	return WriteJSON(w, anError, anError.Status)
 }
 
-func WriteErrorWithCode(w http.ResponseWriter, code ErrorCode, description string) error {
-	return WriteError(w, ErrorWithCode(code, description))
-}
-
-func WriteErrorRedirect(w http.ResponseWriter, uri string, err error, useFragment bool) error {
+func WriteErrorRedirect(w http.ResponseWriter, uri string, useFragment bool, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
-		anError = ErrorWithCode(ServerError, "").(*Error)
+		anError = ServerError("")
 	}
 
 	// write redirect
 	return WriteRedirect(w, uri, anError.Map(), useFragment)
-}
-
-func WriteErrorRedirectWithCode(w http.ResponseWriter, uri string, useFragment bool, code ErrorCode, description string) error {
-	return WriteErrorRedirect(w, uri, ErrorWithCode(code, description), useFragment)
 }

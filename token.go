@@ -59,19 +59,19 @@ func ParseToken(secret []byte, str string) (*Token, error) {
 	// split dot separated key and signature
 	s := strings.Split(str, ".")
 	if len(s) != 2 {
-		return nil, ErrorWithCode(InvalidRequest, "A token must have two segments separated by a dot")
+		return nil, InvalidRequest("A token must have two segments separated by a dot")
 	}
 
 	// decode key
 	key, err := b64.DecodeString(s[0])
 	if err != nil {
-		return nil, ErrorWithCode(InvalidRequest, "Token key is not base64 encoded")
+		return nil, InvalidRequest("Token key is not base64 encoded")
 	}
 
 	// decode signature
 	signature, err := b64.DecodeString(s[1])
 	if err != nil {
-		return nil, ErrorWithCode(InvalidRequest, "Token signature is not base64 encoded")
+		return nil, InvalidRequest("Token signature is not base64 encoded")
 	}
 
 	// construct token
@@ -82,7 +82,7 @@ func ParseToken(secret []byte, str string) (*Token, error) {
 
 	// validate signatures
 	if !token.Valid(secret) {
-		return nil, ErrorWithCode(InvalidRequest, "Invalid token supplied")
+		return nil, InvalidRequest("Invalid token supplied")
 	}
 
 	return token, nil
