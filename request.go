@@ -55,9 +55,6 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 
 	// get redirect uri
 	redirectURIString, err := url.QueryUnescape(req.Form.Get("redirect_uri"))
-	if err != nil {
-		return nil, InvalidRequest("Missing redirect URI")
-	}
 
 	// validate redirect uri if present
 	if len(redirectURIString) > 0 {
@@ -89,7 +86,7 @@ func (r *AccessTokenRequest) Confidential() bool {
 
 type AuthorizationRequest struct {
 	ResponseType ResponseType
-	Scope        []string
+	Scope        Scope
 	ClientID     string
 	RedirectURI  string
 	State        string
