@@ -67,8 +67,9 @@ func WriteTokenResponseRedirect(w http.ResponseWriter, uri string, res *TokenRes
 }
 
 type AuthorizationCodeResponse struct {
-	Code  string `json:"code"`
-	State string `json:"state,omitempty"`
+	Code        string            `json:"code"`
+	State       string            `json:"state,omitempty"`
+	ExtraFields map[string]string `json:",inline"`
 }
 
 func NewAuthorizationCodeResponse(code string) *AuthorizationCodeResponse {
@@ -88,11 +89,12 @@ func (r *AuthorizationCodeResponse) Map() map[string]string {
 		m["state"] = r.State
 	}
 
-	return m
-}
+	// add extra fields
+	for k, v := range r.ExtraFields {
+		m[k] = v
+	}
 
-func WriteAuthorizationCodeResponse(w http.ResponseWriter, res *AuthorizationCodeResponse) error {
-	return WriteJSON(w, res, http.StatusOK)
+	return m
 }
 
 func WriteAuthorizationCodeResponseRedirect(w http.ResponseWriter, uri string, res *AuthorizationCodeResponse) error {

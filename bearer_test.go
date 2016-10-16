@@ -8,10 +8,10 @@ import (
 )
 
 func TestNewBearerTokenResponse(t *testing.T) {
-	res := NewBearerTokenResponse("foo", 10)
+	res := NewBearerTokenResponse("foo", 1)
 	assert.Equal(t, Bearer, res.TokenType)
 	assert.Equal(t, "foo", res.AccessToken)
-	assert.Equal(t, 10, res.ExpiresIn)
+	assert.Equal(t, 1, res.ExpiresIn)
 }
 
 func TestParseBearerToken(t *testing.T) {

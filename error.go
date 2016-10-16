@@ -85,8 +85,12 @@ func ErrorWithCode(code ErrorCode, description ...string) error {
 	}
 }
 
-func (e *Error) Error() string {
+func (e *Error) String() string {
 	return fmt.Sprintf("%s: %s", e.Code, e.Description)
+}
+
+func (e *Error) Error() string {
+	return e.String()
 }
 
 func (e *Error) Map() map[string]string {
