@@ -61,6 +61,6 @@ func TestWriteRedirectFragment(t *testing.T) {
 func TestWriteRedirectError(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	err := WriteRedirect(rec, "%", nil, false)
+	err := WriteRedirect(rec, "foo", nil, false)
 	assert.Error(t, err)
 }

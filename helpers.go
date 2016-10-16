@@ -21,7 +21,7 @@ func WriteJSON(w http.ResponseWriter, doc interface{}, status int) error {
 
 func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string, useFragment bool) error {
 	// parse redirect uri
-	redirectURI, err := url.Parse(uri)
+	redirectURI, err := url.ParseRequestURI(uri)
 	if err != nil {
 		return err
 	}
