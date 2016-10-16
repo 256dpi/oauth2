@@ -7,6 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewBearerTokenResponse(t *testing.T) {
+	res := NewBearerTokenResponse("foo", 10)
+	assert.Equal(t, Bearer, res.TokenType)
+	assert.Equal(t, "foo", res.AccessToken)
+	assert.Equal(t, 10, res.ExpiresIn)
+}
+
 func TestParseBearerToken(t *testing.T) {
 	token1, err := GenerateToken(testSecret, 16)
 	assert.NoError(t, err)
