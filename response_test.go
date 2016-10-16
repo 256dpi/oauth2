@@ -60,7 +60,7 @@ func TestRedirectTokenResponse(t *testing.T) {
 	assert.Equal(t, "http://example.com?baz=qux#access_token=bar&expires_in=1&token_type=foo", rec.HeaderMap.Get("Location"))
 }
 
-func TestNewAuthorizationCodeResponse(t *testing.T) {
+func TestNewCodeResponse(t *testing.T) {
 	res := NewCodeResponse("foo")
 	assert.Equal(t, "foo", res.Code)
 	assert.Equal(t, map[string]string{
@@ -68,7 +68,7 @@ func TestNewAuthorizationCodeResponse(t *testing.T) {
 	}, res.Map())
 }
 
-func TestAuthorizationCodeResponseMap(t *testing.T) {
+func TestCodeResponseMap(t *testing.T) {
 	res := NewCodeResponse("foo")
 	res.State = "bar"
 
@@ -78,7 +78,7 @@ func TestAuthorizationCodeResponseMap(t *testing.T) {
 	}, res.Map())
 }
 
-func TestRedirectAuthorizationCodeResponse(t *testing.T) {
+func TestRedirectCodeResponse(t *testing.T) {
 	rec := httptest.NewRecorder()
 	res := NewCodeResponse("foo")
 
