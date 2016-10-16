@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-type Response struct {
+type TokenResponse struct {
 	TokenType    string            `json:"token_type"`
 	AccessToken  string            `json:"access_token"`
 	ExpiresIn    int               `json:"expires_in"`
@@ -15,15 +15,15 @@ type Response struct {
 	ExtraFields  map[string]string `json:",inline"`
 }
 
-func NewResponse(tokenType, accessToken string, expiresIn int) *Response {
-	return &Response{
+func NewTokenResponse(tokenType, accessToken string, expiresIn int) *TokenResponse {
+	return &TokenResponse{
 		TokenType:   tokenType,
 		AccessToken: accessToken,
 		ExpiresIn:   expiresIn,
 	}
 }
 
-func (r *Response) Map() map[string]string {
+func (r *TokenResponse) Map() map[string]string {
 	m := make(map[string]string)
 
 	// add token type
@@ -58,10 +58,35 @@ func (r *Response) Map() map[string]string {
 	return m
 }
 
-func WriteResponse(w http.ResponseWriter, res *Response) error {
+type AuthorizationCodeResponse struct {
+	Code  string `json:"code"`
+	State string `json:"state,omitempty"`
+}
+
+func NewAuthorizationCodeResponse(code string) *AuthorizationCodeResponse {
+	return &AuthorizationCodeResponse{
+		Code: code,
+	}
+}
+
+func (r *AuthorizationCodeResponse) Map() map[string]string {
+	m := make(map[string]string)
+
+	// add code
+	m["code"] = r.Code
+
+	// add state if present
+	if len(r.State) > 0 {
+		m["state"] = r.State
+	}
+
+	return m
+}
+
+func WriteResponse(w http.ResponseWriter, res *TokenResponse) error {
 	return WriteJSON(w, res, http.StatusOK)
 }
 
-func WriteResponseRedirect(w http.ResponseWriter, res *Response, uri string) error {
+func WriteResponseRedirect(w http.ResponseWriter, res *TokenResponse, uri string) error {
 	return WriteRedirect(w, uri, nil, res.Map())
 }

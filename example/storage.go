@@ -40,6 +40,8 @@ var accessTokens = make(map[string]token)
 
 var refreshTokens = make(map[string]token)
 
+var authorizationCodes = make(map[string]token)
+
 func mustHash(password string) []byte {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 0)
 	if err != nil {

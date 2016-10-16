@@ -31,7 +31,7 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 	if req.ResponseType.Token() {
 		handleImplicitFlow(w, req)
 	} else if req.ResponseType.Code() {
-		//handleExplicitFlow(w, req)
+		handleAuthorizationCodeFlow(w, req)
 	} else {
 		oauth2.WriteError(w, oauth2.ErrorWithCode(oauth2.UnsupportedResponseType))
 	}
@@ -44,20 +44,6 @@ func handleImplicitFlow(w http.ResponseWriter, req *oauth2.AuthorizationRequest)
 		return
 	}
 
-	// issue access
-	at, res := createTokenAndResponse(req)
-
-	// save tokens
-	saveToken(at, req.Scope, req.ClientID, "")
-
-	// set state
-	res.State = req.State
-
-	// write response
-	oauth2.WriteResponseRedirect(w, res, req.RedirectURI)
-}
-
-func createTokenAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oauth2.Response) {
 	// generate new access token
 	accessToken, err := oauth2.GenerateToken(secret, 32)
 	if err != nil {
@@ -70,16 +56,48 @@ func createTokenAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oau
 	// set granted scope
 	res.Scope = req.Scope
 
-	return accessToken, res
-}
+	// set state
+	res.State = req.State
 
-func saveToken(accessToken *oauth2.Token, scope *oauth2.Scope, clientID, username string) {
 	// save access token
 	accessTokens[accessToken.SignatureString()] = token{
-		clientID:  clientID,
-		username:  username,
+		clientID:  req.ClientID,
 		signature: accessToken.SignatureString(),
 		expiresAt: time.Now().Add(tokenLifespan),
-		scope:     scope,
+		scope:     req.Scope,
 	}
+
+	// write response
+	oauth2.WriteResponseRedirect(w, res, req.RedirectURI)
+}
+
+func handleAuthorizationCodeFlow(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
+	// check scope
+	if !allowedScope.Includes(req.Scope) {
+		oauth2.WriteErrorRedirectWithCode(w, req.RedirectURI, oauth2.InvalidScope)
+		return
+	}
+
+	// generate new authorization code
+	authorizationCode, err := oauth2.GenerateToken(secret, 32)
+	if err != nil {
+		panic(err)
+	}
+
+	// prepare response
+	res := oauth2.NewAuthorizationCodeResponse(authorizationCode)
+
+	// set state
+	res.State = req.State
+
+	// save authorization code
+	authorizationCodes[authorizationCode.SignatureString()] = token{
+		clientID:  req.ClientID,
+		signature: authorizationCode.SignatureString(),
+		expiresAt: time.Now().Add(authorizationCodeLifespan),
+		scope:     req.Scope,
+	}
+
+	// write response
+	oauth2.WriteResponseRedirect(w, res, req.RedirectURI)
 }

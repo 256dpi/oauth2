@@ -123,7 +123,7 @@ func handleRefreshTokenFlow(w http.ResponseWriter, req *oauth2.AccessTokenReques
 	oauth2.WriteResponse(w, res)
 }
 
-func createTokensAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oauth2.Token, *oauth2.Response) {
+func createTokensAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oauth2.Token, *oauth2.TokenResponse) {
 	// generate new access token
 	accessToken, err := oauth2.GenerateToken(secret, 32)
 	if err != nil {
