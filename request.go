@@ -121,7 +121,7 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 
 	// get redirect uri
 	redirectURIString, err := url.QueryUnescape(req.Form.Get("redirect_uri"))
-	if err != nil {
+	if err != nil || redirectURIString == "" {
 		return nil, InvalidRequest("Missing redirect URI")
 	}
 
