@@ -84,7 +84,56 @@ func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessToken
 }
 
 func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+	// parse authorization code
+	authorizationCode, err := oauth2.ParseToken(secret, req.Code)
+	if err != nil {
+		oauth2.WriteError(w, err)
+		return
+	}
 
+	// get stored authorization code by signature
+	storedAuthorizationCode, found := authorizationCodes[authorizationCode.Signature]
+	if !found {
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		return
+	}
+
+	// validate ownership
+	if storedAuthorizationCode.clientID != req.ClientID {
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		return
+	}
+
+	// validate scope and expiration
+	if !storedAuthorizationCode.scope.Includes(req.Scope) || storedAuthorizationCode.expiresAt.Before(time.Now()) {
+		oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		return
+	}
+
+	// use original redirect uri
+	redirectURI := storedAuthorizationCode.redirectURI
+
+	// validate redirect uri
+	if req.RedirectURI != "" {
+		if storedAuthorizationCode.redirectURI != req.RedirectURI {
+			oauth2.WriteErrorWithCode(w, oauth2.InvalidRequest) // TODO: Correct error?
+		}
+
+		// overwrite redirect uri
+		redirectURI = req.RedirectURI
+	}
+
+	// issue new access and refresh token
+	at, rt, res := createTokensAndResponse(req)
+
+	// save tokens
+	saveTokens(at, rt, req.Scope, req.ClientID, "")
+
+	// delete used authorization code
+	delete(authorizationCodes, authorizationCode.Signature)
+
+	// write response
+	oauth2.WriteResponseRedirect(w, redirectURI, res)
 }
 
 func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
@@ -118,7 +167,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 	at, rt, res := createTokensAndResponse(req)
 
 	// save tokens
-	saveTokens(at, rt, req.Scope, storedRefreshToken.clientID, storedRefreshToken.username)
+	saveTokens(at, rt, req.Scope, req.ClientID, storedRefreshToken.username)
 
 	// delete used refresh token
 	delete(refreshTokens, refreshToken.Signature)

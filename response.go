@@ -87,6 +87,6 @@ func WriteResponse(w http.ResponseWriter, res *TokenResponse) error {
 	return WriteJSON(w, res, http.StatusOK)
 }
 
-func WriteResponseRedirect(w http.ResponseWriter, res *TokenResponse, uri string) error {
+func WriteResponseRedirect(w http.ResponseWriter, uri string, res *TokenResponse) error {
 	return WriteRedirect(w, uri, nil, res.Map())
 }

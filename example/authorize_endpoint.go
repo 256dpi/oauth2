@@ -92,10 +92,11 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth
 
 	// save authorization code
 	authorizationCodes[authorizationCode.SignatureString()] = token{
-		clientID:  req.ClientID,
-		signature: authorizationCode.SignatureString(),
-		expiresAt: time.Now().Add(authorizationCodeLifespan),
-		scope:     req.Scope,
+		clientID:    req.ClientID,
+		signature:   authorizationCode.SignatureString(),
+		expiresAt:   time.Now().Add(authorizationCodeLifespan),
+		scope:       req.Scope,
+		redirectURI: req.RedirectURI,
 	}
 
 	// write response

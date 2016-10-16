@@ -13,6 +13,8 @@ type AccessTokenRequest struct {
 	Username     string
 	Password     string
 	RefreshToken string
+	RedirectURI  string
+	Code         string
 }
 
 func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
@@ -51,6 +53,12 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	// get refresh token
 	refreshToken := req.PostForm.Get("refresh_token")
 
+	// get redirect URI
+	redirectURI := req.PostForm.Get("redirect_uri")
+
+	// get code
+	code := req.PostForm.Get("code")
+
 	return &AccessTokenRequest{
 		GrantType:    GrantType(grantType),
 		Scope:        scope,
@@ -59,6 +67,8 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 		Username:     username,
 		Password:     password,
 		RefreshToken: refreshToken,
+		RedirectURI:  redirectURI,
+		Code:         code,
 	}, nil
 }
 

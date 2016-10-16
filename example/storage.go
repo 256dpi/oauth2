@@ -29,11 +29,12 @@ var users = map[string]owner{
 }
 
 type token struct {
-	clientID  string
-	username  string
-	signature string
-	expiresAt time.Time
-	scope     oauth2.Scope
+	clientID    string
+	username    string
+	signature   string
+	expiresAt   time.Time
+	scope       oauth2.Scope
+	redirectURI string
 }
 
 var accessTokens = make(map[string]token)
