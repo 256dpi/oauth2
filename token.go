@@ -85,8 +85,6 @@ func ParseToken(secret []byte, str string) (*Token, error) {
 		return nil, InvalidRequest(NoState, "Invalid token supplied")
 	}
 
-	// TODO: Add state in callers.
-
 	return token, nil
 }
 
