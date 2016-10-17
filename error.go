@@ -11,11 +11,13 @@ const (
 )
 
 type Error struct {
-	Status      int    `json:"-"`
 	Name        string `json:"error"`
 	State       string `json:"state,omitempty"`
 	Description string `json:"error_description,omitempty"`
 	URI         string `json:"error_uri,omitempty"`
+
+	Status  int               `json:"-"`
+	Headers map[string]string `json:"-"`
 }
 
 func (e *Error) String() string {
@@ -64,16 +66,15 @@ func InvalidRequest(state, description string) *Error {
 
 // Client authentication failed (e.g., unknown client, no client
 // authentication included, or unsupported authentication method).
-//
-// Note: The spec suggest to add the "WWW-Authenticate" header when returning
-// this error. For simplicity reasons and minor importance this has not been
-// implemented.
 func InvalidClient(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusUnauthorized,
 		Name:        "invalid_client",
 		State:       state,
 		Description: description,
+		Headers: map[string]string{
+			"WWW-Authenticate": `Basic realm="OAuth2"`,
+		},
 	}
 }
 
@@ -176,6 +177,11 @@ func WriteError(w http.ResponseWriter, err error) error {
 	anError, ok := err.(*Error)
 	if !ok {
 		anError = ServerError(NoState, NoDescription)
+	}
+
+	// add headers
+	for k, v := range anError.Headers {
+		w.Header().Set(k, v)
 	}
 
 	// write error response

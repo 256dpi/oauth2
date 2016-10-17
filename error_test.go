@@ -69,11 +69,16 @@ func TestAddStateToError(t *testing.T) {
 
 func TestWriteError(t *testing.T) {
 	err1 := InvalidRequest("foo", "bar")
+	err1.Headers = map[string]string{
+		"foo": "bar",
+	}
+
 	rec := httptest.NewRecorder()
 
 	err2 := WriteError(rec, err1)
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	assert.Equal(t, "bar", rec.HeaderMap.Get("foo"))
 	assert.JSONEq(t, `{
 		"error": "invalid_request",
 		"state":             "foo",
