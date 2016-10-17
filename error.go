@@ -64,10 +64,11 @@ func InvalidRequest(state, description string) *Error {
 
 // Client authentication failed (e.g., unknown client, no client
 // authentication included, or unsupported authentication method).
+//
+// Note: The spec suggest to add the "WWW-Authenticate" header when returning
+// this error. For simplicity reasons and minor importance this has not been
+// implemented.
 func InvalidClient(state, description string) *Error {
-	// TODO: Status code is not always unauthorized?
-	// TODO: How to return "WWW-Authenticate" header?
-
 	return &Error{
 		Status:      http.StatusUnauthorized,
 		Name:        "invalid_client",
