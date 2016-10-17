@@ -36,7 +36,14 @@ func main() {
 
 func protectedResource(w http.ResponseWriter, r *http.Request) {
 	// parse bearer token
-	token, err := oauth2.ParseBearerToken(secret, r)
+	bearerToken, err := oauth2.ParseBearerToken(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// parse token
+	token, err := oauth2.ParseToken(secret, bearerToken)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return

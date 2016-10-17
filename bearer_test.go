@@ -15,19 +15,16 @@ func TestNewBearerTokenResponse(t *testing.T) {
 }
 
 func TestParseBearerToken(t *testing.T) {
-	token1, err := GenerateToken(testSecret, 16)
-	assert.NoError(t, err)
-
 	req, err := http.NewRequest("GET", "/foo", nil)
 	assert.NoError(t, err)
 
-	token2, err := ParseBearerToken(testSecret, req)
+	token, err := ParseBearerToken(req)
 	assert.Error(t, err)
-	assert.Nil(t, token2)
+	assert.Equal(t, "", token)
 
-	req.Header.Add("Authorization", "Bearer "+token1.String())
+	req.Header.Add("Authorization", "Bearer foo")
 
-	token2, err = ParseBearerToken(testSecret, req)
+	token, err = ParseBearerToken(req)
 	assert.NoError(t, err)
-	assert.NotNil(t, token2)
+	assert.Equal(t, "foo", token)
 }
