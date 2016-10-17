@@ -23,6 +23,10 @@ type Config struct {
 	OwnerPassword    string
 	ValidScope       string
 	ExpectedExpireIn int
+	RedirectURI      string
+
+	CustomTokenAuthorization map[string]string
+	CustomCodeAuthorization  map[string]string
 }
 
 func Default(handler http.Handler) *Config {
@@ -47,5 +51,21 @@ func Run(t *testing.T, c *Config) {
 		t.Run("PasswordGrantTest", func(t *testing.T) {
 			PasswordGrantTest(t, c)
 		})
+	}
+
+	if c.ClientCredentialsGrant {
+		t.Run("ClientCredentialsGrantTest", func(t *testing.T) {
+			ClientCredentialsGrantTest(t, c)
+		})
+	}
+
+	if c.ImplicitGrant {
+		t.Run("ImplicitGrantTest", func(t *testing.T) {
+			ImplicitGrantTest(t, c)
+		})
+	}
+
+	if c.AuthorizationCodeGrant {
+
 	}
 }

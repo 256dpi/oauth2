@@ -27,20 +27,33 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// show info notice on a GET request
+	if r.Method == "GET" {
+		w.Write([]byte("This authentication server does not provide an authorization form"))
+		return
+	}
+
 	// triage grant type
 	if req.ResponseType.Token() {
-		handleImplicitGrant(w, req)
+		handleImplicitGrant(w, r, req)
 	} else if req.ResponseType.Code() {
-		handleAuthorizationCodeGrantAuthorization(w, req)
+		handleAuthorizationCodeGrantAuthorization(w, r, req)
 	} else {
 		oauth2.WriteError(w, oauth2.UnsupportedResponseType(""))
 	}
 }
 
-func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
+func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
 		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.InvalidScope(""))
+		return
+	}
+
+	// check user credentials
+	owner, found := users[r.PostForm.Get("username")]
+	if !found || !sameHash(owner.secret, r.PostForm.Get("password")) {
+		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.AccessDenied(""))
 		return
 	}
 
@@ -62,6 +75,7 @@ func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest
 	// save access token
 	accessTokens[accessToken.SignatureString()] = token{
 		clientID:  req.ClientID,
+		username:  owner.id,
 		signature: accessToken.SignatureString(),
 		expiresAt: time.Now().Add(tokenLifespan),
 		scope:     req.Scope,
@@ -71,10 +85,17 @@ func handleImplicitGrant(w http.ResponseWriter, req *oauth2.AuthorizationRequest
 	oauth2.RedirectTokenResponse(w, req.RedirectURI, res)
 }
 
-func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth2.AuthorizationRequest) {
+func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *http.Request, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
 		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.InvalidScope(""))
+		return
+	}
+
+	// check user credentials
+	owner, found := users[r.PostForm.Get("username")]
+	if !found || !sameHash(owner.secret, r.PostForm.Get("password")) {
+		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.AccessDenied(""))
 		return
 	}
 
@@ -93,6 +114,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, req *oauth
 	// save authorization code
 	authorizationCodes[authorizationCode.SignatureString()] = token{
 		clientID:    req.ClientID,
+		username:    owner.id,
 		signature:   authorizationCode.SignatureString(),
 		expiresAt:   time.Now().Add(authorizationCodeLifespan),
 		scope:       req.Scope,
