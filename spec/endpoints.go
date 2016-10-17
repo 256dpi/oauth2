@@ -20,7 +20,7 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		},
 	})
 
-	// unsupported grant type
+	// invalid grant type
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.TokenEndpoint,
@@ -31,7 +31,7 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		Password: c.ClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "unsupported_grant_type", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str)
 		},
 	})
 }
@@ -77,7 +77,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		},
 	})
 
-	// unsupported response type
+	// invalid response type
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
@@ -90,7 +90,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Password: c.ClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "unsupported_response_type", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str)
 		},
 	})
 }
