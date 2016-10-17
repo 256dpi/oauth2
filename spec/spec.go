@@ -47,6 +47,10 @@ func Run(t *testing.T, c *Config) {
 		UnsupportedGrantTypeTest(t, c)
 	})
 
+	t.Run("UnsupportedResponseTypeTest", func(t *testing.T) {
+		UnsupportedResponseTypeTest(t, c)
+	})
+
 	if c.PasswordGrant {
 		t.Run("PasswordGrantTest", func(t *testing.T) {
 			PasswordGrantTest(t, c)
