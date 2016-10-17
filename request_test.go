@@ -64,6 +64,10 @@ func TestParseAccessTokenRequestErrors(t *testing.T) {
 		}),
 		newRequestWithAuth("foo", "bar", map[string]string{
 			"grant_type":   "password",
+			"redirect_uri": "blaa%blupp",
+		}),
+		newRequestWithAuth("foo", "bar", map[string]string{
+			"grant_type":   "password",
 			"redirect_uri": "foo",
 		}),
 	}
