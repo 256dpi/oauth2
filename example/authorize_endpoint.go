@@ -96,7 +96,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *http.Re
 	// check user credentials
 	owner, found := users[r.PostForm.Get("username")]
 	if !found || !sameHash(owner.secret, r.PostForm.Get("password")) {
-		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.AccessDenied(""))
+		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.AccessDenied(""))
 		return
 	}
 

@@ -76,37 +76,3 @@ func UnauthorizedAccessTest(t *testing.T, c *Config) {
 		},
 	})
 }
-
-func UnsupportedGrantTypeTest(t *testing.T, c *Config) {
-	Do(c.Handler, &Request{
-		Method: "POST",
-		Path:   c.TokenEndpoint,
-		Form: map[string]string{
-			"grant_type": "foo",
-		},
-		Username: c.ClientID,
-		Password: c.ClientSecret,
-		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "unsupported_grant_type", gjson.Get(r.Body.String(), "error").Str)
-		},
-	})
-}
-
-func UnsupportedResponseTypeTest(t *testing.T, c *Config) {
-	Do(c.Handler, &Request{
-		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: map[string]string{
-			"response_type": "foo",
-			"client_id":     c.ClientID,
-			"redirect_uri":  c.RedirectURI,
-		},
-		Username: c.ClientID,
-		Password: c.ClientSecret,
-		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "unsupported_response_type", gjson.Get(r.Body.String(), "error").Str)
-		},
-	})
-}

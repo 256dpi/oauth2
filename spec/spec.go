@@ -25,8 +25,8 @@ type Config struct {
 	ExpectedExpireIn int
 	RedirectURI      string
 
-	CustomTokenAuthorization map[string]string
-	CustomCodeAuthorization  map[string]string
+	ValidTokenAuthorization map[string]string
+	ValidCodeAuthorization  map[string]string
 }
 
 func Default(handler http.Handler) *Config {
@@ -43,12 +43,12 @@ func Run(t *testing.T, c *Config) {
 		UnauthorizedAccessTest(t, c)
 	})
 
-	t.Run("UnsupportedGrantTypeTest", func(t *testing.T) {
-		UnsupportedGrantTypeTest(t, c)
+	t.Run("TokenEndpointTest", func(t *testing.T) {
+		TokenEndpointTest(t, c)
 	})
 
-	t.Run("UnsupportedResponseTypeTest", func(t *testing.T) {
-		UnsupportedResponseTypeTest(t, c)
+	t.Run("AuthorizationEndpointTest", func(t *testing.T) {
+		AuthorizationEndpointTest(t, c)
 	})
 
 	if c.PasswordGrant {

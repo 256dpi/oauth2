@@ -23,12 +23,12 @@ func TestSpec(t *testing.T) {
 	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
 	config.RedirectURI = "http://example.com/callback"
 
-	config.CustomTokenAuthorization = map[string]string{
+	config.ValidTokenAuthorization = map[string]string{
 		"username": config.OwnerUsername,
 		"password": config.OwnerPassword,
 	}
 
-	config.CustomCodeAuthorization = map[string]string{
+	config.ValidCodeAuthorization = map[string]string{
 		"username": config.OwnerUsername,
 		"password": config.OwnerPassword,
 	}

@@ -171,7 +171,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.CustomTokenAuthorization, map[string]string{
+		Form: extend(c.ValidTokenAuthorization, map[string]string{
 			"response_type": "token",
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.RedirectURI,
@@ -185,13 +185,31 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// access denied
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: map[string]string{
+			"response_type": "token",
+			"client_id":     c.ClientID,
+			"redirect_uri":  c.RedirectURI,
+			"scope":         c.ValidScope,
+			"state":         "foobar",
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusFound, r.Code)
+			assert.Equal(t, "access_denied", query(r, "error"))
+			// TODO: assert.Equal(t, "foobar", query(r, "state"))
+		},
+	})
+
 	var accessToken string
 
 	// get access token
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.CustomTokenAuthorization, map[string]string{
+		Form: extend(c.ValidTokenAuthorization, map[string]string{
 			"response_type": "token",
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.RedirectURI,
@@ -219,7 +237,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.CustomCodeAuthorization, map[string]string{
+		Form: extend(c.ValidCodeAuthorization, map[string]string{
 			"response_type": "code",
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.RedirectURI,
@@ -233,13 +251,31 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// access denied
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: map[string]string{
+			"response_type": "code",
+			"client_id":     c.ClientID,
+			"redirect_uri":  c.RedirectURI,
+			"scope":         c.ValidScope,
+			"state":         "foobar",
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusFound, r.Code)
+			assert.Equal(t, "access_denied", query(r, "error"))
+			// TODO: assert.Equal(t, "foobar", query(r, "state"))
+		},
+	})
+
 	var authorizationCode string
 
 	// get access token
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.CustomCodeAuthorization, map[string]string{
+		Form: extend(c.ValidCodeAuthorization, map[string]string{
 			"response_type": "code",
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.RedirectURI,
