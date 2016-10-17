@@ -24,7 +24,6 @@ func TestParseAccessTokenRequestMinimal(t *testing.T) {
 	assert.Equal(t, "", req.RedirectURI)
 	assert.Equal(t, "", req.Code)
 	assert.False(t, req.Confidential())
-	assert.NoError(t, req.Validate())
 }
 
 func TestParseAccessTokenRequestFull(t *testing.T) {
@@ -50,7 +49,6 @@ func TestParseAccessTokenRequestFull(t *testing.T) {
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "blaa", req.Code)
 	assert.True(t, req.Confidential())
-	assert.NoError(t, req.Validate())
 }
 
 func TestParseAccessTokenRequestErrors(t *testing.T) {
@@ -93,9 +91,6 @@ func TestAccessTokenRequestValidate(t *testing.T) {
 		req, err := ParseAccessTokenRequest(i)
 		assert.NotNil(t, req)
 		assert.NoError(t, err)
-
-		err = req.Validate()
-		assert.Error(t, err)
 	}
 }
 
@@ -113,7 +108,6 @@ func TestParseAuthorizationRequestMinimal(t *testing.T) {
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "", req.State)
-	assert.NoError(t, req.Validate())
 }
 
 func TestParseAuthorizationRequestFull(t *testing.T) {
@@ -132,7 +126,6 @@ func TestParseAuthorizationRequestFull(t *testing.T) {
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "baz", req.State)
-	assert.NoError(t, req.Validate())
 }
 
 func TestParseAuthorizationRequestErrors(t *testing.T) {
@@ -178,8 +171,5 @@ func TestAuthorizationRequestValidate(t *testing.T) {
 		req, err := ParseAuthorizationRequest(i)
 		assert.NotNil(t, req)
 		assert.NoError(t, err)
-
-		err = req.Validate()
-		assert.Error(t, err)
 	}
 }

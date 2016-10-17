@@ -92,15 +92,6 @@ func (r *AccessTokenRequest) Confidential() bool {
 	return len(r.ClientID) > 0 && len(r.ClientSecret) > 0
 }
 
-func (r *AccessTokenRequest) Validate() error {
-	// make sure the grant type is known
-	if !r.GrantType.Known() {
-		return InvalidRequest(r.State, "Unknown grant type")
-	}
-
-	return nil
-}
-
 type AuthorizationRequest struct {
 	ResponseType ResponseType
 	Scope        Scope
@@ -158,13 +149,4 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 		RedirectURI:  redirectURIString,
 		State:        state,
 	}, nil
-}
-
-func (r *AuthorizationRequest) Validate() error {
-	// make sure the response type is known
-	if !r.ResponseType.Known() {
-		return InvalidRequest(r.State, "Unknown response type")
-	}
-
-	return nil
 }

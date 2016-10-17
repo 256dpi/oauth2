@@ -15,10 +15,9 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate token request
-	err = req.Validate()
-	if err != nil {
-		oauth2.WriteError(w, err)
+	// make sure the grant type is known
+	if !req.GrantType.Known() {
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Unknown grant type"))
 		return
 	}
 

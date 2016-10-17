@@ -15,10 +15,9 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate authorization request
-	err = req.Validate()
-	if err != nil {
-		oauth2.WriteError(w, err)
+	// make sure the response type is known
+	if !req.ResponseType.Known() {
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Unknown response type"))
 		return
 	}
 
