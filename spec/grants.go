@@ -198,8 +198,8 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "access_denied", query(r, "error"))
-			// TODO: assert.Equal(t, "foobar", query(r, "state"))
+			assert.Equal(t, "access_denied", fragment(r, "error"))
+			// TODO: assert.Equal(t, "foobar", fragment(r, "state"))
 		},
 	})
 
