@@ -27,3 +27,5 @@ func ParseBearerToken(r *http.Request) (string, error) {
 
 	return s[1], nil
 }
+
+// TODO: Implement "WWW-Authenticate" header in response: https://tools.ietf.org/html/rfc6750#section-3.
