@@ -40,10 +40,7 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	}
 
 	// get scope
-	scope := req.PostForm.Get("scope")
-	if scope == "" {
-		return nil, InvalidScope(state, "Empty scope")
-	}
+	scope := ParseScope(req.PostForm.Get("scope"))
 
 	// TODO: Support client id and client secret in body form?
 
@@ -79,7 +76,7 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 
 	return &AccessTokenRequest{
 		GrantType:    GrantType(grantType),
-		Scope:        ParseScope(scope),
+		Scope:        scope,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Username:     username,
@@ -134,10 +131,7 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 	}
 
 	// get scope
-	scope := req.Form.Get("scope")
-	if scope == "" {
-		return nil, InvalidScope(state, "Empty scope")
-	}
+	scope := ParseScope(req.Form.Get("scope"))
 
 	// get client id
 	clientID := req.Form.Get("client_id")
@@ -159,7 +153,7 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 
 	return &AuthorizationRequest{
 		ResponseType: ResponseType(responseType),
-		Scope:        ParseScope(scope),
+		Scope:        scope,
 		ClientID:     clientID,
 		RedirectURI:  redirectURIString,
 		State:        state,

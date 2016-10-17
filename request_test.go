@@ -10,7 +10,6 @@ import (
 func TestParseAccessTokenRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
 		"grant_type": "password",
-		"scope":      "foo",
 	})
 
 	req, err := ParseAccessTokenRequest(r)
@@ -18,7 +17,7 @@ func TestParseAccessTokenRequestMinimal(t *testing.T) {
 	assert.Equal(t, "password", req.GrantType.String())
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "", req.ClientSecret)
-	assert.Equal(t, Scope{"foo"}, req.Scope)
+	assert.Equal(t, Scope(nil), req.Scope)
 	assert.Equal(t, "", req.Username)
 	assert.Equal(t, "", req.Password)
 	assert.Equal(t, "", req.RefreshToken)
@@ -65,18 +64,12 @@ func TestParseAccessTokenRequestErrors(t *testing.T) {
 		newRequest(map[string]string{
 			"grant_type": "password",
 		}),
-		newRequest(map[string]string{
-			"grant_type": "password",
-			"scope":      "foo",
-		}),
 		newRequestWithAuth("foo", "bar", map[string]string{
 			"grant_type":   "password",
-			"scope":        "foo",
 			"redirect_uri": "blaa%blupp",
 		}),
 		newRequestWithAuth("foo", "bar", map[string]string{
 			"grant_type":   "password",
-			"scope":        "foo",
 			"redirect_uri": "foo",
 		}),
 	}
@@ -109,7 +102,6 @@ func TestAccessTokenRequestValidate(t *testing.T) {
 func TestParseAuthorizationRequestMinimal(t *testing.T) {
 	r := newRequest(map[string]string{
 		"client_id":     "foo",
-		"scope":         "foo",
 		"response_type": "token",
 		"redirect_uri":  "http://example.com",
 	})
@@ -117,7 +109,7 @@ func TestParseAuthorizationRequestMinimal(t *testing.T) {
 	req, err := ParseAuthorizationRequest(r)
 	assert.NoError(t, err)
 	assert.Equal(t, "token", req.ResponseType.String())
-	assert.Equal(t, Scope{"foo"}, req.Scope)
+	assert.Equal(t, Scope(nil), req.Scope)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "", req.State)
@@ -156,16 +148,10 @@ func TestParseAuthorizationRequestErrors(t *testing.T) {
 		}),
 		newRequest(map[string]string{
 			"response_type": "token",
-			"scope":         "foo",
-		}),
-		newRequest(map[string]string{
-			"response_type": "token",
-			"scope":         "foo",
 			"client_id":     "foo",
 		}),
 		newRequest(map[string]string{
 			"response_type": "token",
-			"scope":         "foo",
 			"client_id":     "foo",
 			"redirect_uri":  "foo",
 		}),
