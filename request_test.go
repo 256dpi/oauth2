@@ -101,6 +101,7 @@ func TestParseAuthorizationRequestMinimal(t *testing.T) {
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "", req.State)
+	assert.NoError(t, req.Validate())
 }
 
 func TestParseAuthorizationRequestFull(t *testing.T) {
@@ -119,6 +120,7 @@ func TestParseAuthorizationRequestFull(t *testing.T) {
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "baz", req.State)
+	assert.NoError(t, req.Validate())
 }
 
 func TestParseAuthorizationRequestErrors(t *testing.T) {
