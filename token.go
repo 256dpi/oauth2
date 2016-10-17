@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -59,19 +60,19 @@ func ParseToken(secret []byte, str string) (*Token, error) {
 	// split dot separated key and signature
 	s := strings.Split(str, ".")
 	if len(s) != 2 {
-		return nil, InvalidRequest(NoState, "A token must have two segments separated by a dot")
+		return nil, errors.New("A token must have two segments separated by a dot")
 	}
 
 	// decode key
 	key, err := b64.DecodeString(s[0])
 	if err != nil {
-		return nil, InvalidRequest(NoState, "Token key is not base64 encoded")
+		return nil, errors.New("Token key is not base64 encoded")
 	}
 
 	// decode signature
 	signature, err := b64.DecodeString(s[1])
 	if err != nil {
-		return nil, InvalidRequest(NoState, "Token signature is not base64 encoded")
+		return nil, errors.New("Token signature is not base64 encoded")
 	}
 
 	// construct token
@@ -82,7 +83,7 @@ func ParseToken(secret []byte, str string) (*Token, error) {
 
 	// validate signatures
 	if !token.Valid(secret) {
-		return nil, InvalidRequest(NoState, "Invalid token supplied")
+		return nil, errors.New("Invalid token supplied")
 	}
 
 	return token, nil

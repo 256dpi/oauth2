@@ -214,8 +214,7 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenReques
 	// parse authorization code
 	authorizationCode, err := oauth2.ParseToken(secret, req.Code)
 	if err != nil {
-		oauth2.AddStateToError(err, req.State)
-		oauth2.WriteError(w, err)
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, err.Error()))
 		return
 	}
 
@@ -260,8 +259,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	// parse refresh token
 	refreshToken, err := oauth2.ParseToken(secret, req.RefreshToken)
 	if err != nil {
-		oauth2.AddStateToError(err, req.State)
-		oauth2.WriteError(w, err)
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, err.Error()))
 		return
 	}
 

@@ -166,12 +166,6 @@ func TemporarilyUnavailable(state, description string) *Error {
 	}
 }
 
-func AddStateToError(err error, state string) {
-	if anError, ok := err.(*Error); ok {
-		anError.State = state
-	}
-}
-
 func WriteError(w http.ResponseWriter, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
