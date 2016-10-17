@@ -199,7 +199,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
 			assert.Equal(t, "access_denied", fragment(r, "error"))
-			// TODO: assert.Equal(t, "foobar", fragment(r, "state"))
+			assert.Equal(t, "foobar", fragment(r, "state"))
 		},
 	})
 
@@ -247,7 +247,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
 			assert.Equal(t, "invalid_scope", query(r, "error"))
-			// TODO: assert.Equal(t, "foobar", query(r, "state"))
+			assert.Equal(t, "foobar", query(r, "state"))
 		},
 	})
 
@@ -284,7 +284,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
-			// TODO: assert.Equal(t, "foobar", fragment(r, "state"))
+			assert.Equal(t, "foobar", query(r, "state"))
 
 			authorizationCode = query(r, "code")
 			assert.NotEmpty(t, authorizationCode)
