@@ -18,7 +18,7 @@ var allowedScope = oauth2.ParseScope("foo bar")
 func newHandler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/oauth2/token", tokenEndpoint)
-	mux.HandleFunc("/oauth2/authorize", authorizeEndpoint)
+	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint)
 	mux.HandleFunc("/api/protected", protectedResource)
 	return mux
 }
