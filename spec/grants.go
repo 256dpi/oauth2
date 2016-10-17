@@ -324,3 +324,24 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		RefreshTokenTest(t, c, refreshToken)
 	}
 }
+
+func RefreshTokenGrantTest(t *testing.T, c *Config) {
+	// invalid refresh token
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ClientID,
+		Password: c.ClientSecret,
+		Form: map[string]string{
+			"grant_type":    "refresh_token",
+			"refresh_token": "invalid",
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").String())
+		},
+	})
+
+	// test refresh token
+	RefreshTokenTest(t, c, c.RefreshToken)
+}

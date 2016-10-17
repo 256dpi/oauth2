@@ -16,6 +16,7 @@ type Config struct {
 	ClientCredentialsGrant  bool
 	ImplicitGrant           bool
 	AuthorizationCodeGrant  bool
+	RefreshTokenGrant       bool
 	RequiresConfidentiality bool
 
 	ClientID         string
@@ -25,6 +26,7 @@ type Config struct {
 	ValidScope       string
 	ExpectedExpireIn int
 	RedirectURI      string
+	RefreshToken     string
 
 	ValidTokenAuthorization map[string]string
 	ValidCodeAuthorization  map[string]string
@@ -79,6 +81,12 @@ func Run(t *testing.T, c *Config) {
 	if c.RequiresConfidentiality {
 		t.Run("ConfidentialClientTest", func(t *testing.T) {
 			ConfidentialClientTest(t, c)
+		})
+	}
+
+	if c.RefreshTokenGrant {
+		t.Run("RefreshTokenGrantTest", func(t *testing.T) {
+			RefreshTokenGrantTest(t, c)
 		})
 	}
 }

@@ -8,12 +8,33 @@ import (
 )
 
 func TestSpec(t *testing.T) {
+	addOwner(clients, owner{
+		id:          "client1",
+		secret:      mustHash("foo"),
+		redirectURI: "http://example.com/callback",
+	})
+
+	addOwner(users, owner{
+		id:     "user1",
+		secret: mustHash("foo"),
+	})
+
+	refreshToken := mustGenerateToken()
+
+	addToken(refreshTokens, token{
+		clientID:  "client1",
+		signature: refreshToken.SignatureString(),
+		scope:     allowedScope,
+		expiresAt: time.Now().Add(time.Hour),
+	})
+
 	config := spec.Default(newHandler())
 
 	config.PasswordGrant = true
 	config.ClientCredentialsGrant = true
 	config.ImplicitGrant = true
 	config.AuthorizationCodeGrant = true
+	config.RefreshTokenGrant = true
 	config.RequiresConfidentiality = true
 
 	config.ClientID = "client1"
@@ -23,6 +44,7 @@ func TestSpec(t *testing.T) {
 	config.ValidScope = "foo bar"
 	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
 	config.RedirectURI = "http://example.com/callback"
+	config.RefreshToken = refreshToken.String()
 
 	config.ValidTokenAuthorization = map[string]string{
 		"username": config.OwnerUsername,
