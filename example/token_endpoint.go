@@ -110,17 +110,11 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 		return
 	}
 
-	// use original redirect uri
-	redirectURI := storedAuthorizationCode.redirectURI
-
 	// validate redirect uri
 	if req.RedirectURI != "" {
 		if storedAuthorizationCode.redirectURI != req.RedirectURI {
 			oauth2.WriteError(w, oauth2.InvalidRequest("")) // TODO: Correct error?
 		}
-
-		// overwrite redirect uri
-		redirectURI = req.RedirectURI
 	}
 
 	// issue new access and refresh token
@@ -133,7 +127,7 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	delete(authorizationCodes, authorizationCode.SignatureString())
 
 	// write response
-	oauth2.RedirectTokenResponse(w, redirectURI, res)
+	oauth2.WriteTokenResponse(w, res)
 }
 
 func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {

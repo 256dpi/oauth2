@@ -213,3 +213,78 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	// test access token
 	AccessTokenTest(t, c, accessToken)
 }
+
+func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
+	// invalid scope
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: extend(c.CustomCodeAuthorization, map[string]string{
+			"response_type": "code",
+			"client_id":     c.ClientID,
+			"redirect_uri":  c.RedirectURI,
+			"scope":         "invalid",
+			"state":         "foobar",
+		}),
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusFound, r.Code)
+			assert.Equal(t, "invalid_scope", query(r, "error"))
+			// TODO: assert.Equal(t, "foobar", query(r, "state"))
+		},
+	})
+
+	var authorizationCode string
+
+	// get access token
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: extend(c.CustomCodeAuthorization, map[string]string{
+			"response_type": "code",
+			"client_id":     c.ClientID,
+			"redirect_uri":  c.RedirectURI,
+			"scope":         c.ValidScope,
+			"state":         "foobar",
+		}),
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusFound, r.Code)
+			// TODO: assert.Equal(t, "foobar", fragment(r, "state"))
+
+			authorizationCode = query(r, "code")
+			assert.NotEmpty(t, authorizationCode)
+		},
+	})
+
+	var accessToken, refreshToken string
+
+	// get access token
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ClientID,
+		Password: c.ClientSecret,
+		Form: map[string]string{
+			"grant_type": "authorization_code",
+			"scope":      c.ValidScope,
+			"code":       authorizationCode,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusOK, r.Code)
+			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String())
+			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String())
+			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
+
+			accessToken = gjson.Get(r.Body.String(), "access_token").String()
+			assert.NotEmpty(t, accessToken)
+			refreshToken = gjson.Get(r.Body.String(), "refresh_token").String()
+		},
+	})
+
+	// test access token
+	AccessTokenTest(t, c, accessToken)
+
+	// test refresh token if present
+	if refreshToken != "" {
+		RefreshTokenTest(t, c, refreshToken)
+	}
+}

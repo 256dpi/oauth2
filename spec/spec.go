@@ -66,6 +66,8 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.AuthorizationCodeGrant {
-
+		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
+			AuthorizationCodeGrantTest(t, c)
+		})
 	}
 }
