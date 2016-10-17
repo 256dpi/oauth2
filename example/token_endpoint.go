@@ -17,14 +17,14 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// check if client is confidential
 	if !req.Confidential() {
-		oauth2.WriteError(w, oauth2.InvalidRequest("Only cofidential clients are allowed"))
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Only cofidential clients are allowed"))
 		return
 	}
 
 	// authenticate client
 	client, found := clients[req.ClientID]
 	if !found || !sameHash(client.secret, req.ClientSecret) {
-		oauth2.WriteError(w, oauth2.InvalidClient(""))
+		oauth2.WriteError(w, oauth2.InvalidClient(req.State, oauth2.NoDescription))
 		return
 	}
 
@@ -38,7 +38,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if req.GrantType.RefreshToken() {
 		handleRefreshTokenGrant(w, req)
 	} else {
-		oauth2.WriteError(w, oauth2.UnsupportedGrantType(""))
+		oauth2.WriteError(w, oauth2.UnsupportedGrantType(req.State, oauth2.NoDescription))
 	}
 }
 
@@ -46,13 +46,13 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oau
 	// authenticate resource owner
 	owner, found := users[req.Username]
 	if !found || !sameHash(owner.secret, req.Password) {
-		oauth2.WriteError(w, oauth2.AccessDenied(""))
+		oauth2.WriteError(w, oauth2.AccessDenied(req.State, oauth2.NoDescription))
 		return
 	}
 
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(""))
+		oauth2.WriteError(w, oauth2.InvalidScope(req.State, oauth2.NoDescription))
 		return
 	}
 
@@ -69,7 +69,7 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oau
 func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(""))
+		oauth2.WriteError(w, oauth2.InvalidScope(req.State, oauth2.NoDescription))
 		return
 	}
 
@@ -94,26 +94,26 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	// get stored authorization code by signature
 	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidRequest("")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, oauth2.NoDescription)) // TODO: Correct error?
 		return
 	}
 
 	// validate ownership
 	if storedAuthorizationCode.clientID != req.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidRequest("")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, oauth2.NoDescription)) // TODO: Correct error?
 		return
 	}
 
 	// validate scope and expiration
 	if !storedAuthorizationCode.scope.Includes(req.Scope) || storedAuthorizationCode.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidRequest("")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, oauth2.NoDescription)) // TODO: Correct error?
 		return
 	}
 
 	// validate redirect uri
 	if req.RedirectURI != "" {
 		if storedAuthorizationCode.redirectURI != req.RedirectURI {
-			oauth2.WriteError(w, oauth2.InvalidRequest("")) // TODO: Correct error?
+			oauth2.WriteError(w, oauth2.InvalidRequest(req.State, oauth2.NoDescription)) // TODO: Correct error?
 		}
 	}
 
@@ -141,19 +141,19 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 	// get stored refresh token by signature
 	storedRefreshToken, found := refreshTokens[refreshToken.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidGrant(""))
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, oauth2.NoDescription))
 		return
 	}
 
 	// validate ownership
 	if storedRefreshToken.clientID != req.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidGrant(""))
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, oauth2.NoDescription))
 		return
 	}
 
 	// validate scope and expiration
 	if !storedRefreshToken.scope.Includes(req.Scope) || storedRefreshToken.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidGrant(""))
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, oauth2.NoDescription))
 		return
 	}
 

@@ -5,16 +5,21 @@ import (
 	"net/http"
 )
 
+const (
+	NoState       = ""
+	NoDescription = ""
+)
+
 type Error struct {
 	Status      int    `json:"-"`
-	Code        string `json:"error"`
+	Name        string `json:"error"`
+	State       string `json:"state,omitempty"`
 	Description string `json:"error_description,omitempty"`
 	URI         string `json:"error_uri,omitempty"`
-	State       string `json:"state,omitempty"`
 }
 
 func (e *Error) String() string {
-	return fmt.Sprintf("%s: %s", e.Code, e.Description)
+	return fmt.Sprintf("%s: %s", e.Name, e.Description)
 }
 
 func (e *Error) Error() string {
@@ -25,7 +30,7 @@ func (e *Error) Map() map[string]string {
 	m := make(map[string]string)
 
 	// add name
-	m["error"] = e.Code
+	m["error"] = e.Name
 
 	// add description
 	if len(e.Description) > 0 {
@@ -48,23 +53,25 @@ func (e *Error) Map() map[string]string {
 // The request is missing a required parameter, includes an invalid
 // parameter value, includes a parameter more than once, or is otherwise
 // malformed.
-func InvalidRequest(description string) *Error {
+func InvalidRequest(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
-		Code:        "invalid_request",
+		Name:        "invalid_request",
+		State:       state,
 		Description: description,
 	}
 }
 
 // Client authentication failed (e.g., unknown client, no client
 // authentication included, or unsupported authentication method).
-func InvalidClient(description string) *Error {
+func InvalidClient(state, description string) *Error {
 	// TODO: Status code is not always unauthorized?
 	// TODO: How to return "WWW-Authenticate" header?
 
 	return &Error{
 		Status:      http.StatusUnauthorized,
-		Code:        "invalid_client",
+		Name:        "invalid_client",
+		State:       state,
 		Description: description,
 	}
 }
@@ -73,78 +80,86 @@ func InvalidClient(description string) *Error {
 // owner credentials) or refresh token is invalid, expired, revoked, does
 // not match the redirection URI used in the authorization request, or was
 // issued to another client.
-func InvalidGrant(description string) *Error {
+func InvalidGrant(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
-		Code:        "invalid_grant",
+		Name:        "invalid_grant",
+		State:       state,
 		Description: description,
 	}
 }
 
 // The requested scope is invalid, unknown, malformed, or exceeds the scope
 // granted by the resource owner.
-func InvalidScope(description string) *Error {
+func InvalidScope(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
-		Code:        "invalid_scope",
+		Name:        "invalid_scope",
+		State:       state,
 		Description: description,
 	}
 }
 
 // The authenticated client is not authorized to use this authorization
 // grant type or method to request and access token.
-func UnauthorizedClient(description string) *Error {
+func UnauthorizedClient(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
-		Code:        "unauthorized_client",
+		Name:        "unauthorized_client",
+		State:       state,
 		Description: description,
 	}
 }
 
 // The authorization grant type is not supported by the authorization server.
-func UnsupportedGrantType(description string) *Error {
+func UnsupportedGrantType(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
-		Code:        "unsupported_grant_type",
+		Name:        "unsupported_grant_type",
+		State:       state,
 		Description: description,
 	}
 }
 
 // The authorization server does not support obtaining an access token using
 // this method.
-func UnsupportedResponseType(description string) *Error {
+func UnsupportedResponseType(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
-		Code:        "unsupported_response_type",
+		Name:        "unsupported_response_type",
+		State:       state,
 		Description: description,
 	}
 }
 
 // The resource owner or authorization server denied the request.
-func AccessDenied(description string) *Error {
+func AccessDenied(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusForbidden,
-		Code:        "access_denied",
+		Name:        "access_denied",
+		State:       state,
 		Description: description,
 	}
 }
 
 // The authorization server encountered an unexpected condition that
 // prevented it from fulfilling the request.
-func ServerError(description string) *Error {
+func ServerError(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusInternalServerError,
-		Code:        "server_error",
+		Name:        "server_error",
+		State:       state,
 		Description: description,
 	}
 }
 
 // The authorization server is currently unable to handle the request due
 // to a temporary overloading or maintenance of the server.
-func TemporarilyUnavailable(description string) *Error {
+func TemporarilyUnavailable(state, description string) *Error {
 	return &Error{
 		Status:      http.StatusServiceUnavailable,
-		Code:        "temporarily_unavailable",
+		Name:        "temporarily_unavailable",
+		State:       state,
 		Description: description,
 	}
 }
@@ -153,7 +168,7 @@ func WriteError(w http.ResponseWriter, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
-		anError = ServerError("")
+		anError = ServerError(NoState, NoDescription)
 	}
 
 	// write error response
@@ -164,7 +179,7 @@ func RedirectError(w http.ResponseWriter, uri string, useFragment bool, err erro
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
-		anError = ServerError("")
+		anError = ServerError(NoState, NoDescription)
 	}
 
 	// write redirect

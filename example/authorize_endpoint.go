@@ -18,13 +18,13 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 	// get client
 	client, found := clients[req.ClientID]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidClient(""))
+		oauth2.WriteError(w, oauth2.InvalidClient(req.State, oauth2.NoDescription))
 		return
 	}
 
 	// validate redirect uri
 	if client.redirectURI != req.RedirectURI {
-		oauth2.WriteError(w, oauth2.InvalidRequest("Invalid redirect URI"))
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Invalid redirect URI"))
 		return
 	}
 
@@ -40,21 +40,21 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else if req.ResponseType.Code() {
 		handleAuthorizationCodeGrantAuthorization(w, r, req)
 	} else {
-		oauth2.WriteError(w, oauth2.UnsupportedResponseType(""))
+		oauth2.WriteError(w, oauth2.UnsupportedResponseType(req.State, oauth2.NoDescription))
 	}
 }
 
 func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.InvalidScope(""))
+		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.InvalidScope(req.State, oauth2.NoDescription))
 		return
 	}
 
 	// check user credentials
 	owner, found := users[r.PostForm.Get("username")]
 	if !found || !sameHash(owner.secret, r.PostForm.Get("password")) {
-		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.AccessDenied(""))
+		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.AccessDenied(req.State, oauth2.NoDescription))
 		return
 	}
 
@@ -89,14 +89,14 @@ func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.Aut
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *http.Request, req *oauth2.AuthorizationRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
-		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.InvalidScope(""))
+		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.InvalidScope(req.State, oauth2.NoDescription))
 		return
 	}
 
 	// check user credentials
 	owner, found := users[r.PostForm.Get("username")]
 	if !found || !sameHash(owner.secret, r.PostForm.Get("password")) {
-		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.AccessDenied(""))
+		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.AccessDenied(req.State, oauth2.NoDescription))
 		return
 	}
 
