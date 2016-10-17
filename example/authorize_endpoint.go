@@ -8,7 +8,7 @@ import (
 )
 
 func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
-	// parse oauth2 authorization request
+	// parse authorization request
 	req, err := oauth2.ParseAuthorizationRequest(r)
 	if err != nil {
 		oauth2.WriteError(w, err)

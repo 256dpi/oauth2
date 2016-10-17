@@ -8,8 +8,15 @@ import (
 )
 
 func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
-	// parse oauth2 token request
+	// parse token request
 	req, err := oauth2.ParseAccessTokenRequest(r)
+	if err != nil {
+		oauth2.WriteError(w, err)
+		return
+	}
+
+	// validate token request
+	err = req.Validate()
 	if err != nil {
 		oauth2.WriteError(w, err)
 		return
@@ -37,8 +44,6 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 		handleAuthorizationCodeGrant(w, req)
 	} else if req.GrantType.RefreshToken() {
 		handleRefreshTokenGrant(w, req)
-	} else {
-		oauth2.WriteError(w, oauth2.UnsupportedGrantType(req.State, oauth2.NoDescription))
 	}
 }
 

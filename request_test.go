@@ -25,6 +25,7 @@ func TestParseAccessTokenRequestMinimal(t *testing.T) {
 	assert.Equal(t, "", req.RedirectURI)
 	assert.Equal(t, "", req.Code)
 	assert.False(t, req.Confidential())
+	assert.NoError(t, req.Validate())
 }
 
 func TestParseAccessTokenRequestFull(t *testing.T) {
@@ -50,6 +51,7 @@ func TestParseAccessTokenRequestFull(t *testing.T) {
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "blaa", req.Code)
 	assert.True(t, req.Confidential())
+	assert.NoError(t, req.Validate())
 }
 
 func TestParseAccessTokenRequestErrors(t *testing.T) {
@@ -82,6 +84,24 @@ func TestParseAccessTokenRequestErrors(t *testing.T) {
 	for _, i := range matrix {
 		req, err := ParseAccessTokenRequest(i)
 		assert.Nil(t, req)
+		assert.Error(t, err)
+	}
+}
+
+func TestAccessTokenRequestValidate(t *testing.T) {
+	matrix := []*http.Request{
+		newRequestWithAuth("foo", "", map[string]string{
+			"grant_type": "foo",
+			"scope":      "foo",
+		}),
+	}
+
+	for _, i := range matrix {
+		req, err := ParseAccessTokenRequest(i)
+		assert.NotNil(t, req)
+		assert.NoError(t, err)
+
+		err = req.Validate()
 		assert.Error(t, err)
 	}
 }
@@ -161,7 +181,7 @@ func TestParseAuthorizationRequestErrors(t *testing.T) {
 func TestAuthorizationRequestValidate(t *testing.T) {
 	matrix := []*http.Request{
 		newRequest(map[string]string{
-			"response_type": "foo", // <- invalid
+			"response_type": "foo",
 			"scope":         "foo",
 			"client_id":     "foo",
 			"redirect_uri":  "http://example.com",
