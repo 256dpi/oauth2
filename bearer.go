@@ -11,6 +11,10 @@ func NewBearerTokenResponse(token string, expiresIn int) *TokenResponse {
 	return NewTokenResponse(Bearer, token, expiresIn)
 }
 
+// Note: The spec also allows obtaining the bearer token from query parameters
+// and the request body (form data). This implementations only supports obtaining
+// the token from the "Authorization" header as this is the most common
+// implementation and considered most secure.
 func ParseBearerToken(r *http.Request) (string, error) {
 	// read header
 	h := r.Header.Get("Authorization")
