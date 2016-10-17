@@ -18,6 +18,8 @@ type AccessTokenRequest struct {
 	Code         string
 }
 
+// Note: Obtaining the client id and secret from the request body (form data)
+// is not implemented by default due to security considerations.
 func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	// check method
 	if req.Method != "POST" {
@@ -47,9 +49,6 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	if !ok {
 		return nil, InvalidRequest(state, "Missing or invalid HTTP authorization header")
 	}
-
-	// obtaining the client id and secret from the request body (form data)
-	// is not implemented by default due to security considerations
 
 	// get username and password
 	username := req.PostForm.Get("username")
