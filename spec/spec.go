@@ -12,10 +12,11 @@ type Config struct {
 	AuthorizeEndpoint string
 	ProtectedResource string
 
-	PasswordGrant          bool
-	ClientCredentialsGrant bool
-	ImplicitGrant          bool
-	AuthorizationCodeGrant bool
+	PasswordGrant           bool
+	ClientCredentialsGrant  bool
+	ImplicitGrant           bool
+	AuthorizationCodeGrant  bool
+	RequiresConfidentiality bool
 
 	ClientID         string
 	ClientSecret     string
@@ -72,6 +73,12 @@ func Run(t *testing.T, c *Config) {
 	if c.AuthorizationCodeGrant {
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
 			AuthorizationCodeGrantTest(t, c)
+		})
+	}
+
+	if c.RequiresConfidentiality {
+		t.Run("ConfidentialClientTest", func(t *testing.T) {
+			ConfidentialClientTest(t, c)
 		})
 	}
 }

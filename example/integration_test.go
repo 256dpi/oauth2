@@ -14,6 +14,7 @@ func TestSpec(t *testing.T) {
 	config.ClientCredentialsGrant = true
 	config.ImplicitGrant = true
 	config.AuthorizationCodeGrant = true
+	config.RequiresConfidentiality = true
 
 	config.ClientID = "client1"
 	config.ClientSecret = "foo"

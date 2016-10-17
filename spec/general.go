@@ -76,3 +76,18 @@ func UnauthorizedAccessTest(t *testing.T, c *Config) {
 		},
 	})
 }
+
+func ConfidentialClientTest(t *testing.T, c *Config) {
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ClientID,
+		Form: map[string]string{
+			"grant_type": "password",
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
+}
