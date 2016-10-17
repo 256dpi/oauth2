@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseAccessTokenRequestMinimal(t *testing.T) {
+func TestParseTokenRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
 		"grant_type": "password",
 	})
 
-	req, err := ParseAccessTokenRequest(r)
+	req, err := ParseTokenRequest(r)
 	assert.NoError(t, err)
 	assert.Equal(t, "password", req.GrantType.String())
 	assert.Equal(t, "foo", req.ClientID)
@@ -26,7 +26,7 @@ func TestParseAccessTokenRequestMinimal(t *testing.T) {
 	assert.False(t, req.Confidential())
 }
 
-func TestParseAccessTokenRequestFull(t *testing.T) {
+func TestParseTokenRequestFull(t *testing.T) {
 	r := newRequestWithAuth("foo", "bar", map[string]string{
 		"grant_type":    "password",
 		"scope":         "foo bar",
@@ -37,7 +37,7 @@ func TestParseAccessTokenRequestFull(t *testing.T) {
 		"code":          "blaa",
 	})
 
-	req, err := ParseAccessTokenRequest(r)
+	req, err := ParseTokenRequest(r)
 	assert.NoError(t, err)
 	assert.Equal(t, "password", req.GrantType.String())
 	assert.Equal(t, "foo", req.ClientID)
@@ -51,7 +51,7 @@ func TestParseAccessTokenRequestFull(t *testing.T) {
 	assert.True(t, req.Confidential())
 }
 
-func TestParseAccessTokenRequestErrors(t *testing.T) {
+func TestParseTokenRequestErrors(t *testing.T) {
 	r1, _ := http.NewRequest("GET", "", nil)
 	r2, _ := http.NewRequest("POST", "", nil)
 
@@ -73,24 +73,9 @@ func TestParseAccessTokenRequestErrors(t *testing.T) {
 	}
 
 	for _, i := range matrix {
-		req, err := ParseAccessTokenRequest(i)
+		req, err := ParseTokenRequest(i)
 		assert.Nil(t, req)
 		assert.Error(t, err)
-	}
-}
-
-func TestAccessTokenRequestValidate(t *testing.T) {
-	matrix := []*http.Request{
-		newRequestWithAuth("foo", "", map[string]string{
-			"grant_type": "foo",
-			"scope":      "foo",
-		}),
-	}
-
-	for _, i := range matrix {
-		req, err := ParseAccessTokenRequest(i)
-		assert.NotNil(t, req)
-		assert.NoError(t, err)
 	}
 }
 
@@ -154,22 +139,5 @@ func TestParseAuthorizationRequestErrors(t *testing.T) {
 		req, err := ParseAuthorizationRequest(i)
 		assert.Nil(t, req)
 		assert.Error(t, err)
-	}
-}
-
-func TestAuthorizationRequestValidate(t *testing.T) {
-	matrix := []*http.Request{
-		newRequest(map[string]string{
-			"response_type": "foo",
-			"scope":         "foo",
-			"client_id":     "foo",
-			"redirect_uri":  "http://example.com",
-		}),
-	}
-
-	for _, i := range matrix {
-		req, err := ParseAuthorizationRequest(i)
-		assert.NotNil(t, req)
-		assert.NoError(t, err)
 	}
 }

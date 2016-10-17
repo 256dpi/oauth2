@@ -5,7 +5,7 @@ import (
 	"net/url"
 )
 
-type AccessTokenRequest struct {
+type TokenRequest struct {
 	GrantType    GrantType
 	Scope        Scope
 	ClientID     string
@@ -20,7 +20,7 @@ type AccessTokenRequest struct {
 
 // Note: Obtaining the client id and secret from the request body (form data)
 // is not implemented by default due to security considerations.
-func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
+func ParseTokenRequest(req *http.Request) (*TokenRequest, error) {
 	// check method
 	if req.Method != "POST" {
 		return nil, InvalidRequest(NoState, "Invalid HTTP method")
@@ -74,7 +74,7 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	// get code
 	code := req.PostForm.Get("code")
 
-	return &AccessTokenRequest{
+	return &TokenRequest{
 		GrantType:    GrantType(grantType),
 		Scope:        scope,
 		ClientID:     clientID,
@@ -88,7 +88,7 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	}, nil
 }
 
-func (r *AccessTokenRequest) Confidential() bool {
+func (r *TokenRequest) Confidential() bool {
 	return len(r.ClientID) > 0 && len(r.ClientSecret) > 0
 }
 

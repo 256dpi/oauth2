@@ -132,7 +132,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *http.Re
 
 func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse token request
-	req, err := oauth2.ParseAccessTokenRequest(r)
+	req, err := oauth2.ParseTokenRequest(r)
 	if err != nil {
 		oauth2.WriteError(w, err)
 		return
@@ -169,7 +169,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	// authenticate resource owner
 	owner, found := users[req.Username]
 	if !found || !sameHash(owner.secret, req.Password) {
@@ -193,7 +193,7 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oau
 	oauth2.WriteTokenResponse(w, res)
 }
 
-func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	// check scope
 	if !allowedScope.Includes(req.Scope) {
 		oauth2.WriteError(w, oauth2.InvalidScope(req.State, oauth2.NoDescription))
@@ -210,7 +210,7 @@ func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	oauth2.WriteTokenResponse(w, res)
 }
 
-func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	// parse authorization code
 	authorizationCode, err := oauth2.ParseToken(secret, req.Code)
 	if err != nil {
@@ -258,7 +258,7 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	oauth2.WriteTokenResponse(w, res)
 }
 
-func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenRequest) {
+func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	// parse refresh token
 	refreshToken, err := oauth2.ParseToken(secret, req.RefreshToken)
 	if err != nil {
@@ -299,7 +299,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 	oauth2.WriteTokenResponse(w, res)
 }
 
-func createTokensAndResponse(req *oauth2.AccessTokenRequest) (*oauth2.Token, *oauth2.Token, *oauth2.TokenResponse) {
+func createTokensAndResponse(req *oauth2.TokenRequest) (*oauth2.Token, *oauth2.Token, *oauth2.TokenResponse) {
 	// generate new access token
 	accessToken, err := oauth2.GenerateToken(secret, 32)
 	if err != nil {

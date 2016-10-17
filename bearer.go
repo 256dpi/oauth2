@@ -7,8 +7,8 @@ import (
 
 const Bearer = "bearer"
 
-func NewBearerTokenResponse(accessToken string, expiresIn int) *TokenResponse {
-	return NewTokenResponse(Bearer, accessToken, expiresIn)
+func NewBearerTokenResponse(token string, expiresIn int) *TokenResponse {
+	return NewTokenResponse(Bearer, token, expiresIn)
 }
 
 func ParseBearerToken(r *http.Request) (string, error) {
