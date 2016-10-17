@@ -239,10 +239,8 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenReques
 	}
 
 	// validate redirect uri
-	if req.RedirectURI != "" {
-		if storedAuthorizationCode.redirectURI != req.RedirectURI {
-			oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Changed redirect uri"))
-		}
+	if storedAuthorizationCode.redirectURI != req.RedirectURI {
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Changed redirect uri"))
 	}
 
 	// issue new access and refresh token

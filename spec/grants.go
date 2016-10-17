@@ -300,9 +300,10 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Username: c.ClientID,
 		Password: c.ClientSecret,
 		Form: map[string]string{
-			"grant_type": "authorization_code",
-			"scope":      c.ValidScope,
-			"code":       authorizationCode,
+			"grant_type":   "authorization_code",
+			"scope":        c.ValidScope,
+			"code":         authorizationCode,
+			"redirect_uri": c.RedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code)
