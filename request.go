@@ -55,6 +55,9 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 
 	// get redirect uri
 	redirectURIString, err := url.QueryUnescape(req.Form.Get("redirect_uri"))
+	if err != nil {
+		return nil, InvalidRequest("Invalid redirect URI")
+	}
 
 	// validate redirect uri if present
 	if len(redirectURIString) > 0 {
