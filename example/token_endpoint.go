@@ -23,14 +23,14 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// check if client is confidential
 	if !req.Confidential() {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Only confidential clients are allowed"))
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Non confidential client"))
 		return
 	}
 
 	// authenticate client
 	client, found := clients[req.ClientID]
 	if !found || !sameHash(client.secret, req.ClientSecret) {
-		oauth2.WriteError(w, oauth2.InvalidClient(req.State, oauth2.NoDescription))
+		oauth2.WriteError(w, oauth2.InvalidClient(req.State, "Unknown client"))
 		return
 	}
 
@@ -99,26 +99,26 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	// get stored authorization code by signature
 	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, oauth2.NoDescription)) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Unkown authorization code")) // TODO: Correct error?
 		return
 	}
 
 	// validate ownership
 	if storedAuthorizationCode.clientID != req.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, oauth2.NoDescription)) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Invalid authorization code ownership")) // TODO: Correct error?
 		return
 	}
 
 	// validate scope and expiration
 	if !storedAuthorizationCode.scope.Includes(req.Scope) || storedAuthorizationCode.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, oauth2.NoDescription)) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Scope exceeds originaly granted scope")) // TODO: Correct error?
 		return
 	}
 
 	// validate redirect uri
 	if req.RedirectURI != "" {
 		if storedAuthorizationCode.redirectURI != req.RedirectURI {
-			oauth2.WriteError(w, oauth2.InvalidRequest(req.State, oauth2.NoDescription)) // TODO: Correct error?
+			oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Changed redirect uri")) // TODO: Correct error?
 		}
 	}
 
@@ -147,19 +147,19 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 	// get stored refresh token by signature
 	storedRefreshToken, found := refreshTokens[refreshToken.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, oauth2.NoDescription))
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Unknown refresh token"))
 		return
 	}
 
 	// validate ownership
 	if storedRefreshToken.clientID != req.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, oauth2.NoDescription))
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Invalid refresh token ownership"))
 		return
 	}
 
 	// validate scope and expiration
 	if !storedRefreshToken.scope.Includes(req.Scope) || storedRefreshToken.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, oauth2.NoDescription))
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Scope exceeds originaly granted scope"))
 		return
 	}
 
