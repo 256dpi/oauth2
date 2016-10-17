@@ -42,13 +42,14 @@ func ParseAccessTokenRequest(req *http.Request) (*AccessTokenRequest, error) {
 	// get scope
 	scope := ParseScope(req.PostForm.Get("scope"))
 
-	// TODO: Support client id and client secret in body form?
-
 	// get client id and secret
 	clientID, clientSecret, ok := req.BasicAuth()
 	if !ok {
 		return nil, InvalidRequest(state, "Missing or invalid HTTP authorization header")
 	}
+
+	// obtaining the client id and secret from the request body (form data)
+	// is not implemented by default due to security considerations
 
 	// get username and password
 	username := req.PostForm.Get("username")
