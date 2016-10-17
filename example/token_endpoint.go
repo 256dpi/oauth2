@@ -99,26 +99,26 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.AccessToken
 	// get stored authorization code by signature
 	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Unkown authorization code")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Unkown authorization code"))
 		return
 	}
 
 	// validate ownership
 	if storedAuthorizationCode.clientID != req.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Invalid authorization code ownership")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Invalid authorization code ownership"))
 		return
 	}
 
 	// validate scope and expiration
 	if !storedAuthorizationCode.scope.Includes(req.Scope) || storedAuthorizationCode.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Scope exceeds originaly granted scope")) // TODO: Correct error?
+		oauth2.WriteError(w, oauth2.InvalidScope(req.State, "Scope exceeds originaly granted scope"))
 		return
 	}
 
 	// validate redirect uri
 	if req.RedirectURI != "" {
 		if storedAuthorizationCode.redirectURI != req.RedirectURI {
-			oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Changed redirect uri")) // TODO: Correct error?
+			oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Changed redirect uri"))
 		}
 	}
 
@@ -159,7 +159,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.AccessTokenReque
 
 	// validate scope and expiration
 	if !storedRefreshToken.scope.Includes(req.Scope) || storedRefreshToken.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Scope exceeds originaly granted scope"))
+		oauth2.WriteError(w, oauth2.InvalidScope(req.State, "Scope exceeds originaly granted scope"))
 		return
 	}
 
