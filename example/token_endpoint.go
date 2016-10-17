@@ -17,7 +17,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// check if client is confidential
 	if !req.Confidential() {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Only cofidential clients are allowed"))
+		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Only confidential clients are allowed"))
 		return
 	}
 
