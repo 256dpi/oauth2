@@ -59,6 +59,14 @@ func TestErrorMap(t *testing.T) {
 	}, err.Map())
 }
 
+func TestAddStateToError(t *testing.T) {
+	err := InvalidRequest(NoState, "foo")
+	assert.Equal(t, "", err.State)
+
+	AddStateToError(err, "bar")
+	assert.Equal(t, "bar", err.State)
+}
+
 func TestWriteError(t *testing.T) {
 	err1 := InvalidRequest("foo", "bar")
 	rec := httptest.NewRecorder()
