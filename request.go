@@ -112,7 +112,7 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 	// parse query params and body params to form
 	err := req.ParseForm()
 	if err != nil {
-		return nil, InvalidRequest(NoState, "Malformed query parameters or body form")
+		return nil, InvalidRequest(NoState, "Malformed query parameters or form data")
 	}
 
 	// get state
@@ -155,4 +155,13 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 		RedirectURI:  redirectURIString,
 		State:        state,
 	}, nil
+}
+
+func (r *AuthorizationRequest) Validate() error {
+	// make sure the response type is known
+	if !r.ResponseType.Known() {
+		return InvalidRequest(r.State, "Unknown response type")
+	}
+
+	return nil
 }

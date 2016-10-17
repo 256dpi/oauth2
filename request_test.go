@@ -155,3 +155,23 @@ func TestParseAuthorizationRequestErrors(t *testing.T) {
 		assert.Error(t, err)
 	}
 }
+
+func TestAuthorizationRequestValidate(t *testing.T) {
+	matrix := []*http.Request{
+		newRequest(map[string]string{
+			"response_type": "foo", // <- invalid
+			"scope":         "foo",
+			"client_id":     "foo",
+			"redirect_uri":  "http://example.com",
+		}),
+	}
+
+	for _, i := range matrix {
+		req, err := ParseAuthorizationRequest(i)
+		assert.NotNil(t, req)
+		assert.NoError(t, err)
+
+		err = req.Validate()
+		assert.Error(t, err)
+	}
+}

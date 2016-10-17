@@ -15,6 +15,13 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate authorization request
+	err = req.Validate()
+	if err != nil {
+		oauth2.WriteError(w, err)
+		return
+	}
+
 	// get client
 	client, found := clients[req.ClientID]
 	if !found {
@@ -34,24 +41,22 @@ func authorizeEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// triage grant type
+	// triage based on response type
 	if req.ResponseType.Token() {
 		handleImplicitGrant(w, r, req)
 	} else if req.ResponseType.Code() {
 		handleAuthorizationCodeGrantAuthorization(w, r, req)
-	} else {
-		oauth2.WriteError(w, oauth2.UnsupportedResponseType(req.State, oauth2.NoDescription))
 	}
 }
 
 func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.AuthorizationRequest) {
-	// check scope
+	// validate scope
 	if !allowedScope.Includes(req.Scope) {
 		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.InvalidScope(req.State, oauth2.NoDescription))
 		return
 	}
 
-	// check user credentials
+	// validate user credentials
 	owner, found := users[r.PostForm.Get("username")]
 	if !found || !sameHash(owner.secret, r.PostForm.Get("password")) {
 		oauth2.RedirectError(w, req.RedirectURI, true, oauth2.AccessDenied(req.State, oauth2.NoDescription))
@@ -87,13 +92,13 @@ func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.Aut
 }
 
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *http.Request, req *oauth2.AuthorizationRequest) {
-	// check scope
+	// validate scope
 	if !allowedScope.Includes(req.Scope) {
 		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.InvalidScope(req.State, oauth2.NoDescription))
 		return
 	}
 
-	// check user credentials
+	// validate user credentials
 	owner, found := users[r.PostForm.Get("username")]
 	if !found || !sameHash(owner.secret, r.PostForm.Get("password")) {
 		oauth2.RedirectError(w, req.RedirectURI, false, oauth2.AccessDenied(req.State, oauth2.NoDescription))
