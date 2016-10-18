@@ -39,8 +39,8 @@ type Config struct {
 
 	// The scopes that are considered invalid, valid and exceeding by the
 	// authentication server.
-	InvalidScope string
-	ValidScope string
+	InvalidScope   string
+	ValidScope     string
 	ExceedingScope string
 
 	// The expected "expire_in" value of returned tokens.
@@ -49,17 +49,17 @@ type Config struct {
 	// The redirect URI that is considered invalid and valid by the
 	// authentication server.
 	InvalidRedirectURI string
-	ValidRedirectURI string
+	ValidRedirectURI   string
 
-	// The refresh token that should be used during the refresh token flow tests.
+	// The refresh token that should be used during the refresh token grant tests.
 	RefreshToken string
 
-	// The additional params used when authorizing the resource owner during the
-	// implicit grant flow test.
+	// The params needed to authorize the resource owner during the implicit
+	// grant test.
 	TokenAuthorizationParams map[string]string
 
-	// The additional params used when authorizing the resource owner during the
-	// authorization code flow test.
+	// The params needed to authorize the resource owner during the authorization
+	// code grant test.
 	CodeAuthorizationParams map[string]string
 }
 

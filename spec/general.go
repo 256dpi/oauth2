@@ -31,7 +31,7 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	var accessToken string
 
-	// test refresh token flow
+	// test refresh token grant
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,

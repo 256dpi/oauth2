@@ -11,7 +11,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// PasswordGrantTest tests the password grant flow.
+// PasswordGrantTest tests the password grant.
 func PasswordGrantTest(t *testing.T, c *Config) {
 	// invalid username
 	Do(c.Handler, &Request{
@@ -120,7 +120,7 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	}
 }
 
-// ClientCredentialsGrantTest tests the client credentials grant flow.
+// ClientCredentialsGrantTest tests the client credentials grant.
 func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	// invalid client secret
 	Do(c.Handler, &Request{
@@ -204,7 +204,7 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	}
 }
 
-// ImplicitGrantTest tests the implicit grant flow.
+// ImplicitGrantTest tests the implicit grant.
 func ImplicitGrantTest(t *testing.T, c *Config) {
 	// invalid scope
 	Do(c.Handler, &Request{
@@ -289,7 +289,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	AccessTokenTest(t, c, accessToken)
 }
 
-// AuthorizationCodeGrantTest tests the authorization code grant flow.
+// AuthorizationCodeGrantTest tests the authorization code grant.
 func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	// invalid scope
 	Do(c.Handler, &Request{
@@ -402,7 +402,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	}
 }
 
-// RefreshTokenGrantTest tests the refresh token grant flow.
+// RefreshTokenGrantTest tests the refresh token grant.
 func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	// invalid refresh token
 	Do(c.Handler, &Request{
