@@ -31,16 +31,16 @@ func TestSpec(t *testing.T) {
 
 	config := spec.Default(newHandler())
 
-	config.PasswordGrant = true
-	config.ClientCredentialsGrant = true
-	config.ImplicitGrant = true
-	config.AuthorizationCodeGrant = true
-	config.RefreshTokenGrant = true
 
 	config.ClientID = "client1"
 	config.ClientSecret = "foo"
 	config.OwnerUsername = "user1"
 	config.OwnerPassword = "foo"
+	config.PasswordGrantSupport = true
+	config.ClientCredentialsGrantSupport = true
+	config.ImplicitGrantSupport = true
+	config.AuthorizationCodeGrantSupport = true
+	config.RefreshTokenGrantSupport = true
 	config.InvalidScope = "baz"
 	config.ValidScope = "foo bar"
 	config.ExceedingScope = "foo bar baz"

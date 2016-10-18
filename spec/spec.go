@@ -22,12 +22,12 @@ type Config struct {
 	// The protected resource (e.g. /api/protected).
 	ProtectedResource string
 
-	// The to be tested grants.
-	PasswordGrant          bool
-	ClientCredentialsGrant bool
-	ImplicitGrant          bool
-	AuthorizationCodeGrant bool
-	RefreshTokenGrant      bool
+	// The supported grants.
+	PasswordGrantSupport          bool
+	ClientCredentialsGrantSupport bool
+	ImplicitGrantSupport          bool
+	AuthorizationCodeGrantSupport bool
+	RefreshTokenGrantSupport      bool
 
 	// The details of the client to be used.
 	ClientID     string
@@ -90,31 +90,31 @@ func Run(t *testing.T, c *Config) {
 		AuthorizationEndpointTest(t, c)
 	})
 
-	if c.PasswordGrant {
+	if c.PasswordGrantSupport {
 		t.Run("PasswordGrantTest", func(t *testing.T) {
 			PasswordGrantTest(t, c)
 		})
 	}
 
-	if c.ClientCredentialsGrant {
+	if c.ClientCredentialsGrantSupport {
 		t.Run("ClientCredentialsGrantTest", func(t *testing.T) {
 			ClientCredentialsGrantTest(t, c)
 		})
 	}
 
-	if c.ImplicitGrant {
+	if c.ImplicitGrantSupport {
 		t.Run("ImplicitGrantTest", func(t *testing.T) {
 			ImplicitGrantTest(t, c)
 		})
 	}
 
-	if c.AuthorizationCodeGrant {
+	if c.AuthorizationCodeGrantSupport {
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
 			AuthorizationCodeGrantTest(t, c)
 		})
 	}
 
-	if c.RefreshTokenGrant {
+	if c.RefreshTokenGrantSupport {
 		t.Run("RefreshTokenGrantTest", func(t *testing.T) {
 			RefreshTokenGrantTest(t, c)
 		})
