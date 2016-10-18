@@ -16,9 +16,9 @@ _Note: This package is still under development._
 
 The library considers and implements the following specifications:
  
-- [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
-- [The OAuth 2.0 Authorization Framework: Bearer Token Usage](https://tools.ietf.org/html/rfc6750)
-- [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
+- [OAuth 2.0 Framework](https://tools.ietf.org/html/rfc6749) - RFC 6749
+- [Bearer Token Usage](https://tools.ietf.org/html/rfc6750) - RFC 6750
+- [Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819) - RFC 6819
 
 ## Example
 
