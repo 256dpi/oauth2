@@ -5,6 +5,8 @@ import (
 	"net/url"
 )
 
+// A TokenRequest is typically returned by ParseTokenRequest and holds all
+// information necessary to handle a token request.
 type TokenRequest struct {
 	GrantType    string
 	Scope        Scope
@@ -18,6 +20,9 @@ type TokenRequest struct {
 	Code         string
 }
 
+// ParseTokenRequest parses an incoming request and returns a TokenRequest.
+// The functions validates basic constraints given by the OAuth2 spec.
+//
 // Note: Obtaining the client id and secret from the request body (form data)
 // is not implemented by default due to security considerations.
 func ParseTokenRequest(req *http.Request) (*TokenRequest, error) {
@@ -88,10 +93,14 @@ func ParseTokenRequest(req *http.Request) (*TokenRequest, error) {
 	}, nil
 }
 
+// Confidential returns true when the client supplied its and and secret and
+// therefore acts as being a confidential client.
 func (r *TokenRequest) Confidential() bool {
 	return len(r.ClientID) > 0 && len(r.ClientSecret) > 0
 }
 
+// A AuthorizationRequest is typically returned by ParseAuthorizationRequest and
+// holds all information necessary to handle an authorization request.
 type AuthorizationRequest struct {
 	ResponseType string
 	Scope        Scope
@@ -100,6 +109,9 @@ type AuthorizationRequest struct {
 	State        string
 }
 
+// ParseAuthorizationRequest parses an incoming request and returns an
+// AuthorizationRequest. The functions validates basic constraints given by the
+// OAuth2 spec.
 func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error) {
 	// check method
 	if req.Method != "GET" && req.Method != "POST" {

@@ -38,9 +38,9 @@ func (e *Error) Error() string {
 	return e.String()
 }
 
-// Map returns a map of all fields that can be presented to the user. This
+// Map returns a map of all fields that can be presented to the client. This
 // method can be used to construct query parameters or a fragment when
-// redirecting an error.
+// redirecting the error.
 func (e *Error) Map() map[string]string {
 	m := make(map[string]string)
 

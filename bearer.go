@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// The bearer token type.
+// BearerTokenType is the bearer token type as defined by the OAuth2 spec.
 const BearerTokenType = "bearer"
 
 // NewBearerTokenResponse creates and returns a new token response that carries
