@@ -9,6 +9,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// TokenEndpointTest executes general token endpoint tests.
 func TokenEndpointTest(t *testing.T, c *Config) {
 	// invalid request
 	Do(c.Handler, &Request{
@@ -36,6 +37,7 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 	})
 }
 
+// AuthorizationEndpointTest executes general authorization endpoint tests.
 func AuthorizationEndpointTest(t *testing.T, c *Config) {
 	// invalid request
 	Do(c.Handler, &Request{
@@ -54,7 +56,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": "code",
 			"client_id":     "invalid",
-			"redirect_uri":  c.RedirectURI,
+			"redirect_uri":  c.ValidRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code)
@@ -85,7 +87,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": "foo",
 			"client_id":     c.ClientID,
-			"redirect_uri":  c.RedirectURI,
+			"redirect_uri":  c.ValidRedirectURI,
 		},
 		Username: c.ClientID,
 		Password: c.ClientSecret,

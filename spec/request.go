@@ -7,6 +7,7 @@ import (
 	"net/url"
 )
 
+// A Request is a convenience wrapper to formulate test requests.
 type Request struct {
 	Method   string
 	Path     string
@@ -17,6 +18,7 @@ type Request struct {
 	Callback func(*httptest.ResponseRecorder, *http.Request)
 }
 
+// Do will perform the specified request on the specified handler.
 func Do(handler http.Handler, req *Request) {
 	// create request
 	r, err := http.NewRequest(req.Method, req.Path, nil)

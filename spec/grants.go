@@ -10,6 +10,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// PasswordGrantTest tests the password grant flow.
 func PasswordGrantTest(t *testing.T, c *Config) {
 	// invalid username
 	Do(c.Handler, &Request{
@@ -100,6 +101,7 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	}
 }
 
+// ClientCredentialsGrantTest tests the client credentials grant flow.
 func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	// invalid client secret
 	Do(c.Handler, &Request{
@@ -167,15 +169,16 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	}
 }
 
+// ImplicitGrantTest tests the implicit grant flow.
 func ImplicitGrantTest(t *testing.T, c *Config) {
 	// invalid scope
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidTokenAuthorization, map[string]string{
+		Form: extend(c.TokenAuthorizationParams, map[string]string{
 			"response_type": "token",
 			"client_id":     c.ClientID,
-			"redirect_uri":  c.RedirectURI,
+			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         "invalid",
 			"state":         "foobar",
 		}),
@@ -193,7 +196,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": "token",
 			"client_id":     c.ClientID,
-			"redirect_uri":  c.RedirectURI,
+			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "foobar",
 		},
@@ -210,10 +213,10 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidTokenAuthorization, map[string]string{
+		Form: extend(c.TokenAuthorizationParams, map[string]string{
 			"response_type": "token",
 			"client_id":     c.ClientID,
-			"redirect_uri":  c.RedirectURI,
+			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "foobar",
 		}),
@@ -233,15 +236,16 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	AccessTokenTest(t, c, accessToken)
 }
 
+// AuthorizationCodeGrantTest tests the authorization code grant flow.
 func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	// invalid scope
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidCodeAuthorization, map[string]string{
+		Form: extend(c.CodeAuthorizationParams, map[string]string{
 			"response_type": "code",
 			"client_id":     c.ClientID,
-			"redirect_uri":  c.RedirectURI,
+			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         "invalid",
 			"state":         "foobar",
 		}),
@@ -259,7 +263,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": "code",
 			"client_id":     c.ClientID,
-			"redirect_uri":  c.RedirectURI,
+			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "foobar",
 		},
@@ -276,10 +280,10 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidCodeAuthorization, map[string]string{
+		Form: extend(c.CodeAuthorizationParams, map[string]string{
 			"response_type": "code",
 			"client_id":     c.ClientID,
-			"redirect_uri":  c.RedirectURI,
+			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "foobar",
 		}),
@@ -304,7 +308,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"grant_type":   "authorization_code",
 			"scope":        c.ValidScope,
 			"code":         authorizationCode,
-			"redirect_uri": c.RedirectURI,
+			"redirect_uri": c.ValidRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code)
@@ -327,6 +331,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	}
 }
 
+// RefreshTokenGrantTest tests the refresh token grant flow.
 func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	// invalid refresh token
 	Do(c.Handler, &Request{

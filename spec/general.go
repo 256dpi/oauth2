@@ -9,6 +9,8 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// AccessTokenTest validates the specified access token by requesting the
+// protected resource.
 func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 	Do(c.Handler, &Request{
 		Method: "GET",
@@ -23,6 +25,8 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 	})
 }
 
+// RefreshTokenTest validates the specified refreshToken by requesting a new
+// access token and validating it as well.
 func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	var accessToken string
 
@@ -66,6 +70,7 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	})
 }
 
+// UnauthorizedAccessTest validates authorization of the protected resource.
 func UnauthorizedAccessTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "GET",
@@ -73,21 +78,6 @@ func UnauthorizedAccessTest(t *testing.T, c *Config) {
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code)
 			assert.Equal(t, "", r.Body.String())
-		},
-	})
-}
-
-func ConfidentialClientTest(t *testing.T, c *Config) {
-	Do(c.Handler, &Request{
-		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Form: map[string]string{
-			"grant_type": "password",
-		},
-		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str)
 		},
 	})
 }

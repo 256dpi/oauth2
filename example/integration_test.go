@@ -35,7 +35,6 @@ func TestSpec(t *testing.T) {
 	config.ImplicitGrant = true
 	config.AuthorizationCodeGrant = true
 	config.RefreshTokenGrant = true
-	config.RequiresConfidentiality = true
 
 	config.ClientID = "client1"
 	config.ClientSecret = "foo"
@@ -43,15 +42,15 @@ func TestSpec(t *testing.T) {
 	config.OwnerPassword = "foo"
 	config.ValidScope = "foo bar"
 	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
-	config.RedirectURI = "http://example.com/callback"
+	config.ValidRedirectURI = "http://example.com/callback"
 	config.RefreshToken = refreshToken.String()
 
-	config.ValidTokenAuthorization = map[string]string{
+	config.TokenAuthorizationParams = map[string]string{
 		"username": config.OwnerUsername,
 		"password": config.OwnerPassword,
 	}
 
-	config.ValidCodeAuthorization = map[string]string{
+	config.CodeAuthorizationParams = map[string]string{
 		"username": config.OwnerUsername,
 		"password": config.OwnerPassword,
 	}

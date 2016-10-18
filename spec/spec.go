@@ -5,42 +5,69 @@ import (
 	"testing"
 )
 
+// A Config declares the configuration of a to be tested OAuth2 authentication
+// server.
 type Config struct {
+	// The server handler.
 	Handler http.Handler
 
-	TokenEndpoint     string
+	// The token endpoint (e.g. /oauth2/token).
+	TokenEndpoint string
+
+	// The authorization endpoint (e.g. /oauth2/authorize).
 	AuthorizeEndpoint string
+
+	// The protected resource (e.g. /api/protected).
 	ProtectedResource string
 
-	PasswordGrant           bool
-	ClientCredentialsGrant  bool
-	ImplicitGrant           bool
-	AuthorizationCodeGrant  bool
-	RefreshTokenGrant       bool
-	RequiresConfidentiality bool
+	// The to be tested grant flows.
+	PasswordGrant          bool
+	ClientCredentialsGrant bool
+	ImplicitGrant          bool
+	AuthorizationCodeGrant bool
+	RefreshTokenGrant      bool
 
-	ClientID         string
-	ClientSecret     string
-	OwnerUsername    string
-	OwnerPassword    string
-	ValidScope       string
+	// The details of the client to be used.
+	ClientID     string
+	ClientSecret string
+
+	// The details of the resource owner to be used.
+	OwnerUsername string
+	OwnerPassword string
+
+	// The scope that is considered valid by the authentication server.
+	ValidScope string
+
+	// The expected "expire_in" value of returned tokens.
 	ExpectedExpireIn int
-	RedirectURI      string
-	RefreshToken     string
 
-	ValidTokenAuthorization map[string]string
-	ValidCodeAuthorization  map[string]string
+	// The redirect URI that is considered valid by the authentication server.
+	ValidRedirectURI string
+
+	// The refresh token that should be used during the refresh token flow tests.
+	RefreshToken string
+
+	// The additional params used when authorizing the resource owner during the
+	// implicit grant flow test.
+	TokenAuthorizationParams map[string]string
+
+	// The additional params used when authorizing the resource owner during the
+	// authorization code flow test.
+	CodeAuthorizationParams map[string]string
 }
 
+// Default returns a common used configuration that can taken as a basis.
 func Default(handler http.Handler) *Config {
 	return &Config{
 		Handler:           handler,
 		TokenEndpoint:     "/oauth2/token",
 		AuthorizeEndpoint: "/oauth2/authorize",
 		ProtectedResource: "/api/protected",
+		ExpectedExpireIn:  3600,
 	}
 }
 
+// Run will run all tests using the specified config.
 func Run(t *testing.T, c *Config) {
 	t.Run("ProtectedResourceTest", func(t *testing.T) {
 		UnauthorizedAccessTest(t, c)
@@ -75,12 +102,6 @@ func Run(t *testing.T, c *Config) {
 	if c.AuthorizationCodeGrant {
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
 			AuthorizationCodeGrantTest(t, c)
-		})
-	}
-
-	if c.RequiresConfidentiality {
-		t.Run("ConfidentialClientTest", func(t *testing.T) {
-			ConfidentialClientTest(t, c)
 		})
 	}
 
