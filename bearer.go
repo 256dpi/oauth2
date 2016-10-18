@@ -6,10 +6,8 @@ import (
 	"strings"
 )
 
-const Bearer = "bearer"
-
 func NewBearerTokenResponse(token string, expiresIn int) *TokenResponse {
-	return NewTokenResponse(Bearer, token, expiresIn)
+	return NewTokenResponse("bearer", token, expiresIn)
 }
 
 // Note: The spec also allows obtaining the bearer token from query parameters
@@ -22,7 +20,7 @@ func ParseBearerToken(r *http.Request) (string, error) {
 
 	// split header
 	s := strings.SplitN(h, " ", 2)
-	if len(s) != 2 || !strings.EqualFold(s[0], Bearer) {
+	if len(s) != 2 || !strings.EqualFold(s[0], "bearer") {
 		return "", errors.New("Malformed or missing authorization header")
 	}
 
