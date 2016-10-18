@@ -6,14 +6,19 @@ import (
 	"strings"
 )
 
+// NewBearerTokenResponse creates and returns a new token response that carries
+// a bearer token.
 func NewBearerTokenResponse(token string, expiresIn int) *TokenResponse {
 	return NewTokenResponse("bearer", token, expiresIn)
 }
 
+// ParseBearerToken parses and returns the bearer token from a request. It will
+// return standard errors if the extraction failed.
+//
 // Note: The spec also allows obtaining the bearer token from query parameters
-// and the request body (form data). This implementations only supports obtaining
-// the token from the "Authorization" header as this is the most common
-// implementation and considered most secure.
+// and the request body (form data). This implementation only supports obtaining
+// the token from the "Authorization" header as this is the most common use case
+// and considered most secure.
 func ParseBearerToken(r *http.Request) (string, error) {
 	// read header
 	h := r.Header.Get("Authorization")
@@ -24,7 +29,7 @@ func ParseBearerToken(r *http.Request) (string, error) {
 		return "", errors.New("Malformed or missing authorization header")
 	}
 
+	// TODO: Implement "WWW-Authenticate" header in response: https://tools.ietf.org/html/rfc6750#section-3.
+
 	return s[1], nil
 }
-
-// TODO: Implement "WWW-Authenticate" header in response: https://tools.ietf.org/html/rfc6750#section-3.
