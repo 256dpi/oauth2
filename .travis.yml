@@ -10,7 +10,7 @@ install:
   - go get -t ./...
 script:
   - go test -coverprofile=jsonapi.coverprofile
-  - go test ./example # ignore coverage for example
+  - go test ./examples/server # ignore coverage for example
   - $HOME/gopath/bin/gover
   - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
 matrix:
