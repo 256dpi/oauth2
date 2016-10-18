@@ -7,8 +7,7 @@ import (
 	"testing"
 )
 
-// A Config declares the configuration of a to be tested OAuth2 authentication
-// server.
+// A Config declares the needed info for testing an OAuth2 authentication server.
 type Config struct {
 	// The server handler.
 	Handler http.Handler
@@ -54,7 +53,7 @@ type Config struct {
 	// The invalid and valid refresh token that should be used during the
 	// refresh token grant tests.
 	InvalidRefreshToken string
-	ValidRefreshToken string
+	ValidRefreshToken   string
 
 	// The params needed to authorize the resource owner during the implicit
 	// grant test.
