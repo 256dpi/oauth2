@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gonfire/oauth2"
+	"github.com/gonfire/oauth2/hmacsha"
 	"github.com/gonfire/oauth2/spec"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -112,8 +112,8 @@ func mustHash(password string) []byte {
 	return hash
 }
 
-func mustGenerateToken() *oauth2.Token {
-	token, err := oauth2.GenerateToken(secret, 16)
+func mustGenerateToken() *hmacsha.Token {
+	token, err := hmacsha.Generate(secret, 16)
 	if err != nil {
 		panic(err)
 	}

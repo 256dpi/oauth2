@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-var testSecret = []byte("abcd1234abcd1234")
-
 func newRequest(body map[string]string) *http.Request {
 	data := make(url.Values)
 

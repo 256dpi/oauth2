@@ -1,4 +1,4 @@
-package oauth2
+package hmacsha
 
 import (
 	"strings"
@@ -7,33 +7,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var testSecret = []byte("abcd1234abcd1234")
+
 func TestToken(t *testing.T) {
-	token1, err := GenerateToken(testSecret, 16)
+	token1, err := Generate(testSecret, 16)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token1.Key)
 	assert.NotEmpty(t, token1.Signature)
 	assert.NotEmpty(t, token1.String())
 
-	token2, err := ParseToken(testSecret, token1.String())
+	token2, err := Parse(testSecret, token1.String())
 	assert.NoError(t, err)
 	assert.Equal(t, token1.Key, token2.Key)
 	assert.Equal(t, token1.Signature, token2.Signature)
 
-	token2, err = ParseToken(testSecret, token1.String()+"foo")
+	token2, err = Parse(testSecret, token1.String()+"foo")
 	assert.Error(t, err)
 	assert.Nil(t, token2)
 }
 
 func TestParseToken(t *testing.T) {
-	token, err := ParseToken(testSecret, "")
+	token, err := Parse(testSecret, "")
 	assert.Error(t, err)
 	assert.Nil(t, token)
 
-	token, err = ParseToken(testSecret, "%.foo")
+	token, err = Parse(testSecret, "%.foo")
 	assert.Error(t, err)
 	assert.Nil(t, token)
 
-	token, err = ParseToken(testSecret, "foo.%")
+	token, err = Parse(testSecret, "foo.%")
 	assert.Error(t, err)
 	assert.Nil(t, token)
 }
@@ -42,7 +44,7 @@ func TestGenerateToken(t *testing.T) {
 	currentSource := randSource
 	randSource = strings.NewReader("")
 
-	token, err := GenerateToken(testSecret, 16)
+	token, err := Generate(testSecret, 16)
 	assert.Error(t, err)
 	assert.Nil(t, token)
 

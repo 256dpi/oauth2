@@ -6,6 +6,7 @@ import (
 
 	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/bearer"
+	"github.com/gonfire/oauth2/hmacsha"
 )
 
 func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +66,7 @@ func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.Aut
 	}
 
 	// generate new access token
-	accessToken, err := oauth2.GenerateToken(secret, 32)
+	accessToken, err := hmacsha.Generate(secret, 32)
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +108,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *http.Re
 	}
 
 	// generate new authorization code
-	authorizationCode, err := oauth2.GenerateToken(secret, 32)
+	authorizationCode, err := hmacsha.Generate(secret, 32)
 	if err != nil {
 		panic(err)
 	}
@@ -215,7 +216,7 @@ func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.TokenReques
 
 func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	// parse authorization code
-	authorizationCode, err := oauth2.ParseToken(secret, req.Code)
+	authorizationCode, err := hmacsha.Parse(secret, req.Code)
 	if err != nil {
 		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, err.Error()))
 		return
@@ -267,7 +268,7 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenReques
 
 func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	// parse refresh token
-	refreshToken, err := oauth2.ParseToken(secret, req.RefreshToken)
+	refreshToken, err := hmacsha.Parse(secret, req.RefreshToken)
 	if err != nil {
 		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, err.Error()))
 		return
@@ -311,15 +312,15 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	oauth2.WriteTokenResponse(w, res)
 }
 
-func createTokensAndResponse(req *oauth2.TokenRequest) (*oauth2.Token, *oauth2.Token, *oauth2.TokenResponse) {
+func createTokensAndResponse(req *oauth2.TokenRequest) (*hmacsha.Token, *hmacsha.Token, *oauth2.TokenResponse) {
 	// generate new access token
-	accessToken, err := oauth2.GenerateToken(secret, 32)
+	accessToken, err := hmacsha.Generate(secret, 32)
 	if err != nil {
 		panic(err)
 	}
 
 	// generate new refresh token
-	refreshToken, err := oauth2.GenerateToken(secret, 32)
+	refreshToken, err := hmacsha.Generate(secret, 32)
 	if err != nil {
 		panic(err)
 	}
@@ -336,7 +337,7 @@ func createTokensAndResponse(req *oauth2.TokenRequest) (*oauth2.Token, *oauth2.T
 	return accessToken, refreshToken, res
 }
 
-func saveTokens(accessToken, refreshToken *oauth2.Token, scope oauth2.Scope, clientID, username string) {
+func saveTokens(accessToken, refreshToken *hmacsha.Token, scope oauth2.Scope, clientID, username string) {
 	// save access token
 	accessTokens[accessToken.SignatureString()] = token{
 		clientID:  clientID,

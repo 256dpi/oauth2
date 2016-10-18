@@ -1,4 +1,4 @@
-package oauth2
+package hmacsha
 
 import (
 	"crypto/hmac"
@@ -22,12 +22,12 @@ type Token struct {
 	Signature []byte
 }
 
-// TokenFromKey will return a new token that is constructed using the specified
+// FromKey will return a new token that is constructed using the specified
 // secret and key.
 //
 // Note: The secret and the token key should both at least have a length of 16
 // characters to be considered unguessable.
-func TokenFromKey(secret []byte, key []byte) *Token {
+func FromKey(secret []byte, key []byte) *Token {
 	// create hash
 	hash := hmac.New(sha256.New, secret)
 
@@ -46,12 +46,12 @@ func TokenFromKey(secret []byte, key []byte) *Token {
 	return token
 }
 
-// GenerateToken will return a new token that is constructed using the specified
+// Generate will return a new token that is constructed using the specified
 // secret and random key of the specified length.
 //
 // Note: The secret and the to be generated token key should both at least have
 // a length of 16 characters to be considered unguessable.
-func GenerateToken(secret []byte, length int) (*Token, error) {
+func Generate(secret []byte, length int) (*Token, error) {
 	// prepare key
 	key := make([]byte, length)
 
@@ -61,11 +61,11 @@ func GenerateToken(secret []byte, length int) (*Token, error) {
 		return nil, err
 	}
 
-	return TokenFromKey(secret, key), nil
+	return FromKey(secret, key), nil
 }
 
-// ParseToken will parse a token that is in its string representation.
-func ParseToken(secret []byte, str string) (*Token, error) {
+// Parse will parse a token that is in its string representation.
+func Parse(secret []byte, str string) (*Token, error) {
 	// split dot separated key and signature
 	s := strings.Split(str, ".")
 	if len(s) != 2 {
@@ -100,7 +100,7 @@ func ParseToken(secret []byte, str string) (*Token, error) {
 
 // Valid returns true when the tokens key matches its signature.
 func (t *Token) Valid(secret []byte) bool {
-	return TokenFromKey(secret, t.Key).Equal(t.Signature)
+	return FromKey(secret, t.Key).Equal(t.Signature)
 }
 
 // Equal returns true then the specified signature is the same as the tokens

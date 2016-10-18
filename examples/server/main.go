@@ -6,6 +6,7 @@ import (
 
 	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/bearer"
+	"github.com/gonfire/oauth2/hmacsha"
 )
 
 var secret = []byte("abcd1234abcd1234")
@@ -44,7 +45,7 @@ func protectedResource(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse token
-	token, err := oauth2.ParseToken(secret, tk)
+	token, err := hmacsha.Parse(secret, tk)
 	if err != nil {
 		bearer.WriteError(w, bearer.InvalidToken("Malformed token"))
 		return
