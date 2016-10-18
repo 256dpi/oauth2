@@ -113,7 +113,7 @@ func Run(t *testing.T, c *Config) {
 	assert.NotEmpty(t, c.ValidScope)
 	assert.NotEmpty(t, c.ExceedingScope)
 
-	t.Run("ProtectedResourceTest", func(t *testing.T) {
+	t.Run("UnauthorizedAccessTest", func(t *testing.T) {
 		UnauthorizedAccessTest(t, c)
 	})
 

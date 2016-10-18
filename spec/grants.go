@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/gonfire/oauth2"
+	"github.com/gonfire/oauth2/bearer"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 )
@@ -101,7 +102,7 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code)
-			assert.Equal(t, oauth2.BearerTokenType, gjson.Get(r.Body.String(), "token_type").String())
+			assert.Equal(t, bearer.TokenType, gjson.Get(r.Body.String(), "token_type").String())
 			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String())
 			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
 
@@ -275,7 +276,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, oauth2.BearerTokenType, fragment(r, "token_type"))
+			assert.Equal(t, bearer.TokenType, fragment(r, "token_type"))
 			assert.Equal(t, c.ValidScope, fragment(r, "scope"))
 			assert.Equal(t, strconv.Itoa(c.ExpectedExpireIn), fragment(r, "expires_in"))
 			assert.Equal(t, "xyz", fragment(r, "state"))
@@ -491,7 +492,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code)
-			assert.Equal(t, oauth2.BearerTokenType, gjson.Get(r.Body.String(), "token_type").String())
+			assert.Equal(t, bearer.TokenType, gjson.Get(r.Body.String(), "token_type").String())
 			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String())
 			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
 

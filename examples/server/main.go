@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gonfire/oauth2"
+	"github.com/gonfire/oauth2/bearer"
 )
 
 var secret = []byte("abcd1234abcd1234")
@@ -36,23 +37,35 @@ func main() {
 
 func protectedResource(w http.ResponseWriter, r *http.Request) {
 	// parse bearer token
-	bearerToken, err := oauth2.ParseBearerToken(r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+	tk, res := bearer.ParseToken(r)
+	if res != nil {
+		bearer.WriteError(w, res)
 		return
 	}
 
 	// parse token
-	token, err := oauth2.ParseToken(secret, bearerToken)
+	token, err := oauth2.ParseToken(secret, tk)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		bearer.WriteError(w, bearer.InvalidToken("Malformed token"))
 		return
 	}
 
-	// validate access token
+	// get token
 	accessToken, found := accessTokens[token.SignatureString()]
-	if !found || accessToken.expiresAt.Before(time.Now()) {
-		w.WriteHeader(http.StatusUnauthorized)
+	if !found {
+		bearer.WriteError(w, bearer.InvalidToken("Unkown token"))
+		return
+	}
+
+	// validate expiration
+	if accessToken.expiresAt.Before(time.Now()) {
+		bearer.WriteError(w, bearer.InvalidToken("Expired token"))
+		return
+	}
+
+	// validate scope
+	if !allowedScope.Includes(accessToken.scope) {
+		bearer.WriteError(w, bearer.InsufficientScope(allowedScope.String()))
 		return
 	}
 

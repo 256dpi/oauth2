@@ -77,7 +77,7 @@ func UnauthorizedAccessTest(t *testing.T, c *Config) {
 		Method: "GET",
 		Path:   c.ProtectedResource,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code)
+			assert.Equal(t, http.StatusBadRequest, r.Code)
 			assert.Equal(t, "", r.Body.String())
 		},
 	})

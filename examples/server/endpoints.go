@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gonfire/oauth2"
+	"github.com/gonfire/oauth2/bearer"
 )
 
 func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +71,7 @@ func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.Aut
 	}
 
 	// prepare response
-	res := oauth2.NewBearerTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
+	res := bearer.NewTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
 
 	// set granted scope
 	res.Scope = req.Scope
@@ -324,7 +325,7 @@ func createTokensAndResponse(req *oauth2.TokenRequest) (*oauth2.Token, *oauth2.T
 	}
 
 	// prepare response
-	res := oauth2.NewBearerTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
+	res := bearer.NewTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
 
 	// set granted scope
 	res.Scope = req.Scope
