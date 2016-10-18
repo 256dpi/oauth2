@@ -14,7 +14,6 @@ type owner struct {
 }
 
 var clients = map[string]owner{}
-
 var users = map[string]owner{}
 
 type token struct {
@@ -27,9 +26,7 @@ type token struct {
 }
 
 var accessTokens = make(map[string]token)
-
 var refreshTokens = make(map[string]token)
-
 var authorizationCodes = make(map[string]token)
 
 func addOwner(list map[string]owner, o owner) owner {
