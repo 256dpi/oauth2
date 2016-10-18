@@ -6,6 +6,8 @@ import (
 	"net/url"
 )
 
+// Write will encode the specified object as json and write a response to the
+// response writer as specified by the OAuth2 spec.
 func Write(w http.ResponseWriter, obj interface{}, status int) error {
 	// set required headers
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -16,9 +18,14 @@ func Write(w http.ResponseWriter, obj interface{}, status int) error {
 	w.WriteHeader(status)
 
 	// write error document
-	return json.NewEncoder(w).Encode(obj)
+	err := json.NewEncoder(w).Encode(obj)
+
+	return err
 }
 
+// Redirect will either add the specified parameters to the query of the
+// specified uri or encode them and it as the fragment as specified by the
+// OAuth2 spec.
 func Redirect(w http.ResponseWriter, uri string, params map[string]string, useFragment bool) error {
 	// parse redirect uri
 	redirectURI, err := url.ParseRequestURI(uri)
@@ -59,5 +66,6 @@ func Redirect(w http.ResponseWriter, uri string, params map[string]string, useFr
 
 	// finish response
 	_, err = w.Write(nil)
+
 	return err
 }
