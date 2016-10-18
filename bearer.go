@@ -6,10 +6,13 @@ import (
 	"strings"
 )
 
+// The bearer token type.
+const BearerTokenType = "bearer"
+
 // NewBearerTokenResponse creates and returns a new token response that carries
 // a bearer token.
 func NewBearerTokenResponse(token string, expiresIn int) *TokenResponse {
-	return NewTokenResponse("bearer", token, expiresIn)
+	return NewTokenResponse(BearerTokenType, token, expiresIn)
 }
 
 // ParseBearerToken parses and returns the bearer token from a request. It will
@@ -25,7 +28,7 @@ func ParseBearerToken(r *http.Request) (string, error) {
 
 	// split header
 	s := strings.SplitN(h, " ", 2)
-	if len(s) != 2 || !strings.EqualFold(s[0], "bearer") {
+	if len(s) != 2 || !strings.EqualFold(s[0], BearerTokenType) {
 		return "", errors.New("Malformed or missing authorization header")
 	}
 
