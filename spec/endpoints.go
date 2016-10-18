@@ -73,7 +73,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.ClientID,
-			"redirect_uri":  "http://inval.id",
+			"redirect_uri":  c.InvalidRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)

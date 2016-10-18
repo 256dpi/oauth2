@@ -1,3 +1,5 @@
+// Package spec implements reusable integration tests to test any OAuth2
+// authentication server.
 package spec
 
 import (
@@ -20,7 +22,7 @@ type Config struct {
 	// The protected resource (e.g. /api/protected).
 	ProtectedResource string
 
-	// The to be tested grant flows.
+	// The to be tested grants.
 	PasswordGrant          bool
 	ClientCredentialsGrant bool
 	ImplicitGrant          bool
@@ -44,7 +46,9 @@ type Config struct {
 	// The expected "expire_in" value of returned tokens.
 	ExpectedExpireIn int
 
-	// The redirect URI that is considered valid by the authentication server.
+	// The redirect URI that is considered invalid and valid by the
+	// authentication server.
+	InvalidRedirectURI string
 	ValidRedirectURI string
 
 	// The refresh token that should be used during the refresh token flow tests.
