@@ -450,7 +450,7 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").String())
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String())
 		},
 	})
 
