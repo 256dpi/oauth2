@@ -48,17 +48,17 @@ func (e *Error) Map() map[string]string {
 	m["error"] = e.Name
 
 	// add description
-	if len(e.Description) > 0 {
+	if e.Description != "" {
 		m["error_description"] = e.Description
 	}
 
 	// add state
-	if len(e.State) > 0 {
+	if e.State != "" {
 		m["state"] = e.State
 	}
 
 	// add uri
-	if len(e.URI) > 0 {
+	if e.URI != "" {
 		m["error_uri"] = e.URI
 	}
 

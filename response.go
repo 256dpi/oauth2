@@ -42,7 +42,7 @@ func (r *TokenResponse) Map() map[string]string {
 	m["expires_in"] = strconv.Itoa(r.ExpiresIn)
 
 	// add description
-	if len(r.RefreshToken) > 0 {
+	if r.RefreshToken != "" {
 		m["refresh_token"] = r.RefreshToken
 	}
 
@@ -52,7 +52,7 @@ func (r *TokenResponse) Map() map[string]string {
 	}
 
 	// add state if present
-	if len(r.State) > 0 {
+	if r.State != "" {
 		m["state"] = r.State
 	}
 
@@ -94,7 +94,7 @@ func (r *CodeResponse) Map() map[string]string {
 	m["code"] = r.Code
 
 	// add state if present
-	if len(r.State) > 0 {
+	if r.State != "" {
 		m["state"] = r.State
 	}
 

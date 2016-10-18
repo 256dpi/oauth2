@@ -69,7 +69,7 @@ func ParseTokenRequest(req *http.Request) (*TokenRequest, error) {
 	}
 
 	// validate redirect uri if present
-	if len(redirectURIString) > 0 {
+	if redirectURIString != "" {
 		redirectURI, err := url.ParseRequestURI(redirectURIString)
 		if err != nil || redirectURI.Fragment != "" {
 			return nil, InvalidRequest(state, "Invalid redirect URI")
@@ -96,7 +96,7 @@ func ParseTokenRequest(req *http.Request) (*TokenRequest, error) {
 // Confidential returns true when the client supplied its and and secret and
 // therefore acts as being a confidential client.
 func (r *TokenRequest) Confidential() bool {
-	return len(r.ClientID) > 0 && len(r.ClientSecret) > 0
+	return r.ClientID != "" && r.ClientSecret != ""
 }
 
 // A AuthorizationRequest is typically returned by ParseAuthorizationRequest and
