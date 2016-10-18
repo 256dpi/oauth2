@@ -30,7 +30,7 @@ func TestSpec(t *testing.T) {
 		secret: mustHash("foo"),
 	})
 
-	invalidRefreshToken := mustGenerateToken()
+	unkownRefreshToken := mustGenerateToken()
 	validRefreshToken := mustGenerateToken()
 
 	addToken(refreshTokens, token{
@@ -67,7 +67,8 @@ func TestSpec(t *testing.T) {
 	config.InvalidRedirectURI = "http://invalid.com"
 	config.ValidRedirectURI = "http://example.com/callback"
 
-	config.InvalidRefreshToken = invalidRefreshToken.String()
+	config.InvalidRefreshToken = "invalid"
+	config.UnknownRefreshToken = unkownRefreshToken.String()
 	config.ValidRefreshToken = validRefreshToken.String()
 
 	config.TokenAuthorizationParams = map[string]string{

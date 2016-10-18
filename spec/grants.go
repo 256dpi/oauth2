@@ -378,7 +378,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"grant_type":   oauth2.AuthorizationCodeGrantType,
 			"scope":        c.ValidScope,
-			"code":         "invalid",
+			"code":         "invalid", // TODO: Configurable?
 			"redirect_uri": c.ValidRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -430,7 +430,7 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type":    oauth2.RefreshTokenGrantType,
-			"refresh_token": "invalid",
+			"refresh_token": c.InvalidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
@@ -446,7 +446,7 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type":    oauth2.RefreshTokenGrantType,
-			"refresh_token": c.InvalidRefreshToken,
+			"refresh_token": c.UnknownRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
