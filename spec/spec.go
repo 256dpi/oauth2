@@ -51,8 +51,10 @@ type Config struct {
 	InvalidRedirectURI string
 	ValidRedirectURI   string
 
-	// The refresh token that should be used during the refresh token grant tests.
-	RefreshToken string
+	// The invalid and valid refresh token that should be used during the
+	// refresh token grant tests.
+	InvalidRefreshToken string
+	ValidRefreshToken string
 
 	// The params needed to authorize the resource owner during the implicit
 	// grant test.

@@ -19,11 +19,12 @@ func TestSpec(t *testing.T) {
 		secret: mustHash("foo"),
 	})
 
-	refreshToken := mustGenerateToken()
+	invalidRefreshToken := mustGenerateToken()
+	validRefreshToken := mustGenerateToken()
 
 	addToken(refreshTokens, token{
 		clientID:  "client1",
-		signature: refreshToken.SignatureString(),
+		signature: validRefreshToken.SignatureString(),
 		scope:     allowedScope,
 		expiresAt: time.Now().Add(time.Hour),
 	})
@@ -45,7 +46,8 @@ func TestSpec(t *testing.T) {
 	config.ExceedingScope = "foo bar baz"
 	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
 	config.ValidRedirectURI = "http://example.com/callback"
-	config.RefreshToken = refreshToken.String()
+	config.InvalidRefreshToken = invalidRefreshToken.String()
+	config.ValidRefreshToken = validRefreshToken.String()
 
 	config.TokenAuthorizationParams = map[string]string{
 		"username": config.OwnerUsername,

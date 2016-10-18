@@ -347,7 +347,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 
 	var authorizationCode string
 
-	// get access token
+	// get authorization code
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
@@ -368,6 +368,24 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	var accessToken, refreshToken string
+
+	// invalid code
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ClientID,
+		Password: c.ClientSecret,
+		Form: map[string]string{
+			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"scope":        c.ValidScope,
+			"code":         "invalid",
+			"redirect_uri": c.ValidRedirectURI,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
 
 	// get access token
 	Do(c.Handler, &Request{
@@ -420,6 +438,22 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// invalid refresh token
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ClientID,
+		Password: c.ClientSecret,
+		Form: map[string]string{
+			"grant_type":    oauth2.RefreshTokenGrantType,
+			"refresh_token": c.InvalidRefreshToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").String())
+		},
+	})
+
 	// test refresh token
-	RefreshTokenTest(t, c, c.RefreshToken)
+	RefreshTokenTest(t, c, c.ValidRefreshToken)
 }
