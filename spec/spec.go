@@ -57,8 +57,9 @@ type Config struct {
 
 	// The redirect URI that is considered invalid and valid by the
 	// authentication server.
-	InvalidRedirectURI string
-	ValidRedirectURI   string
+	InvalidRedirectURI   string
+	PrimaryRedirectURI   string
+	SecondaryRedirectURI string
 
 	// The invalid, unknown and valid refresh tokens that should be used during
 	// the refresh token grant tests.
@@ -123,7 +124,8 @@ func Run(t *testing.T, c *Config) {
 
 	if c.ImplicitGrantSupport || c.AuthorizationCodeGrantSupport {
 		assert.NotEmpty(t, c.InvalidRedirectURI)
-		assert.NotEmpty(t, c.ValidRedirectURI)
+		assert.NotEmpty(t, c.PrimaryRedirectURI)
+		assert.NotEmpty(t, c.SecondaryRedirectURI)
 
 		t.Run("AuthorizationEndpointTest", func(t *testing.T) {
 			AuthorizationEndpointTest(t, c)

@@ -11,13 +11,13 @@ func TestSpec(t *testing.T) {
 	addOwner(clients, owner{
 		id:          "client1",
 		secret:      mustHash("foo"),
-		redirectURI: "http://example.com/callback",
+		redirectURI: "http://example.com/callback1",
 	})
 
 	addOwner(clients, owner{
 		id:          "client2",
 		secret:      mustHash("foo"),
-		redirectURI: "http://example.com/callback",
+		redirectURI: "http://example.com/callback2",
 	})
 
 	addOwner(users, owner{
@@ -67,7 +67,8 @@ func TestSpec(t *testing.T) {
 	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
 
 	config.InvalidRedirectURI = "http://invalid.com"
-	config.ValidRedirectURI = "http://example.com/callback"
+	config.PrimaryRedirectURI = "http://example.com/callback1"
+	config.SecondaryRedirectURI = "http://example.com/callback2"
 
 	config.InvalidRefreshToken = "invalid"
 	config.UnknownRefreshToken = unknownRefreshToken.String()

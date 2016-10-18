@@ -227,6 +227,12 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenReques
 		return
 	}
 
+	// validate expiration
+	if storedAuthorizationCode.expiresAt.Before(time.Now()) {
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Expired authorization code"))
+		return
+	}
+
 	// validate ownership
 	if storedAuthorizationCode.clientID != req.ClientID {
 		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Invalid authorization code ownership"))
@@ -236,10 +242,11 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenReques
 	// validate redirect uri
 	if storedAuthorizationCode.redirectURI != req.RedirectURI {
 		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Changed redirect uri"))
+		return
 	}
 
-	// validate scope and expiration
-	if !storedAuthorizationCode.scope.Includes(req.Scope) || storedAuthorizationCode.expiresAt.Before(time.Now()) {
+	// validate scope
+	if !storedAuthorizationCode.scope.Includes(req.Scope) {
 		oauth2.WriteError(w, oauth2.InvalidScope(req.State, "Scope exceeds the originally granted scope"))
 		return
 	}
@@ -272,14 +279,20 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 		return
 	}
 
+	// validate expiration
+	if storedRefreshToken.expiresAt.Before(time.Now()) {
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Expired refresh token"))
+		return
+	}
+
 	// validate ownership
 	if storedRefreshToken.clientID != req.ClientID {
 		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Invalid refresh token ownership"))
 		return
 	}
 
-	// validate scope and expiration
-	if !storedRefreshToken.scope.Includes(req.Scope) || storedRefreshToken.expiresAt.Before(time.Now()) {
+	// validate scope
+	if !storedRefreshToken.scope.Includes(req.Scope) {
 		oauth2.WriteError(w, oauth2.InvalidScope(req.State, "Scope exceeds the originally granted scope"))
 		return
 	}

@@ -213,7 +213,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Form: extend(c.TokenAuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.InvalidScope,
 			"state":         "xyz",
 		}),
@@ -231,7 +231,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Form: extend(c.TokenAuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ExceedingScope,
 			"state":         "xyz",
 		}),
@@ -249,7 +249,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		},
@@ -269,7 +269,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Form: extend(c.TokenAuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		}),
@@ -298,7 +298,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Form: extend(c.CodeAuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.InvalidScope,
 			"state":         "xyz",
 		}),
@@ -316,7 +316,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Form: extend(c.CodeAuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ExceedingScope,
 			"state":         "xyz",
 		}),
@@ -334,7 +334,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		},
@@ -354,7 +354,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Form: extend(c.CodeAuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		}),
@@ -379,7 +379,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"grant_type":   oauth2.AuthorizationCodeGrantType,
 			"scope":        c.ValidScope,
 			"code":         c.InvalidAuthorizationCode,
-			"redirect_uri": c.ValidRedirectURI,
+			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
@@ -397,7 +397,43 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"grant_type":   oauth2.AuthorizationCodeGrantType,
 			"scope":        c.ValidScope,
 			"code":         c.UnknownAuthorizationCode,
-			"redirect_uri": c.ValidRedirectURI,
+			"redirect_uri": c.PrimaryRedirectURI,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
+
+	// wrong client
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.SecondaryClientID,
+		Password: c.SecondaryClientSecret,
+		Form: map[string]string{
+			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"scope":        c.ValidScope,
+			"code":         authorizationCode,
+			"redirect_uri": c.PrimaryRedirectURI,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
+
+	// wrong redirect uri
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Form: map[string]string{
+			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"scope":        c.ValidScope,
+			"code":         authorizationCode,
+			"redirect_uri": c.SecondaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
@@ -417,7 +453,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"grant_type":   oauth2.AuthorizationCodeGrantType,
 			"scope":        c.ValidScope,
 			"code":         authorizationCode,
-			"redirect_uri": c.ValidRedirectURI,
+			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code)

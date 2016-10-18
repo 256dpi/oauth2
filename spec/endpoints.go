@@ -57,7 +57,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     "invalid",
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code)
@@ -88,7 +88,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": "invalid",
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 		},
 		Username: c.PrimaryClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -104,7 +104,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.PrimaryClientID,
-			"redirect_uri":  c.ValidRedirectURI,
+			"redirect_uri":  c.PrimaryRedirectURI,
 		},
 		Username: c.PrimaryClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
