@@ -22,7 +22,7 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
 			"username":   "invalid",
-			"password":   c.PrimaryResourceOwnerPassword,
+			"password":   c.ResourceOwnerPassword,
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -39,7 +39,7 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
-			"username":   c.PrimaryResourceOwnerUsername,
+			"username":   c.ResourceOwnerUsername,
 			"password":   "invalid",
 			"scope":      c.ValidScope,
 		},
@@ -57,8 +57,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
-			"username":   c.PrimaryResourceOwnerUsername,
-			"password":   c.PrimaryResourceOwnerPassword,
+			"username":   c.ResourceOwnerUsername,
+			"password":   c.ResourceOwnerPassword,
 			"scope":      c.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -75,8 +75,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
-			"username":   c.PrimaryResourceOwnerUsername,
-			"password":   c.PrimaryResourceOwnerPassword,
+			"username":   c.ResourceOwnerUsername,
+			"password":   c.ResourceOwnerPassword,
 			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -95,8 +95,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
-			"username":   c.PrimaryResourceOwnerUsername,
-			"password":   c.PrimaryResourceOwnerPassword,
+			"username":   c.ResourceOwnerUsername,
+			"password":   c.ResourceOwnerPassword,
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {

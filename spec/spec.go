@@ -38,13 +38,11 @@ type Config struct {
 	SecondaryClientID     string
 	SecondaryClientSecret string
 
-	// The details of the primary resource owner for grant tests.
-	PrimaryResourceOwnerUsername string
-	PrimaryResourceOwnerPassword string
-
-	// The details of the secondary resource owner for security tests.
-	SecondaryResourceOwnerUsername string
-	SecondaryResourceOwnerPassword string
+	// The details of the primary resource owner for the password grant test.
+	//
+	// Note: Only needed if the password grant is supported.
+	ResourceOwnerUsername string
+	ResourceOwnerPassword string
 
 	// The scopes that are considered invalid, valid and exceeding by the
 	// authentication server.
@@ -105,10 +103,6 @@ func Run(t *testing.T, c *Config) {
 	assert.NotEmpty(t, c.PrimaryClientSecret)
 	assert.NotEmpty(t, c.SecondaryClientID)
 	assert.NotEmpty(t, c.SecondaryClientSecret)
-	assert.NotEmpty(t, c.PrimaryResourceOwnerUsername)
-	assert.NotEmpty(t, c.PrimaryResourceOwnerPassword)
-	assert.NotEmpty(t, c.SecondaryResourceOwnerUsername)
-	assert.NotEmpty(t, c.SecondaryResourceOwnerPassword)
 	assert.NotEmpty(t, c.InvalidScope)
 	assert.NotEmpty(t, c.ValidScope)
 	assert.NotEmpty(t, c.ExceedingScope)
@@ -135,6 +129,9 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.PasswordGrantSupport {
+		assert.NotEmpty(t, c.ResourceOwnerUsername)
+		assert.NotEmpty(t, c.ResourceOwnerPassword)
+
 		t.Run("PasswordGrantTest", func(t *testing.T) {
 			PasswordGrantTest(t, c)
 		})

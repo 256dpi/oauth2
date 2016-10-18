@@ -73,10 +73,8 @@ func TestSpec(t *testing.T) {
 	config.SecondaryClientID = "client2"
 	config.SecondaryClientSecret = "foo"
 
-	config.PrimaryResourceOwnerUsername = "user1"
-	config.PrimaryResourceOwnerPassword = "foo"
-	config.SecondaryResourceOwnerUsername = "user2"
-	config.SecondaryResourceOwnerPassword = "foo"
+	config.ResourceOwnerUsername = "user1"
+	config.ResourceOwnerPassword = "foo"
 
 	config.InvalidScope = "baz"
 	config.ValidScope = "foo bar"
@@ -98,13 +96,13 @@ func TestSpec(t *testing.T) {
 	config.ExpiredAuthorizationCode = expiredAuthorizationCode.String()
 
 	config.TokenAuthorizationParams = map[string]string{
-		"username": config.PrimaryResourceOwnerUsername,
-		"password": config.PrimaryResourceOwnerPassword,
+		"username": "user1",
+		"password": "foo",
 	}
 
 	config.CodeAuthorizationParams = map[string]string{
-		"username": config.PrimaryResourceOwnerUsername,
-		"password": config.PrimaryResourceOwnerPassword,
+		"username": "user1",
+		"password": "foo",
 	}
 
 	spec.Run(t, config)
