@@ -210,7 +210,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.TokenAuthorizationParams, map[string]string{
+		Form: extend(c.AuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -228,7 +228,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.TokenAuthorizationParams, map[string]string{
+		Form: extend(c.AuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -266,7 +266,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.TokenAuthorizationParams, map[string]string{
+		Form: extend(c.AuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -295,7 +295,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.CodeAuthorizationParams, map[string]string{
+		Form: extend(c.AuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -313,7 +313,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.CodeAuthorizationParams, map[string]string{
+		Form: extend(c.AuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -351,7 +351,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.CodeAuthorizationParams, map[string]string{
+		Form: extend(c.AuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,

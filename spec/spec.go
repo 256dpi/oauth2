@@ -38,12 +38,6 @@ type Config struct {
 	SecondaryClientID     string
 	SecondaryClientSecret string
 
-	// The details of the primary resource owner for the password grant test.
-	//
-	// Note: Only needed if the password grant is supported.
-	ResourceOwnerUsername string
-	ResourceOwnerPassword string
-
 	// The scopes that are considered invalid, valid and exceeding by the
 	// authentication server.
 	InvalidScope   string
@@ -53,14 +47,25 @@ type Config struct {
 	// The expected "expire_in" value of returned tokens.
 	ExpectedExpireIn int
 
+	// The details of the primary resource owner for the password grant test.
+	//
+	// Note: Only needed if the password grant is supported.
+	ResourceOwnerUsername string
+	ResourceOwnerPassword string
+
 	// The redirect URI that is considered invalid and valid by the
 	// authentication server.
+	//
+	// Note: Only needed if the implicit grant or authorization code grant is
+	// supported.
 	InvalidRedirectURI   string
 	PrimaryRedirectURI   string
 	SecondaryRedirectURI string
 
 	// The invalid, unknown, valid and expired refresh tokens that is used
 	// during the refresh token grant tests.
+	//
+	// Note: Only needed if the refresh token grant is supported.
 	InvalidRefreshToken string
 	UnknownRefreshToken string
 	ValidRefreshToken   string
@@ -68,17 +73,18 @@ type Config struct {
 
 	// The invalid, unknown and expired authorization code that is used during
 	// the authorization code grant tests.
+	//
+	// Note: Only needed if the authorization code grant is supported.
 	InvalidAuthorizationCode string
 	UnknownAuthorizationCode string
 	ExpiredAuthorizationCode string
 
 	// The params needed to authorize the resource owner during the implicit
-	// grant test.
-	TokenAuthorizationParams map[string]string
-
-	// The params needed to authorize the resource owner during the authorization
-	// code grant test.
-	CodeAuthorizationParams map[string]string
+	// grant or authorization code grant test.
+	//
+	// Note: Only needed if the implicit grant or authorization code grant
+	// is supported.
+	AuthorizationParams map[string]string
 }
 
 // Default returns a common used configuration that can taken as a basis.
@@ -144,7 +150,7 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.ImplicitGrantSupport {
-		assert.NotEmpty(t, c.TokenAuthorizationParams)
+		assert.NotEmpty(t, c.AuthorizationParams)
 
 		t.Run("ImplicitGrantTest", func(t *testing.T) {
 			ImplicitGrantTest(t, c)
@@ -152,7 +158,7 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.AuthorizationCodeGrantSupport {
-		assert.NotEmpty(t, c.CodeAuthorizationParams)
+		assert.NotEmpty(t, c.AuthorizationParams)
 		assert.NotEmpty(t, c.InvalidAuthorizationCode)
 		assert.NotEmpty(t, c.UnknownAuthorizationCode)
 		assert.NotEmpty(t, c.ExpiredAuthorizationCode)
