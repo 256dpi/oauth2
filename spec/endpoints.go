@@ -27,7 +27,7 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.TokenEndpoint,
 		Form: map[string]string{
-			"grant_type": "foo",
+			"grant_type": "invalid",
 		},
 		Username: c.ClientID,
 		Password: c.ClientSecret,
@@ -73,7 +73,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.ClientID,
-			"redirect_uri":  "http://invalid.com",
+			"redirect_uri":  "http://inval.id",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
@@ -86,15 +86,30 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
-			"response_type": "foo",
+			"response_type": "invalid",
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 		},
 		Username: c.ClientID,
-		Password: c.ClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
 			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
+
+	// must respond to GET request
+	Do(c.Handler, &Request{
+		Method: "GET",
+		Path:   c.AuthorizeEndpoint,
+		Form: map[string]string{
+			"response_type": oauth2.TokenResponseType,
+			"client_id":     c.ClientID,
+			"redirect_uri":  c.ValidRedirectURI,
+		},
+		Username: c.ClientID,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusOK, r.Code)
+			assert.NotEmpty(t, r.Body.String())
 		},
 	})
 }

@@ -40,7 +40,9 @@ func TestSpec(t *testing.T) {
 	config.ClientSecret = "foo"
 	config.OwnerUsername = "user1"
 	config.OwnerPassword = "foo"
+	config.InvalidScope = "baz"
 	config.ValidScope = "foo bar"
+	config.ExceedingScope = "foo bar baz"
 	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
 	config.ValidRedirectURI = "http://example.com/callback"
 	config.RefreshToken = refreshToken.String()

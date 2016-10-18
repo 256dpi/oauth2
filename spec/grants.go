@@ -59,7 +59,25 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"grant_type": oauth2.PasswordGrantType,
 			"username":   c.OwnerUsername,
 			"password":   c.OwnerPassword,
-			"scope":      "invalid",
+			"scope":      c.InvalidScope,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
+
+	// exceeding scope
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ClientID,
+		Password: c.ClientSecret,
+		Form: map[string]string{
+			"grant_type": oauth2.PasswordGrantType,
+			"username":   c.OwnerUsername,
+			"password":   c.OwnerPassword,
+			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
@@ -83,7 +101,7 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code)
-			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String())
+			assert.Equal(t, oauth2.BearerTokenType, gjson.Get(r.Body.String(), "token_type").String())
 			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String())
 			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
 
@@ -129,7 +147,23 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 		Password: c.ClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.ClientCredentialsGrantType,
-			"scope":      "invalid",
+			"scope":      c.InvalidScope,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
+
+	// exceeding scope
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ClientID,
+		Password: c.ClientSecret,
+		Form: map[string]string{
+			"grant_type": oauth2.ClientCredentialsGrantType,
+			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
@@ -180,13 +214,31 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"response_type": oauth2.TokenResponseType,
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.ValidRedirectURI,
-			"scope":         "invalid",
-			"state":         "foobar",
+			"scope":         c.InvalidScope,
+			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
 			assert.Equal(t, "invalid_scope", fragment(r, "error"))
-			assert.Equal(t, "foobar", fragment(r, "state"))
+			assert.Equal(t, "xyz", fragment(r, "state"))
+		},
+	})
+
+	// exceeding scope
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: extend(c.TokenAuthorizationParams, map[string]string{
+			"response_type": oauth2.TokenResponseType,
+			"client_id":     c.ClientID,
+			"redirect_uri":  c.ValidRedirectURI,
+			"scope":         c.ExceedingScope,
+			"state":         "xyz",
+		}),
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusFound, r.Code)
+			assert.Equal(t, "invalid_scope", fragment(r, "error"))
+			assert.Equal(t, "xyz", fragment(r, "state"))
 		},
 	})
 
@@ -199,12 +251,12 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
-			"state":         "foobar",
+			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
 			assert.Equal(t, "access_denied", fragment(r, "error"))
-			assert.Equal(t, "foobar", fragment(r, "state"))
+			assert.Equal(t, "xyz", fragment(r, "state"))
 		},
 	})
 
@@ -219,14 +271,14 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
-			"state":         "foobar",
+			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "bearer", fragment(r, "token_type"))
+			assert.Equal(t, oauth2.BearerTokenType, fragment(r, "token_type"))
 			assert.Equal(t, c.ValidScope, fragment(r, "scope"))
 			assert.Equal(t, strconv.Itoa(c.ExpectedExpireIn), fragment(r, "expires_in"))
-			assert.Equal(t, "foobar", fragment(r, "state"))
+			assert.Equal(t, "xyz", fragment(r, "state"))
 
 			accessToken = fragment(r, "access_token")
 			assert.NotEmpty(t, accessToken)
@@ -247,13 +299,31 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.ValidRedirectURI,
-			"scope":         "invalid",
-			"state":         "foobar",
+			"scope":         c.InvalidScope,
+			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
 			assert.Equal(t, "invalid_scope", query(r, "error"))
-			assert.Equal(t, "foobar", query(r, "state"))
+			assert.Equal(t, "xyz", query(r, "state"))
+		},
+	})
+
+	// exceeding scope
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: extend(c.CodeAuthorizationParams, map[string]string{
+			"response_type": oauth2.CodeResponseType,
+			"client_id":     c.ClientID,
+			"redirect_uri":  c.ValidRedirectURI,
+			"scope":         c.ExceedingScope,
+			"state":         "xyz",
+		}),
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusFound, r.Code)
+			assert.Equal(t, "invalid_scope", query(r, "error"))
+			assert.Equal(t, "xyz", query(r, "state"))
 		},
 	})
 
@@ -266,12 +336,12 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
-			"state":         "foobar",
+			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
 			assert.Equal(t, "access_denied", query(r, "error"))
-			assert.Equal(t, "foobar", query(r, "state"))
+			assert.Equal(t, "xyz", query(r, "state"))
 		},
 	})
 
@@ -286,11 +356,11 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"client_id":     c.ClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
-			"state":         "foobar",
+			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "foobar", query(r, "state"))
+			assert.Equal(t, "xyz", query(r, "state"))
 
 			authorizationCode = query(r, "code")
 			assert.NotEmpty(t, authorizationCode)
@@ -313,7 +383,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code)
-			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String())
+			assert.Equal(t, oauth2.BearerTokenType, gjson.Get(r.Body.String(), "token_type").String())
 			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String())
 			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
 

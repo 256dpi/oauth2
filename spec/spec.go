@@ -35,8 +35,11 @@ type Config struct {
 	OwnerUsername string
 	OwnerPassword string
 
-	// The scope that is considered valid by the authentication server.
+	// The scopes that are considered invalid, valid and exceeding by the
+	// authentication server.
+	InvalidScope string
 	ValidScope string
+	ExceedingScope string
 
 	// The expected "expire_in" value of returned tokens.
 	ExpectedExpireIn int
