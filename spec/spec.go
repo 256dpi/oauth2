@@ -4,7 +4,6 @@ package spec
 
 import (
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -67,6 +66,10 @@ type Config struct {
 	UnknownRefreshToken string
 	ValidRefreshToken   string
 
+	// The invalid authorization code that is used during the authorization code
+	// grant tests.
+	InvalidAuthorizationCode string
+
 	// The params needed to authorize the resource owner during the implicit
 	// grant test.
 	TokenAuthorizationParams map[string]string
@@ -89,31 +92,42 @@ func Default(handler http.Handler) *Config {
 
 // Run will run all tests using the specified config.
 func Run(t *testing.T, c *Config) {
-	// reflect on config
-	val := reflect.ValueOf(c).Elem()
-
-	// check all fields
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		structField := val.Type().Field(i)
-
-		// test if strings are filled out
-		if field.Type().Kind() == reflect.String {
-			assert.NotEmpty(t, field.String(), structField.Name)
-		}
-	}
+	// validate config
+	assert.NotEmpty(t, c.Handler)
+	assert.NotEmpty(t, c.TokenEndpoint)
+	assert.NotEmpty(t, c.AuthorizeEndpoint)
+	assert.NotEmpty(t, c.ProtectedResource)
+	assert.NotEmpty(t, c.PrimaryClientID)
+	assert.NotEmpty(t, c.PrimaryClientSecret)
+	assert.NotEmpty(t, c.SecondaryClientID)
+	assert.NotEmpty(t, c.SecondaryClientSecret)
+	assert.NotEmpty(t, c.PrimaryResourceOwnerUsername)
+	assert.NotEmpty(t, c.PrimaryResourceOwnerPassword)
+	assert.NotEmpty(t, c.SecondaryResourceOwnerUsername)
+	assert.NotEmpty(t, c.SecondaryResourceOwnerPassword)
+	assert.NotEmpty(t, c.InvalidScope)
+	assert.NotEmpty(t, c.ValidScope)
+	assert.NotEmpty(t, c.ExceedingScope)
 
 	t.Run("ProtectedResourceTest", func(t *testing.T) {
 		UnauthorizedAccessTest(t, c)
 	})
 
-	t.Run("TokenEndpointTest", func(t *testing.T) {
-		TokenEndpointTest(t, c)
-	})
+	if c.PasswordGrantSupport || c.ClientCredentialsGrantSupport ||
+		c.AuthorizationCodeGrantSupport || c.RefreshTokenGrantSupport {
+		t.Run("TokenEndpointTest", func(t *testing.T) {
+			TokenEndpointTest(t, c)
+		})
+	}
 
-	t.Run("AuthorizationEndpointTest", func(t *testing.T) {
-		AuthorizationEndpointTest(t, c)
-	})
+	if c.ImplicitGrantSupport || c.AuthorizationCodeGrantSupport {
+		assert.NotEmpty(t, c.InvalidRedirectURI)
+		assert.NotEmpty(t, c.ValidRedirectURI)
+
+		t.Run("AuthorizationEndpointTest", func(t *testing.T) {
+			AuthorizationEndpointTest(t, c)
+		})
+	}
 
 	if c.PasswordGrantSupport {
 		t.Run("PasswordGrantTest", func(t *testing.T) {
@@ -128,12 +142,17 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.ImplicitGrantSupport {
+		assert.NotEmpty(t, c.TokenAuthorizationParams)
+
 		t.Run("ImplicitGrantTest", func(t *testing.T) {
 			ImplicitGrantTest(t, c)
 		})
 	}
 
 	if c.AuthorizationCodeGrantSupport {
+		assert.NotEmpty(t, c.InvalidAuthorizationCode)
+		assert.NotEmpty(t, c.CodeAuthorizationParams)
+
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
 			AuthorizationCodeGrantTest(t, c)
 		})

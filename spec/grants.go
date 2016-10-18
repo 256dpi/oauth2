@@ -378,7 +378,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"grant_type":   oauth2.AuthorizationCodeGrantType,
 			"scope":        c.ValidScope,
-			"code":         "invalid", // TODO: Configurable?
+			"code":         c.InvalidAuthorizationCode,
 			"redirect_uri": c.ValidRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {

@@ -71,6 +71,8 @@ func TestSpec(t *testing.T) {
 	config.UnknownRefreshToken = unkownRefreshToken.String()
 	config.ValidRefreshToken = validRefreshToken.String()
 
+	config.InvalidAuthorizationCode = "invalid"
+
 	config.TokenAuthorizationParams = map[string]string{
 		"username": config.PrimaryResourceOwnerUsername,
 		"password": config.PrimaryResourceOwnerPassword,
