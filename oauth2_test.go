@@ -8,6 +8,38 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestKnownGrantType(t *testing.T) {
+	matrix := []struct {
+		gt string
+		kn bool
+	}{
+		{"foo", false},
+		{PasswordGrantType, true},
+		{ClientCredentialsGrantType, true},
+		{AuthorizationCodeGrantType, true},
+		{RefreshTokenGrantType, true},
+	}
+
+	for _, i := range matrix {
+		assert.Equal(t, i.kn, KnownGrantType(i.gt))
+	}
+}
+
+func TestKnownResponseType(t *testing.T) {
+	matrix := []struct {
+		rt string
+		kn bool
+	}{
+		{"foo", false},
+		{TokenResponseType, true},
+		{CodeResponseType, true},
+	}
+
+	for _, i := range matrix {
+		assert.Equal(t, i.kn, KnownResponseType(i.rt))
+	}
+}
+
 func TestWrite(t *testing.T) {
 	rec := httptest.NewRecorder()
 

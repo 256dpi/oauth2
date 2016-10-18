@@ -8,23 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestKnownGrantType(t *testing.T) {
-	matrix := []struct {
-		gt string
-		kn bool
-	}{
-		{"foo", false},
-		{PasswordGrantType, true},
-		{ClientCredentialsGrantType, true},
-		{AuthorizationCodeGrantType, true},
-		{RefreshTokenGrantType, true},
-	}
-
-	for _, i := range matrix {
-		assert.Equal(t, i.kn, KnownGrantType(i.gt))
-	}
-}
-
 func TestParseTokenRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
 		"grant_type": oauth2.PasswordGrant,
@@ -94,21 +77,6 @@ func TestParseTokenRequestErrors(t *testing.T) {
 		req, err := ParseTokenRequest(i)
 		assert.Nil(t, req)
 		assert.Error(t, err)
-	}
-}
-
-func TestKnownResponseType(t *testing.T) {
-	matrix := []struct {
-		rt string
-		kn bool
-	}{
-		{"foo", false},
-		{TokenResponseType, true},
-		{CodeResponseType, true},
-	}
-
-	for _, i := range matrix {
-		assert.Equal(t, i.kn, KnownResponseType(i.rt))
 	}
 }
 
