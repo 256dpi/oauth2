@@ -28,13 +28,21 @@ type Config struct {
 	AuthorizationCodeGrantSupport bool
 	RefreshTokenGrantSupport      bool
 
-	// The details of the client to be used.
-	ClientID     string
-	ClientSecret string
+	// The details of the primary client for grant tests.
+	PrimaryClientID     string
+	PrimaryClientSecret string
 
-	// The details of the resource owner to be used.
-	OwnerUsername string
-	OwnerPassword string
+	// The details of the secondary client for security tests.
+	SecondaryClientID     string
+	SecondaryClientSecret string
+
+	// The details of the primary resource owner for grant tests.
+	PrimaryResourceOwnerUsername string
+	PrimaryResourceOwnerPassword string
+
+	// The details of the secondary resource owner for security tests.
+	SecondaryResourceOwnerUsername string
+	SecondaryResourceOwnerPassword string
 
 	// The scopes that are considered invalid, valid and exceeding by the
 	// authentication server.

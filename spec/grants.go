@@ -17,12 +17,12 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
 			"username":   "invalid",
-			"password":   c.OwnerPassword,
+			"password":   c.PrimaryResourceOwnerPassword,
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -35,11 +35,11 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
-			"username":   c.OwnerUsername,
+			"username":   c.PrimaryResourceOwnerUsername,
 			"password":   "invalid",
 			"scope":      c.ValidScope,
 		},
@@ -53,12 +53,12 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
-			"username":   c.OwnerUsername,
-			"password":   c.OwnerPassword,
+			"username":   c.PrimaryResourceOwnerUsername,
+			"password":   c.PrimaryResourceOwnerPassword,
 			"scope":      c.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -71,12 +71,12 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
-			"username":   c.OwnerUsername,
-			"password":   c.OwnerPassword,
+			"username":   c.PrimaryResourceOwnerUsername,
+			"password":   c.PrimaryResourceOwnerPassword,
 			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -91,12 +91,12 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
-			"username":   c.OwnerUsername,
-			"password":   c.OwnerPassword,
+			"username":   c.PrimaryResourceOwnerUsername,
+			"password":   c.PrimaryResourceOwnerPassword,
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -126,7 +126,7 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
+		Username: c.PrimaryClientID,
 		Password: "invalid",
 		Form: map[string]string{
 			"grant_type": oauth2.ClientCredentialsGrantType,
@@ -143,8 +143,8 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.ClientCredentialsGrantType,
 			"scope":      c.InvalidScope,
@@ -159,8 +159,8 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.ClientCredentialsGrantType,
 			"scope":      c.ExceedingScope,
@@ -177,8 +177,8 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type": oauth2.ClientCredentialsGrantType,
 			"scope":      c.ValidScope,
@@ -212,7 +212,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.TokenAuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
-			"client_id":     c.ClientID,
+			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.InvalidScope,
 			"state":         "xyz",
@@ -230,7 +230,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.TokenAuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
-			"client_id":     c.ClientID,
+			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ExceedingScope,
 			"state":         "xyz",
@@ -248,7 +248,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": oauth2.TokenResponseType,
-			"client_id":     c.ClientID,
+			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
@@ -268,7 +268,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.TokenAuthorizationParams, map[string]string{
 			"response_type": oauth2.TokenResponseType,
-			"client_id":     c.ClientID,
+			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
@@ -297,7 +297,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.CodeAuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
-			"client_id":     c.ClientID,
+			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.InvalidScope,
 			"state":         "xyz",
@@ -315,7 +315,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.CodeAuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
-			"client_id":     c.ClientID,
+			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ExceedingScope,
 			"state":         "xyz",
@@ -333,7 +333,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": oauth2.CodeResponseType,
-			"client_id":     c.ClientID,
+			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
@@ -353,7 +353,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.CodeAuthorizationParams, map[string]string{
 			"response_type": oauth2.CodeResponseType,
-			"client_id":     c.ClientID,
+			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.ValidRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
@@ -373,8 +373,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type":   oauth2.AuthorizationCodeGrantType,
 			"scope":        c.ValidScope,
@@ -391,8 +391,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type":   oauth2.AuthorizationCodeGrantType,
 			"scope":        c.ValidScope,
@@ -426,8 +426,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type":    oauth2.RefreshTokenGrantType,
 			"refresh_token": "invalid",
@@ -442,8 +442,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type":    oauth2.RefreshTokenGrantType,
 			"refresh_token": c.InvalidRefreshToken,

@@ -31,16 +31,16 @@ func TestSpec(t *testing.T) {
 
 	config := spec.Default(newHandler())
 
-	config.ClientID = "client1"
-	config.ClientSecret = "foo"
-	config.OwnerUsername = "user1"
-	config.OwnerPassword = "foo"
 	config.PasswordGrantSupport = true
 	config.ClientCredentialsGrantSupport = true
 	config.ImplicitGrantSupport = true
 	config.AuthorizationCodeGrantSupport = true
 	config.RefreshTokenGrantSupport = true
 
+	config.PrimaryClientID = "client1"
+	config.PrimaryClientSecret = "foo"
+	config.PrimaryResourceOwnerUsername = "user1"
+	config.PrimaryResourceOwnerPassword = "foo"
 
 	config.InvalidScope = "baz"
 	config.ValidScope = "foo bar"
@@ -55,13 +55,13 @@ func TestSpec(t *testing.T) {
 	config.ValidRefreshToken = validRefreshToken.String()
 
 	config.TokenAuthorizationParams = map[string]string{
-		"username": config.OwnerUsername,
-		"password": config.OwnerPassword,
+		"username": config.PrimaryResourceOwnerUsername,
+		"password": config.PrimaryResourceOwnerPassword,
 	}
 
 	config.CodeAuthorizationParams = map[string]string{
-		"username": config.OwnerUsername,
-		"password": config.OwnerPassword,
+		"username": config.PrimaryResourceOwnerUsername,
+		"password": config.PrimaryResourceOwnerPassword,
 	}
 
 	spec.Run(t, config)

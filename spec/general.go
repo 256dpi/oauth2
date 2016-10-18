@@ -35,8 +35,8 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type":    oauth2.RefreshTokenGrantType,
 			"refresh_token": refreshToken,
@@ -58,8 +58,8 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.ClientID,
-		Password: c.ClientSecret,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
 			"grant_type":    oauth2.RefreshTokenGrantType,
 			"refresh_token": refreshToken,
