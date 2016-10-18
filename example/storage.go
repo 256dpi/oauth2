@@ -43,7 +43,7 @@ func addToken(list map[string]token, t token) token {
 }
 
 func mustHash(password string) []byte {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 0)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		panic(err)
 	}
