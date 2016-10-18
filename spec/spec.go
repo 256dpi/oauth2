@@ -61,16 +61,18 @@ type Config struct {
 	PrimaryRedirectURI   string
 	SecondaryRedirectURI string
 
-	// The invalid, unknown and valid refresh tokens that should be used during
-	// the refresh token grant tests.
+	// The invalid, unknown, valid and expired refresh tokens that is used
+	// during the refresh token grant tests.
 	InvalidRefreshToken string
 	UnknownRefreshToken string
 	ValidRefreshToken   string
+	ExpiredRefreshToken string
 
-	// The invalid authorization code that is used during the authorization code
-	// grant tests.
+	// The invalid, unknown and expired authorization code that is used during
+	// the authorization code grant tests.
 	InvalidAuthorizationCode string
 	UnknownAuthorizationCode string
+	ExpiredAuthorizationCode string
 
 	// The params needed to authorize the resource owner during the implicit
 	// grant test.
@@ -153,9 +155,10 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.AuthorizationCodeGrantSupport {
+		assert.NotEmpty(t, c.CodeAuthorizationParams)
 		assert.NotEmpty(t, c.InvalidAuthorizationCode)
 		assert.NotEmpty(t, c.UnknownAuthorizationCode)
-		assert.NotEmpty(t, c.CodeAuthorizationParams)
+		assert.NotEmpty(t, c.ExpiredAuthorizationCode)
 
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
 			AuthorizationCodeGrantTest(t, c)
@@ -163,6 +166,11 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.RefreshTokenGrantSupport {
+		assert.NotEmpty(t, c.InvalidRefreshToken)
+		assert.NotEmpty(t, c.UnknownRefreshToken)
+		assert.NotEmpty(t, c.ValidRefreshToken)
+		assert.NotEmpty(t, c.ExpiredRefreshToken)
+
 		t.Run("RefreshTokenGrantTest", func(t *testing.T) {
 			RefreshTokenGrantTest(t, c)
 		})

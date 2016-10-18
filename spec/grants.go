@@ -367,8 +367,6 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
-	var accessToken, refreshToken string
-
 	// invalid authorization code
 	Do(c.Handler, &Request{
 		Method:   "POST",
@@ -397,6 +395,24 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"grant_type":   oauth2.AuthorizationCodeGrantType,
 			"scope":        c.ValidScope,
 			"code":         c.UnknownAuthorizationCode,
+			"redirect_uri": c.PrimaryRedirectURI,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
+
+	// expired authorization code
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Form: map[string]string{
+			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"scope":        c.ValidScope,
+			"code":         c.ExpiredAuthorizationCode,
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -442,6 +458,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// TODO: Test security by mixing up two clients.
+
+	var accessToken, refreshToken string
 
 	// get access token
 	Do(c.Handler, &Request{
@@ -494,7 +512,7 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
-	// invalid refresh token
+	// unknown refresh token
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
@@ -503,6 +521,38 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"grant_type":    oauth2.RefreshTokenGrantType,
 			"refresh_token": c.UnknownRefreshToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String())
+		},
+	})
+
+	// expired refresh token
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Form: map[string]string{
+			"grant_type":    oauth2.RefreshTokenGrantType,
+			"refresh_token": c.ExpiredRefreshToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String())
+		},
+	})
+
+	// wrong client
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.SecondaryClientID,
+		Password: c.SecondaryClientSecret,
+		Form: map[string]string{
+			"grant_type":    oauth2.RefreshTokenGrantType,
+			"refresh_token": c.ValidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)

@@ -31,15 +31,31 @@ func TestSpec(t *testing.T) {
 	})
 
 	unknownAuthorizationCode := mustGenerateToken()
+	expiredAuthorizationCode := mustGenerateToken()
+
+	addToken(authorizationCodes, token{
+		clientID:  "client1",
+		signature: expiredAuthorizationCode.SignatureString(),
+		scope:     allowedScope,
+		expiresAt: time.Now().Add(-time.Hour),
+	})
 
 	unknownRefreshToken := mustGenerateToken()
 	validRefreshToken := mustGenerateToken()
+	expiredRefreshToken := mustGenerateToken()
 
 	addToken(refreshTokens, token{
 		clientID:  "client1",
 		signature: validRefreshToken.SignatureString(),
 		scope:     allowedScope,
 		expiresAt: time.Now().Add(time.Hour),
+	})
+
+	addToken(refreshTokens, token{
+		clientID:  "client1",
+		signature: expiredRefreshToken.SignatureString(),
+		scope:     allowedScope,
+		expiresAt: time.Now().Add(-time.Hour),
 	})
 
 	config := spec.Default(newHandler())
@@ -73,9 +89,11 @@ func TestSpec(t *testing.T) {
 	config.InvalidRefreshToken = "invalid"
 	config.UnknownRefreshToken = unknownRefreshToken.String()
 	config.ValidRefreshToken = validRefreshToken.String()
+	config.ExpiredRefreshToken = expiredRefreshToken.String()
 
 	config.InvalidAuthorizationCode = "invalid"
 	config.UnknownAuthorizationCode = unknownAuthorizationCode.String()
+	config.ExpiredAuthorizationCode = expiredAuthorizationCode.String()
 
 	config.TokenAuthorizationParams = map[string]string{
 		"username": config.PrimaryResourceOwnerUsername,
