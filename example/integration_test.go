@@ -14,8 +14,19 @@ func TestSpec(t *testing.T) {
 		redirectURI: "http://example.com/callback",
 	})
 
+	addOwner(clients, owner{
+		id:          "client2",
+		secret:      mustHash("foo"),
+		redirectURI: "http://example.com/callback",
+	})
+
 	addOwner(users, owner{
 		id:     "user1",
+		secret: mustHash("foo"),
+	})
+
+	addOwner(users, owner{
+		id:     "user2",
 		secret: mustHash("foo"),
 	})
 
@@ -39,8 +50,13 @@ func TestSpec(t *testing.T) {
 
 	config.PrimaryClientID = "client1"
 	config.PrimaryClientSecret = "foo"
+	config.SecondaryClientID = "client2"
+	config.SecondaryClientSecret = "foo"
+
 	config.PrimaryResourceOwnerUsername = "user1"
 	config.PrimaryResourceOwnerPassword = "foo"
+	config.SecondaryResourceOwnerUsername = "user2"
+	config.SecondaryResourceOwnerPassword = "foo"
 
 	config.InvalidScope = "baz"
 	config.ValidScope = "foo bar"

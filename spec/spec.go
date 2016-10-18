@@ -4,7 +4,10 @@ package spec
 
 import (
 	"net/http"
+	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // A Config declares the needed info for testing an OAuth2 authentication server.
@@ -85,6 +88,20 @@ func Default(handler http.Handler) *Config {
 
 // Run will run all tests using the specified config.
 func Run(t *testing.T, c *Config) {
+	// reflect on config
+	val := reflect.ValueOf(c).Elem()
+
+	// check all fields
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		structField := val.Type().Field(i)
+
+		// test if strings are filled out
+		if field.Type().Kind() == reflect.String {
+			assert.NotEmpty(t, field.String(), structField.Name)
+		}
+	}
+
 	t.Run("ProtectedResourceTest", func(t *testing.T) {
 		UnauthorizedAccessTest(t, c)
 	})
