@@ -457,7 +457,23 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
-	// TODO: Test security by mixing up two clients.
+	// exceeding scope
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Form: map[string]string{
+			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"scope":        c.ExceedingScope,
+			"code":         authorizationCode,
+			"redirect_uri": c.PrimaryRedirectURI,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str)
+		},
+	})
 
 	var accessToken, refreshToken string
 
@@ -560,7 +576,22 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
-	// TODO: Test security by mixing up two clients.
+	// exceeding scope
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Form: map[string]string{
+			"grant_type":    oauth2.RefreshTokenGrantType,
+			"refresh_token": c.ValidRefreshToken,
+			"scope":         c.ExceedingScope,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").String())
+		},
+	})
 
 	// test refresh token
 	RefreshTokenTest(t, c, c.ValidRefreshToken)

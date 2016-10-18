@@ -42,24 +42,6 @@ func addToken(list map[string]token, t token) token {
 	return t
 }
 
-func mustHash(password string) []byte {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-	if err != nil {
-		panic(err)
-	}
-
-	return hash
-}
-
 func sameHash(hash []byte, password string) bool {
 	return bcrypt.CompareHashAndPassword(hash, []byte(password)) == nil
-}
-
-func mustGenerateToken() *oauth2.Token {
-	token, err := oauth2.GenerateToken(secret, 16)
-	if err != nil {
-		panic(err)
-	}
-
-	return token
 }

@@ -291,7 +291,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 		return
 	}
 
-	// validate scope
+	// validate scope - a missing scope is always included
 	if !storedRefreshToken.scope.Includes(req.Scope) {
 		oauth2.WriteError(w, oauth2.InvalidScope(req.State, "Scope exceeds the originally granted scope"))
 		return

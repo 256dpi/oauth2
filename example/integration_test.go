@@ -4,7 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/spec"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestSpec(t *testing.T) {
@@ -106,4 +108,22 @@ func TestSpec(t *testing.T) {
 	}
 
 	spec.Run(t, config)
+}
+
+func mustHash(password string) []byte {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		panic(err)
+	}
+
+	return hash
+}
+
+func mustGenerateToken() *oauth2.Token {
+	token, err := oauth2.GenerateToken(secret, 16)
+	if err != nil {
+		panic(err)
+	}
+
+	return token
 }

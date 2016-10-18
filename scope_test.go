@@ -31,6 +31,9 @@ func TestScopeContains(t *testing.T) {
 }
 
 func TestScopeIncludes(t *testing.T) {
+	s0 := Scope([]string{})
+	assert.True(t, s0.Includes(s0))
+
 	s1 := Scope([]string{"foo", "bar", "baz"})
 	s2 := Scope([]string{"foo", "bar"})
 	assert.True(t, s1.Includes(s2))
