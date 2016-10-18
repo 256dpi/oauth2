@@ -233,15 +233,15 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenReques
 		return
 	}
 
+	// validate redirect uri
+	if storedAuthorizationCode.redirectURI != req.RedirectURI {
+		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Changed redirect uri"))
+	}
+
 	// validate scope and expiration
 	if !storedAuthorizationCode.scope.Includes(req.Scope) || storedAuthorizationCode.expiresAt.Before(time.Now()) {
 		oauth2.WriteError(w, oauth2.InvalidScope(req.State, "Scope exceeds the originally granted scope"))
 		return
-	}
-
-	// validate redirect uri
-	if storedAuthorizationCode.redirectURI != req.RedirectURI {
-		oauth2.WriteError(w, oauth2.InvalidGrant(req.State, "Changed redirect uri"))
 	}
 
 	// issue new access and refresh token

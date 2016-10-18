@@ -69,6 +69,7 @@ type Config struct {
 	// The invalid authorization code that is used during the authorization code
 	// grant tests.
 	InvalidAuthorizationCode string
+	UnknownAuthorizationCode string
 
 	// The params needed to authorize the resource owner during the implicit
 	// grant test.
@@ -151,6 +152,7 @@ func Run(t *testing.T, c *Config) {
 
 	if c.AuthorizationCodeGrantSupport {
 		assert.NotEmpty(t, c.InvalidAuthorizationCode)
+		assert.NotEmpty(t, c.UnknownAuthorizationCode)
 		assert.NotEmpty(t, c.CodeAuthorizationParams)
 
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
