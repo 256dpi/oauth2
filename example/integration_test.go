@@ -31,7 +31,6 @@ func TestSpec(t *testing.T) {
 
 	config := spec.Default(newHandler())
 
-
 	config.ClientID = "client1"
 	config.ClientSecret = "foo"
 	config.OwnerUsername = "user1"
@@ -41,11 +40,17 @@ func TestSpec(t *testing.T) {
 	config.ImplicitGrantSupport = true
 	config.AuthorizationCodeGrantSupport = true
 	config.RefreshTokenGrantSupport = true
+
+
 	config.InvalidScope = "baz"
 	config.ValidScope = "foo bar"
 	config.ExceedingScope = "foo bar baz"
+
 	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
+
+	config.InvalidRedirectURI = "http://invalid.com"
 	config.ValidRedirectURI = "http://example.com/callback"
+
 	config.InvalidRefreshToken = invalidRefreshToken.String()
 	config.ValidRefreshToken = validRefreshToken.String()
 
