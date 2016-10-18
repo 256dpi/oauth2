@@ -4,17 +4,35 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/gonfire/fire/oauth2"
 	"github.com/stretchr/testify/assert"
 )
 
+func TestKnownGrantType(t *testing.T) {
+	matrix := []struct {
+		gt string
+		kn bool
+	}{
+		{"foo", false},
+		{PasswordGrantType, true},
+		{ClientCredentialsGrantType, true},
+		{AuthorizationCodeGrantType, true},
+		{RefreshTokenGrantType, true},
+	}
+
+	for _, i := range matrix {
+		assert.Equal(t, i.kn, KnownGrantType(i.gt))
+	}
+}
+
 func TestParseTokenRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
-		"grant_type": "password",
+		"grant_type": oauth2.PasswordGrant,
 	})
 
 	req, err := ParseTokenRequest(r)
 	assert.NoError(t, err)
-	assert.Equal(t, "password", req.GrantType.String())
+	assert.Equal(t, "password", req.GrantType)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "", req.ClientSecret)
 	assert.Equal(t, Scope(nil), req.Scope)
@@ -28,7 +46,7 @@ func TestParseTokenRequestMinimal(t *testing.T) {
 
 func TestParseTokenRequestFull(t *testing.T) {
 	r := newRequestWithAuth("foo", "bar", map[string]string{
-		"grant_type":    "password",
+		"grant_type":    oauth2.PasswordGrant,
 		"scope":         "foo bar",
 		"username":      "baz",
 		"password":      "qux",
@@ -39,7 +57,7 @@ func TestParseTokenRequestFull(t *testing.T) {
 
 	req, err := ParseTokenRequest(r)
 	assert.NoError(t, err)
-	assert.Equal(t, "password", req.GrantType.String())
+	assert.Equal(t, "password", req.GrantType)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "bar", req.ClientSecret)
 	assert.Equal(t, Scope([]string{"foo", "bar"}), req.Scope)
@@ -60,14 +78,14 @@ func TestParseTokenRequestErrors(t *testing.T) {
 		r2,
 		newRequest(nil),
 		newRequest(map[string]string{
-			"grant_type": "password",
+			"grant_type": oauth2.PasswordGrant,
 		}),
 		newRequestWithAuth("foo", "bar", map[string]string{
-			"grant_type":   "password",
+			"grant_type":   oauth2.PasswordGrant,
 			"redirect_uri": "blaa%blupp",
 		}),
 		newRequestWithAuth("foo", "bar", map[string]string{
-			"grant_type":   "password",
+			"grant_type":   oauth2.PasswordGrant,
 			"redirect_uri": "foo",
 		}),
 	}
@@ -79,16 +97,31 @@ func TestParseTokenRequestErrors(t *testing.T) {
 	}
 }
 
+func TestKnownResponseType(t *testing.T) {
+	matrix := []struct {
+		rt string
+		kn bool
+	}{
+		{"foo", false},
+		{TokenResponseType, true},
+		{CodeResponseType, true},
+	}
+
+	for _, i := range matrix {
+		assert.Equal(t, i.kn, KnownResponseType(i.rt))
+	}
+}
+
 func TestParseAuthorizationRequestMinimal(t *testing.T) {
 	r := newRequest(map[string]string{
 		"client_id":     "foo",
-		"response_type": "token",
+		"response_type": TokenResponseType,
 		"redirect_uri":  "http://example.com",
 	})
 
 	req, err := ParseAuthorizationRequest(r)
 	assert.NoError(t, err)
-	assert.Equal(t, "token", req.ResponseType.String())
+	assert.Equal(t, "token", req.ResponseType)
 	assert.Equal(t, Scope(nil), req.Scope)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
@@ -99,14 +132,14 @@ func TestParseAuthorizationRequestFull(t *testing.T) {
 	r := newRequest(map[string]string{
 		"client_id":     "foo",
 		"scope":         "foo bar",
-		"response_type": "token",
+		"response_type": TokenResponseType,
 		"redirect_uri":  "http://example.com",
 		"state":         "baz",
 	})
 
 	req, err := ParseAuthorizationRequest(r)
 	assert.NoError(t, err)
-	assert.Equal(t, "token", req.ResponseType.String())
+	assert.Equal(t, "token", req.ResponseType)
 	assert.Equal(t, Scope([]string{"foo", "bar"}), req.Scope)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
@@ -122,14 +155,14 @@ func TestParseAuthorizationRequestErrors(t *testing.T) {
 		r2,
 		newRequest(nil),
 		newRequest(map[string]string{
-			"response_type": "token",
+			"response_type": TokenResponseType,
 		}),
 		newRequest(map[string]string{
-			"response_type": "token",
+			"response_type": TokenResponseType,
 			"client_id":     "foo",
 		}),
 		newRequest(map[string]string{
-			"response_type": "token",
+			"response_type": TokenResponseType,
 			"client_id":     "foo",
 			"redirect_uri":  "foo",
 		}),

@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gonfire/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 )
@@ -54,7 +55,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
-			"response_type": "code",
+			"response_type": oauth2.CodeResponseType,
 			"client_id":     "invalid",
 			"redirect_uri":  c.ValidRedirectURI,
 		},
@@ -70,7 +71,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
-			"response_type": "code",
+			"response_type": oauth2.CodeResponseType,
 			"client_id":     c.ClientID,
 			"redirect_uri":  "http://invalid.com",
 		},

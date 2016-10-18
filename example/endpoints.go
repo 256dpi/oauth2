@@ -16,7 +16,7 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make sure the response type is known
-	if !req.ResponseType.Known() {
+	if !oauth2.KnownResponseType(req.ResponseType) {
 		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Unknown response type"))
 		return
 	}
@@ -41,9 +41,10 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// triage based on response type
-	if req.ResponseType.Token() {
+	switch req.ResponseType {
+	case oauth2.TokenResponseType:
 		handleImplicitGrant(w, r, req)
-	} else if req.ResponseType.Code() {
+	case oauth2.CodeResponseType:
 		handleAuthorizationCodeGrantAuthorization(w, r, req)
 	}
 }
@@ -139,7 +140,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make sure the grant type is known
-	if !req.GrantType.Known() {
+	if !oauth2.KnownGrantType(req.GrantType) {
 		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Unknown grant type"))
 		return
 	}
@@ -157,14 +158,15 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// triage grant type
-	if req.GrantType.Password() {
+	// handle grant type
+	switch req.GrantType {
+	case oauth2.PasswordGrantType:
 		handleResourceOwnerPasswordCredentialsGrant(w, req)
-	} else if req.GrantType.ClientCredentials() {
+	case oauth2.ClientCredentialsGrantType:
 		handleClientCredentialsGrant(w, req)
-	} else if req.GrantType.AuthorizationCode() {
+	case oauth2.AuthorizationCodeGrantType:
 		handleAuthorizationCodeGrant(w, req)
-	} else if req.GrantType.RefreshToken() {
+	case oauth2.RefreshTokenGrantType:
 		handleRefreshTokenGrant(w, req)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gonfire/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 )
@@ -37,7 +38,7 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 		Username: c.ClientID,
 		Password: c.ClientSecret,
 		Form: map[string]string{
-			"grant_type":    "refresh_token",
+			"grant_type":    oauth2.RefreshTokenGrantType,
 			"refresh_token": refreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -60,7 +61,7 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 		Username: c.ClientID,
 		Password: c.ClientSecret,
 		Form: map[string]string{
-			"grant_type":    "refresh_token",
+			"grant_type":    oauth2.RefreshTokenGrantType,
 			"refresh_token": refreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {

@@ -6,27 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGrantType(t *testing.T) {
-	matrix := []struct {
-		gt GrantType
-		kn bool
-		ex bool
-	}{
-		{"foo", false, false},
-		{"password", true, false},
-		{"client_credentials", true, false},
-		{"authorization_code", true, false},
-		{"refresh_token", true, false},
-		{"http://example.com/grants/foo", false, true},
-	}
-
-	for _, i := range matrix {
-		assert.Equal(t, string(i.gt), i.gt.String())
-		assert.Equal(t, i.kn, i.gt.Known())
-		assert.Equal(t, i.ex, i.gt.Extension())
-	}
-}
-
 func TestParseScope(t *testing.T) {
 	matrix := []struct {
 		scp string
@@ -62,20 +41,4 @@ func TestScopeMarshalJSON(t *testing.T) {
 	s := Scope([]string{"foo", "bar"})
 	buf, _ := s.MarshalJSON()
 	assert.Equal(t, `"foo bar"`, string(buf))
-}
-
-func TestResponseType(t *testing.T) {
-	matrix := []struct {
-		rt ResponseType
-		kn bool
-	}{
-		{"foo", false},
-		{"token", true},
-		{"code", true},
-	}
-
-	for _, i := range matrix {
-		assert.Equal(t, string(i.rt), i.rt.String())
-		assert.Equal(t, i.kn, i.rt.Known())
-	}
 }
