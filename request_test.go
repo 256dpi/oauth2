@@ -4,13 +4,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gonfire/fire/oauth2"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestParseTokenRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
-		"grant_type": oauth2.PasswordGrant,
+		"grant_type": PasswordGrantType,
 	})
 
 	req, err := ParseTokenRequest(r)
@@ -29,7 +28,7 @@ func TestParseTokenRequestMinimal(t *testing.T) {
 
 func TestParseTokenRequestFull(t *testing.T) {
 	r := newRequestWithAuth("foo", "bar", map[string]string{
-		"grant_type":    oauth2.PasswordGrant,
+		"grant_type":    PasswordGrantType,
 		"scope":         "foo bar",
 		"username":      "baz",
 		"password":      "qux",
@@ -61,14 +60,14 @@ func TestParseTokenRequestErrors(t *testing.T) {
 		r2,
 		newRequest(nil),
 		newRequest(map[string]string{
-			"grant_type": oauth2.PasswordGrant,
+			"grant_type": PasswordGrantType,
 		}),
 		newRequestWithAuth("foo", "bar", map[string]string{
-			"grant_type":   oauth2.PasswordGrant,
+			"grant_type":   PasswordGrantType,
 			"redirect_uri": "blaa%blupp",
 		}),
 		newRequestWithAuth("foo", "bar", map[string]string{
-			"grant_type":   oauth2.PasswordGrant,
+			"grant_type":   PasswordGrantType,
 			"redirect_uri": "foo",
 		}),
 	}
