@@ -32,8 +32,10 @@ type Error struct {
 func (e *Error) Map() map[string]string {
 	m := make(map[string]string)
 
-	// add name
-	m["error"] = e.Name
+	// add name if present
+	if e.Name != "" {
+		m["error"] = e.Name
+	}
 
 	// add description if present
 	if e.Description != "" {
@@ -77,6 +79,14 @@ func (e *Error) Params() string {
 // Error implements the error interface.
 func (e *Error) Error() string {
 	return fmt.Sprintf("%s: %s", e.Name, e.Description)
+}
+
+// ProtectedResource constructs and error that indicates that the requested
+// resource needs authentication.
+func ProtectedResource() *Error {
+	return &Error{
+		Status: http.StatusUnauthorized,
+	}
 }
 
 // InvalidRequest constructs and error that indicates that the request is
@@ -123,7 +133,7 @@ func ParseToken(r *http.Request) (string, error) {
 	// read header
 	h := r.Header.Get("Authorization")
 	if h == "" {
-		return "", InvalidRequest("Missing authorization header")
+		return "", ProtectedResource()
 	}
 
 	// split header
@@ -151,8 +161,16 @@ func WriteError(w http.ResponseWriter, err error) error {
 		return err
 	}
 
+	// get params
+	params := anError.Params()
+
+	// force at least one parameter
+	if params == "" {
+		params = `realm="OAuth2"`
+	}
+
 	// prepare response
-	response := "Bearer " + anError.Params()
+	response := "Bearer " + params
 
 	// set header
 	w.Header().Set("WWW-Authenticate", response)

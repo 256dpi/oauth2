@@ -62,7 +62,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code)
 			assert.Equal(t, "invalid_client", gjson.Get(r.Body.String(), "error").Str)
-			assert.Equal(t, `Basic realm="OAuth2"`, r.HeaderMap.Get("WWW-Authenticate"))
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Basic realm=`)
 		},
 	})
 
@@ -121,8 +121,8 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 		Method: "GET",
 		Path:   c.ProtectedResource,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_request"`)
+			assert.Equal(t, http.StatusUnauthorized, r.Code)
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer realm=`)
 			assert.Empty(t, r.Body.String())
 		},
 	})

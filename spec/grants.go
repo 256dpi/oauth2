@@ -136,7 +136,7 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code)
 			assert.Equal(t, "invalid_client", gjson.Get(r.Body.String(), "error").Str)
-			assert.Equal(t, `Basic realm="OAuth2"`, r.HeaderMap.Get("WWW-Authenticate"))
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Basic realm=`)
 		},
 	})
 

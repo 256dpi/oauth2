@@ -52,6 +52,7 @@ func TestErrorBuilders(t *testing.T) {
 		cde string
 		sta int
 	}{
+		{ProtectedResource(), "", http.StatusUnauthorized},
 		{InvalidRequest("foo"), "invalid_request", http.StatusBadRequest},
 		{InvalidToken("foo"), "invalid_token", http.StatusUnauthorized},
 		{InsufficientScope("foo"), "insufficient_scope", http.StatusForbidden},
@@ -93,6 +94,18 @@ func TestWriteError(t *testing.T) {
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	assert.Equal(t, `Bearer error="invalid_request", error_description="foo"`, rec.HeaderMap.Get("WWW-Authenticate"))
+	assert.Empty(t, rec.Body.String())
+}
+
+func TestWriteErrorForcedRealm(t *testing.T) {
+	err1 := ProtectedResource()
+
+	rec := httptest.NewRecorder()
+
+	err2 := WriteError(rec, err1)
+	assert.NoError(t, err2)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	assert.Equal(t, `Bearer realm="OAuth2"`, rec.HeaderMap.Get("WWW-Authenticate"))
 	assert.Empty(t, rec.Body.String())
 }
 
