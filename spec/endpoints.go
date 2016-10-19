@@ -22,6 +22,20 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// unknown client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.TokenEndpoint,
+		Username: "unknown",
+		Form: map[string]string{
+			"grant_type": oauth2.PasswordGrantType,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
+			assert.Equal(t, "invalid_client", gjson.Get(r.Body.String(), "error").Str, debug(r))
+		},
+	})
+
 	// invalid grant type
 	Do(c.Handler, &Request{
 		Method: "POST",
