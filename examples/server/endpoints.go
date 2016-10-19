@@ -141,17 +141,17 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// at this point the authentication server may check if the authenticated
-	// client is public or confidential
-	//
-	// see: req.Confidential()
-
 	// authenticate client
 	client, found := clients[req.ClientID]
 	if !found || !sameHash(client.secret, req.ClientSecret) {
 		oauth2.WriteError(w, oauth2.InvalidClient(req.State, "Unknown client"))
 		return
 	}
+
+	// at this point the authentication server may check if the authenticated
+	// client is public or confidential
+	//
+	// see: req.Confidential()
 
 	// handle grant type
 	switch req.GrantType {
@@ -322,6 +322,9 @@ func createTokensAndResponse(req *oauth2.TokenRequest) (*hmacsha.Token, *hmacsha
 
 	// set granted scope
 	res.Scope = req.Scope
+
+	// carry over state
+	res.State = req.State
 
 	// set refresh token
 	res.RefreshToken = refreshToken.String()
