@@ -51,6 +51,11 @@ func (s Scope) Includes(scope Scope) bool {
 	return true
 }
 
+// Empty return true if the scope is empty.
+func (s Scope) Empty() bool {
+	return len(s) == 0
+}
+
 // String implements the fmt.Stringer interface.
 func (s Scope) String() string {
 	return strings.Join(s, " ")

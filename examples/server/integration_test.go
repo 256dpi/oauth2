@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/hmacsha"
 	"github.com/gonfire/oauth2/spec"
 	"golang.org/x/crypto/bcrypt"
@@ -27,19 +28,22 @@ func TestSpec(t *testing.T) {
 		secret: mustHash("foo"),
 	})
 
-	addOwner(users, owner{
-		id:     "user2",
-		secret: mustHash("foo"),
-	})
+	unknownToken := mustGenerateToken()
+	expiredToken := mustGenerateToken()
+	insufficientToken := mustGenerateToken()
 
-	unknownAuthorizationCode := mustGenerateToken()
-	expiredAuthorizationCode := mustGenerateToken()
-
-	addToken(authorizationCodes, token{
+	addToken(accessTokens, token{
 		clientID:  "client1",
-		signature: expiredAuthorizationCode.SignatureString(),
+		signature: expiredToken.SignatureString(),
 		scope:     allowedScope,
 		expiresAt: time.Now().Add(-time.Hour),
+	})
+
+	addToken(accessTokens, token{
+		clientID:  "client1",
+		signature: insufficientToken.SignatureString(),
+		scope:     oauth2.Scope{},
+		expiresAt: time.Now().Add(time.Hour),
 	})
 
 	unknownRefreshToken := mustGenerateToken()
@@ -56,6 +60,16 @@ func TestSpec(t *testing.T) {
 	addToken(refreshTokens, token{
 		clientID:  "client1",
 		signature: expiredRefreshToken.SignatureString(),
+		scope:     allowedScope,
+		expiresAt: time.Now().Add(-time.Hour),
+	})
+
+	unknownAuthorizationCode := mustGenerateToken()
+	expiredAuthorizationCode := mustGenerateToken()
+
+	addToken(authorizationCodes, token{
+		clientID:  "client1",
+		signature: expiredAuthorizationCode.SignatureString(),
 		scope:     allowedScope,
 		expiresAt: time.Now().Add(-time.Hour),
 	})
@@ -81,6 +95,11 @@ func TestSpec(t *testing.T) {
 	config.ExceedingScope = "foo bar baz"
 
 	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
+
+	config.InvalidToken = "invalid"
+	config.UnknownToken = unknownToken.String()
+	config.ExpiredToken = expiredToken.String()
+	config.InsufficientToken = insufficientToken.String()
 
 	config.InvalidRedirectURI = "http://invalid.com"
 	config.PrimaryRedirectURI = "http://example.com/callback1"

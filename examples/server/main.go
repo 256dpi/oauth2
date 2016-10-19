@@ -16,6 +16,7 @@ var tokenLifespan = time.Hour
 var authorizationCodeLifespan = 10 * time.Minute
 
 var allowedScope = oauth2.ParseScope("foo bar")
+var requiredScope = oauth2.ParseScope("foo")
 
 func newHandler() http.Handler {
 	mux := http.NewServeMux()
@@ -65,8 +66,8 @@ func protectedResource(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate scope
-	if !allowedScope.Includes(accessToken.scope) {
-		bearer.WriteError(w, bearer.InsufficientScope(allowedScope.String()))
+	if !accessToken.scope.Includes(requiredScope) {
+		bearer.WriteError(w, bearer.InsufficientScope(requiredScope.String()))
 		return
 	}
 

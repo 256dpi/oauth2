@@ -47,6 +47,12 @@ type Config struct {
 	// The expected "expire_in" value of returned tokens.
 	ExpectedExpireIn int
 
+	// The tokens for the protected resource tests.
+	InvalidToken      string
+	UnknownToken      string
+	ExpiredToken      string
+	InsufficientToken string
+
 	// The details of the primary resource owner for the password grant test.
 	//
 	// Note: Only needed if the password grant is supported.
@@ -112,9 +118,12 @@ func Run(t *testing.T, c *Config) {
 	assert.NotEmpty(t, c.InvalidScope)
 	assert.NotEmpty(t, c.ValidScope)
 	assert.NotEmpty(t, c.ExceedingScope)
+	assert.NotEmpty(t, c.InvalidToken)
+	assert.NotEmpty(t, c.UnknownToken)
+	assert.NotEmpty(t, c.ExpiredToken)
 
-	t.Run("UnauthorizedAccessTest", func(t *testing.T) {
-		UnauthorizedAccessTest(t, c)
+	t.Run("ProtectedResourceTest", func(t *testing.T) {
+		ProtectedResourceTest(t, c)
 	})
 
 	if c.PasswordGrantSupport || c.ClientCredentialsGrantSupport ||

@@ -40,6 +40,14 @@ func TestScopeIncludes(t *testing.T) {
 	assert.False(t, s2.Includes(s1))
 }
 
+func TestScopeEmpty(t *testing.T) {
+	s0 := Scope([]string{})
+	assert.True(t, s0.Empty())
+
+	s1 := Scope([]string{"foo"})
+	assert.False(t, s1.Empty())
+}
+
 func TestScopeMarshalJSON(t *testing.T) {
 	s := Scope([]string{"foo", "bar"})
 	buf, _ := s.MarshalJSON()

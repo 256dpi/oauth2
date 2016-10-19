@@ -71,7 +71,13 @@ func TestParseToken(t *testing.T) {
 	assert.Error(t, res)
 	assert.Equal(t, "", token)
 
-	req.Header.Add("Authorization", "Bearer foo")
+	req.Header.Set("Authorization", "foo")
+
+	token, res = ParseToken(req)
+	assert.Error(t, res)
+	assert.Equal(t, "", token)
+
+	req.Header.Set("Authorization", "Bearer foo")
 
 	token, res = ParseToken(req)
 	assert.NoError(t, res)

@@ -71,14 +71,86 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	})
 }
 
-// UnauthorizedAccessTest validates authorization of the protected resource.
-func UnauthorizedAccessTest(t *testing.T, c *Config) {
+// ProtectedResourceTest validates authorization of the protected resource.
+func ProtectedResourceTest(t *testing.T, c *Config) {
+	// missing token
 	Do(c.Handler, &Request{
 		Method: "GET",
 		Path:   c.ProtectedResource,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "", r.Body.String())
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_request"`)
+			assert.Empty(t, r.Body.String())
+		},
+	})
+
+	// invalid header
+	Do(c.Handler, &Request{
+		Method: "GET",
+		Path:   c.ProtectedResource,
+		Header: map[string]string{
+			"Authorization": "invalid",
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code)
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_request"`)
+			assert.Empty(t, r.Body.String())
+		},
+	})
+
+	// invalid token
+	Do(c.Handler, &Request{
+		Method: "GET",
+		Path:   c.ProtectedResource,
+		Header: map[string]string{
+			"Authorization": "Bearer " + c.InvalidToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusUnauthorized, r.Code)
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`)
+			assert.Empty(t, r.Body.String())
+		},
+	})
+
+	// unknown token
+	Do(c.Handler, &Request{
+		Method: "GET",
+		Path:   c.ProtectedResource,
+		Header: map[string]string{
+			"Authorization": "Bearer " + c.UnknownToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusUnauthorized, r.Code)
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`)
+			assert.Empty(t, r.Body.String())
+		},
+	})
+
+	// expired token
+	Do(c.Handler, &Request{
+		Method: "GET",
+		Path:   c.ProtectedResource,
+		Header: map[string]string{
+			"Authorization": "Bearer " + c.ExpiredToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusUnauthorized, r.Code)
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`)
+			assert.Empty(t, r.Body.String())
+		},
+	})
+
+	// insufficient token
+	Do(c.Handler, &Request{
+		Method: "GET",
+		Path:   c.ProtectedResource,
+		Header: map[string]string{
+			"Authorization": "Bearer " + c.InsufficientToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusForbidden, r.Code)
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="insufficient_scope"`)
+			assert.Empty(t, r.Body.String())
 		},
 	})
 }

@@ -122,6 +122,9 @@ func InsufficientScope(necessaryScope string) *Error {
 func ParseToken(r *http.Request) (string, error) {
 	// read header
 	h := r.Header.Get("Authorization")
+	if h == "" {
+		return "", InvalidRequest("Missing authorization header")
+	}
 
 	// split header
 	s := strings.SplitN(h, " ", 2)
