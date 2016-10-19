@@ -64,6 +64,21 @@ func Generate(secret []byte, length int) (*Token, error) {
 	return FromKey(secret, key), nil
 }
 
+// MustGenerate will generate a token using Generate and panic instead of
+// returning an error.
+//
+// Note: The cryptographically secure pseudo-random number generator provided
+// by the operating system may fail. However, such a fail would mean that
+// something seriously must be wrong with the machine running this code.
+func MustGenerate(secret []byte, length int) *Token {
+	token, err := Generate(secret, length)
+	if err != nil {
+		panic(err)
+	}
+
+	return token
+}
+
 // Parse will parse a token that is in its string representation.
 func Parse(secret []byte, str string) (*Token, error) {
 	// split dot separated key and signature

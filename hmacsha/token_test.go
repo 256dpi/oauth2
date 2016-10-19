@@ -40,13 +40,22 @@ func TestParseToken(t *testing.T) {
 	assert.Nil(t, token)
 }
 
-func TestGenerateToken(t *testing.T) {
+func TestGenerate(t *testing.T) {
+	token := MustGenerate(testSecret, 16)
+	assert.NotNil(t, token)
+}
+
+func TestGenerateError(t *testing.T) {
 	currentSource := randSource
 	randSource = strings.NewReader("")
 
 	token, err := Generate(testSecret, 16)
 	assert.Error(t, err)
 	assert.Nil(t, token)
+
+	assert.Panics(t, func() {
+		MustGenerate(testSecret, 16)
+	})
 
 	randSource = currentSource
 }

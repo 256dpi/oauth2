@@ -66,10 +66,7 @@ func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.Aut
 	}
 
 	// generate new access token
-	accessToken, err := hmacsha.Generate(secret, 32)
-	if err != nil {
-		panic(err)
-	}
+	accessToken := hmacsha.MustGenerate(secret, 32)
 
 	// prepare response
 	res := bearer.NewTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
@@ -108,10 +105,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *http.Re
 	}
 
 	// generate new authorization code
-	authorizationCode, err := hmacsha.Generate(secret, 32)
-	if err != nil {
-		panic(err)
-	}
+	authorizationCode := hmacsha.MustGenerate(secret, 32)
 
 	// prepare response
 	res := oauth2.NewCodeResponse(authorizationCode.String())
@@ -147,11 +141,10 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if client is confidential
-	if !req.Confidential() {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Non confidential client"))
-		return
-	}
+	// at this point the authentication server may check if the authenticated
+	// client is public or confidential
+	//
+	// see: req.Confidential()
 
 	// authenticate client
 	client, found := clients[req.ClientID]
@@ -319,16 +312,10 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 
 func createTokensAndResponse(req *oauth2.TokenRequest) (*hmacsha.Token, *hmacsha.Token, *oauth2.TokenResponse) {
 	// generate new access token
-	accessToken, err := hmacsha.Generate(secret, 32)
-	if err != nil {
-		panic(err)
-	}
+	accessToken := hmacsha.MustGenerate(secret, 32)
 
 	// generate new refresh token
-	refreshToken, err := hmacsha.Generate(secret, 32)
-	if err != nil {
-		panic(err)
-	}
+	refreshToken := hmacsha.MustGenerate(secret, 32)
 
 	// prepare response
 	res := bearer.NewTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))

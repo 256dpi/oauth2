@@ -28,9 +28,9 @@ func TestSpec(t *testing.T) {
 		secret: mustHash("foo"),
 	})
 
-	unknownToken := mustGenerateToken()
-	expiredToken := mustGenerateToken()
-	insufficientToken := mustGenerateToken()
+	unknownToken := hmacsha.MustGenerate(secret, 16)
+	expiredToken := hmacsha.MustGenerate(secret, 16)
+	insufficientToken := hmacsha.MustGenerate(secret, 16)
 
 	addToken(accessTokens, token{
 		clientID:  "client1",
@@ -46,9 +46,9 @@ func TestSpec(t *testing.T) {
 		expiresAt: time.Now().Add(time.Hour),
 	})
 
-	unknownRefreshToken := mustGenerateToken()
-	validRefreshToken := mustGenerateToken()
-	expiredRefreshToken := mustGenerateToken()
+	unknownRefreshToken := hmacsha.MustGenerate(secret, 16)
+	validRefreshToken := hmacsha.MustGenerate(secret, 16)
+	expiredRefreshToken := hmacsha.MustGenerate(secret, 16)
 
 	addToken(refreshTokens, token{
 		clientID:  "client1",
@@ -64,8 +64,8 @@ func TestSpec(t *testing.T) {
 		expiresAt: time.Now().Add(-time.Hour),
 	})
 
-	unknownAuthorizationCode := mustGenerateToken()
-	expiredAuthorizationCode := mustGenerateToken()
+	unknownAuthorizationCode := hmacsha.MustGenerate(secret, 16)
+	expiredAuthorizationCode := hmacsha.MustGenerate(secret, 16)
 
 	addToken(authorizationCodes, token{
 		clientID:  "client1",
@@ -129,13 +129,4 @@ func mustHash(password string) []byte {
 	}
 
 	return hash
-}
-
-func mustGenerateToken() *hmacsha.Token {
-	token, err := hmacsha.Generate(secret, 16)
-	if err != nil {
-		panic(err)
-	}
-
-	return token
 }
