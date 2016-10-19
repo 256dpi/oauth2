@@ -27,8 +27,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusForbidden, r.Code)
-			assert.Equal(t, "access_denied", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
+			assert.Equal(t, "access_denied", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -45,8 +45,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusForbidden, r.Code)
-			assert.Equal(t, "access_denied", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
+			assert.Equal(t, "access_denied", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -63,8 +63,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -81,8 +81,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -101,14 +101,14 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code)
-			assert.Equal(t, bearer.TokenType, gjson.Get(r.Body.String(), "token_type").String())
-			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String())
-			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
+			assert.Equal(t, bearer.TokenType, gjson.Get(r.Body.String(), "token_type").String(), debug(r))
+			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String(), debug(r))
+			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int(), debug(r))
 
 			accessToken = gjson.Get(r.Body.String(), "access_token").String()
 			refreshToken = gjson.Get(r.Body.String(), "refresh_token").String()
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 		},
 	})
 
@@ -134,9 +134,9 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code)
-			assert.Equal(t, "invalid_client", gjson.Get(r.Body.String(), "error").Str)
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Basic realm=`)
+			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
+			assert.Equal(t, "invalid_client", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Basic realm=`, debug(r))
 		},
 	})
 
@@ -151,8 +151,8 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 			"scope":      c.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -167,8 +167,8 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -185,14 +185,14 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code)
-			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String())
-			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String())
-			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
+			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String(), debug(r))
+			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String(), debug(r))
+			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int(), debug(r))
 
 			accessToken = gjson.Get(r.Body.String(), "access_token").String()
 			refreshToken = gjson.Get(r.Body.String(), "refresh_token").String()
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 		},
 	})
 
@@ -219,9 +219,9 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "invalid_scope", fragment(r, "error"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
+			assert.Equal(t, http.StatusFound, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", fragment(r, "error"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 		},
 	})
 
@@ -237,9 +237,9 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "invalid_scope", fragment(r, "error"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
+			assert.Equal(t, http.StatusFound, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", fragment(r, "error"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 		},
 	})
 
@@ -255,9 +255,9 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "access_denied", fragment(r, "error"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
+			assert.Equal(t, http.StatusFound, r.Code, debug(r))
+			assert.Equal(t, "access_denied", fragment(r, "error"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 		},
 	})
 
@@ -275,14 +275,14 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, bearer.TokenType, fragment(r, "token_type"))
-			assert.Equal(t, c.ValidScope, fragment(r, "scope"))
-			assert.Equal(t, strconv.Itoa(c.ExpectedExpireIn), fragment(r, "expires_in"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
+			assert.Equal(t, http.StatusFound, r.Code, debug(r))
+			assert.Equal(t, bearer.TokenType, fragment(r, "token_type"), debug(r))
+			assert.Equal(t, c.ValidScope, fragment(r, "scope"), debug(r))
+			assert.Equal(t, strconv.Itoa(c.ExpectedExpireIn), fragment(r, "expires_in"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 
 			accessToken = fragment(r, "access_token")
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 		},
 	})
 
@@ -304,9 +304,9 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "invalid_scope", query(r, "error"))
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusFound, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", query(r, "error"), debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 		},
 	})
 
@@ -322,9 +322,9 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "invalid_scope", query(r, "error"))
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusFound, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", query(r, "error"), debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 		},
 	})
 
@@ -340,9 +340,9 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "access_denied", query(r, "error"))
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusFound, r.Code, debug(r))
+			assert.Equal(t, "access_denied", query(r, "error"), debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 		},
 	})
 
@@ -360,11 +360,11 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code)
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusFound, r.Code, debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 
 			authorizationCode = query(r, "code")
-			assert.NotEmpty(t, authorizationCode)
+			assert.NotEmpty(t, authorizationCode, debug(r))
 		},
 	})
 
@@ -381,8 +381,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -399,8 +399,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -417,8 +417,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -435,8 +435,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -453,8 +453,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.SecondaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -471,8 +471,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str)
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
 		},
 	})
 
@@ -491,13 +491,13 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code)
-			assert.Equal(t, bearer.TokenType, gjson.Get(r.Body.String(), "token_type").String())
-			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String())
-			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
+			assert.Equal(t, bearer.TokenType, gjson.Get(r.Body.String(), "token_type").String(), debug(r))
+			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String(), debug(r))
+			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int(), debug(r))
 
 			accessToken = gjson.Get(r.Body.String(), "access_token").String()
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 			refreshToken = gjson.Get(r.Body.String(), "refresh_token").String()
 		},
 	})
@@ -524,8 +524,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.InvalidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").String())
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").String(), debug(r))
 		},
 	})
 
@@ -540,8 +540,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.UnknownRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String())
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
 		},
 	})
 
@@ -556,8 +556,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.ExpiredRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String())
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
 		},
 	})
 
@@ -572,8 +572,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.ValidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String())
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
 		},
 	})
 
@@ -589,8 +589,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"scope":         c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").String())
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").String(), debug(r))
 		},
 	})
 

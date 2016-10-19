@@ -20,8 +20,8 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 			"Authorization": "Bearer " + accessToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code)
-			assert.NotEmpty(t, r.Body.String())
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
+			assert.NotEmpty(t, r.Body.String(), debug(r))
 		},
 	})
 }
@@ -42,12 +42,12 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 			"refresh_token": refreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code)
-			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String())
-			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int())
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
+			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String(), debug(r))
+			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int(), debug(r))
 
 			accessToken = gjson.Get(r.Body.String(), "access_token").String()
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 		},
 	})
 
@@ -65,8 +65,8 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 			"refresh_token": refreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String())
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
 		},
 	})
 }

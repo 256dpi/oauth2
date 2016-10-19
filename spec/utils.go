@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"net/url"
 )
@@ -45,4 +46,8 @@ func query(r *httptest.ResponseRecorder, key string) string {
 	}
 
 	return u.Query().Get(key)
+}
+
+func debug(rec *httptest.ResponseRecorder) interface{} {
+	return fmt.Sprintf("\nStatus: %d\nHeader: %v\nBody:   %v", rec.Code, rec.HeaderMap, rec.Body.String())
 }
