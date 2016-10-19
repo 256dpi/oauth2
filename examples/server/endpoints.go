@@ -65,26 +65,8 @@ func handleImplicitGrant(w http.ResponseWriter, r *http.Request, req *oauth2.Aut
 		return
 	}
 
-	// generate new access token
-	accessToken := hmacsha.MustGenerate(secret, 32)
-
-	// prepare response
-	res := bearer.NewTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
-
-	// set granted scope
-	res.Scope = req.Scope
-
-	// set state
-	res.State = req.State
-
-	// save access token
-	accessTokens[accessToken.SignatureString()] = token{
-		clientID:  req.ClientID,
-		username:  owner.id,
-		signature: accessToken.SignatureString(),
-		expiresAt: time.Now().Add(tokenLifespan),
-		scope:     req.Scope,
-	}
+	// issue tokens
+	res := issueTokens(false, req.Scope, req.State, req.ClientID, owner.id)
 
 	// write response
 	oauth2.RedirectTokenResponse(w, req.RedirectURI, res)
@@ -180,11 +162,8 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, req *oau
 		return
 	}
 
-	// issue access and refresh token
-	at, rt, res := createTokensAndResponse(req)
-
-	// save tokens
-	saveTokens(at, rt, req.Scope, req.ClientID, req.Username)
+	// issue tokens
+	res := issueTokens(true, req.Scope, req.State, req.ClientID, req.Username)
 
 	// write response
 	oauth2.WriteTokenResponse(w, res)
@@ -197,11 +176,8 @@ func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.TokenReques
 		return
 	}
 
-	// issue access and refresh token
-	at, rt, res := createTokensAndResponse(req)
-
 	// save tokens
-	saveTokens(at, rt, req.Scope, req.ClientID, "")
+	res := issueTokens(true, req.Scope, req.State, req.ClientID, "")
 
 	// write response
 	oauth2.WriteTokenResponse(w, res)
@@ -246,11 +222,8 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, req *oauth2.TokenReques
 		return
 	}
 
-	// issue new access and refresh token
-	at, rt, res := createTokensAndResponse(req)
-
-	// save tokens
-	saveTokens(at, rt, req.Scope, req.ClientID, "")
+	// issue tokens
+	res := issueTokens(true, req.Scope, req.State, req.ClientID, storedAuthorizationCode.username)
 
 	// delete used authorization code
 	delete(authorizationCodes, authorizationCode.SignatureString())
@@ -297,11 +270,8 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 		return
 	}
 
-	// issue new access and refresh token
-	at, rt, res := createTokensAndResponse(req)
-
-	// save tokens
-	saveTokens(at, rt, req.Scope, req.ClientID, storedRefreshToken.username)
+	// issue tokens
+	res := issueTokens(true, req.Scope, req.State, req.ClientID, storedRefreshToken.username)
 
 	// delete used refresh token
 	delete(refreshTokens, refreshToken.SignatureString())
@@ -310,7 +280,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
 	oauth2.WriteTokenResponse(w, res)
 }
 
-func createTokensAndResponse(req *oauth2.TokenRequest) (*hmacsha.Token, *hmacsha.Token, *oauth2.TokenResponse) {
+func issueTokens(issueRefreshToken bool, scope oauth2.Scope, state, clientID, username string) *oauth2.TokenResponse {
 	// generate new access token
 	accessToken := hmacsha.MustGenerate(secret, 32)
 
@@ -321,18 +291,19 @@ func createTokensAndResponse(req *oauth2.TokenRequest) (*hmacsha.Token, *hmacsha
 	res := bearer.NewTokenResponse(accessToken.String(), int(tokenLifespan/time.Second))
 
 	// set granted scope
-	res.Scope = req.Scope
+	res.Scope = scope
 
-	// carry over state
-	res.State = req.State
+	// set state
+	res.State = state
 
 	// set refresh token
 	res.RefreshToken = refreshToken.String()
 
-	return accessToken, refreshToken, res
-}
+	// disable refresh token if not requested
+	if !issueRefreshToken {
+		refreshToken = nil
+	}
 
-func saveTokens(accessToken, refreshToken *hmacsha.Token, scope oauth2.Scope, clientID, username string) {
 	// save access token
 	accessTokens[accessToken.SignatureString()] = token{
 		clientID:  clientID,
@@ -342,12 +313,16 @@ func saveTokens(accessToken, refreshToken *hmacsha.Token, scope oauth2.Scope, cl
 		scope:     scope,
 	}
 
-	// save refresh token
-	refreshTokens[refreshToken.SignatureString()] = token{
-		clientID:  clientID,
-		username:  username,
-		signature: refreshToken.SignatureString(),
-		expiresAt: time.Now().Add(tokenLifespan),
-		scope:     scope,
+	// save refresh token if present
+	if refreshToken != nil {
+		refreshTokens[refreshToken.SignatureString()] = token{
+			clientID:  clientID,
+			username:  username,
+			signature: refreshToken.SignatureString(),
+			expiresAt: time.Now().Add(tokenLifespan),
+			scope:     scope,
+		}
 	}
+
+	return res
 }
