@@ -125,7 +125,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// authenticate client
 	client, found := clients[req.ClientID]
-	if !found || !sameHash(client.secret, req.ClientSecret) {
+	if !found {
 		oauth2.WriteError(w, oauth2.InvalidClient(req.State, "Unknown client"))
 		return
 	}
@@ -134,6 +134,12 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	// client is public or confidential
 	//
 	// see: req.Confidential()
+
+	// validate client
+	if req.Confidential() && !sameHash(client.secret, req.ClientSecret) {
+		oauth2.WriteError(w, oauth2.InvalidClient(req.State, "Unknown client"))
+		return
+	}
 
 	// handle grant type
 	switch req.GrantType {
