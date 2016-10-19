@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"net/http"
@@ -24,17 +24,6 @@ func newHandler() http.Handler {
 	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint)
 	mux.HandleFunc("/api/protected", protectedResource)
 	return mux
-}
-
-func main() {
-	// create server
-	server := http.Server{
-		Addr:    "0.0.0.0:4000",
-		Handler: newHandler(),
-	}
-
-	// run server
-	server.ListenAndServe()
 }
 
 func protectedResource(w http.ResponseWriter, r *http.Request) {
