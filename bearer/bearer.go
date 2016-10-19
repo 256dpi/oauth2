@@ -3,10 +3,10 @@ package bearer
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/gonfire/oauth2"
-	"sort"
 )
 
 // TokenType is the bearer token type as defined by the OAuth2 Bearer Token spec.
@@ -58,7 +58,7 @@ func (e *Error) Map() map[string]string {
 	return m
 }
 
-// Params returns an encoded representation of the error parameters.
+// Params returns an string encoded representation of the error parameters.
 func (e *Error) Params() string {
 	// prepare params
 	var params []string
