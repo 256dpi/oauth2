@@ -12,7 +12,7 @@ script:
   - go test -coverprofile=jsonapi.coverprofile
   - go test -coverprofile=jsonapi.coverprofile ./bearer
   - go test -coverprofile=jsonapi.coverprofile ./hmacsha
-  - go test ./examples/server # ignore coverage for example
+  - go test -coverprofile=jsonapi.coverprofile ./examples/server
   - $HOME/gopath/bin/gover
   - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
 matrix:
