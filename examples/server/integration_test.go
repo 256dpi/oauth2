@@ -12,15 +12,17 @@ import (
 
 func TestSpec(t *testing.T) {
 	addOwner(clients, owner{
-		id:          "client1",
-		secret:      mustHash("foo"),
-		redirectURI: "http://example.com/callback1",
+		id:           "client1",
+		secret:       mustHash("foo"),
+		redirectURI:  "http://example.com/callback1",
+		confidential: true,
 	})
 
 	addOwner(clients, owner{
-		id:          "client2",
-		secret:      mustHash("foo"),
-		redirectURI: "http://example.com/callback2",
+		id:           "client2",
+		secret:       mustHash("foo"),
+		redirectURI:  "http://example.com/callback2",
+		confidential: true,
 	})
 
 	addOwner(users, owner{

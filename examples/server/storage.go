@@ -8,9 +8,10 @@ import (
 )
 
 type owner struct {
-	id          string
-	secret      []byte
-	redirectURI string
+	id           string
+	secret       []byte
+	redirectURI  string
+	confidential bool
 }
 
 var clients = map[string]owner{}

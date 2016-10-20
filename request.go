@@ -96,12 +96,6 @@ func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 	}, nil
 }
 
-// Confidential returns true when the client supplied its and and secret and
-// therefore acts as being a confidential client.
-func (r *TokenRequest) Confidential() bool {
-	return r.ClientID != "" && r.ClientSecret != ""
-}
-
 // A AuthorizationRequest is typically returned by ParseAuthorizationRequest and
 // holds all information necessary to handle an authorization request.
 type AuthorizationRequest struct {

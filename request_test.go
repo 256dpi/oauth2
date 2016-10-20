@@ -23,7 +23,6 @@ func TestParseTokenRequestMinimal(t *testing.T) {
 	assert.Equal(t, "", req.RefreshToken)
 	assert.Equal(t, "", req.RedirectURI)
 	assert.Equal(t, "", req.Code)
-	assert.False(t, req.Confidential())
 	assert.Equal(t, r, req.HTTP)
 }
 
@@ -49,7 +48,6 @@ func TestParseTokenRequestFull(t *testing.T) {
 	assert.Equal(t, "bla", req.RefreshToken)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "blaa", req.Code)
-	assert.True(t, req.Confidential())
 	assert.Equal(t, r, req.HTTP)
 }
 
