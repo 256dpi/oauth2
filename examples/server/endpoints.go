@@ -119,20 +119,20 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// make sure the grant type is known
 	if !oauth2.KnownGrantType(req.GrantType) {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Unknown grant type"))
+		oauth2.WriteError(w, oauth2.InvalidRequest(oauth2.NoState, "Unknown grant type"))
 		return
 	}
 
 	// find client
 	client, found := clients[req.ClientID]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidClient(req.State, "Unknown client"))
+		oauth2.WriteError(w, oauth2.InvalidClient(oauth2.NoState, "Unknown client"))
 		return
 	}
 
 	// authenticate client
 	if client.confidential && !sameHash(client.secret, req.ClientSecret) {
-		oauth2.WriteError(w, oauth2.InvalidClient(req.State, "Unknown client"))
+		oauth2.WriteError(w, oauth2.InvalidClient(oauth2.NoState, "Unknown client"))
 		return
 	}
 
@@ -153,18 +153,18 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, r *oauth
 	// authenticate resource owner
 	owner, found := users[r.Username]
 	if !found || !sameHash(owner.secret, r.Password) {
-		oauth2.WriteError(w, oauth2.AccessDenied(r.State, oauth2.NoDescription))
+		oauth2.WriteError(w, oauth2.AccessDenied(oauth2.NoState, oauth2.NoDescription))
 		return
 	}
 
 	// check scope
 	if !allowedScope.Includes(r.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(r.State, oauth2.NoDescription))
+		oauth2.WriteError(w, oauth2.InvalidScope(oauth2.NoState, oauth2.NoDescription))
 		return
 	}
 
 	// issue tokens
-	res := issueTokens(true, r.Scope, r.State, r.ClientID, r.Username)
+	res := issueTokens(true, r.Scope, oauth2.NoState, r.ClientID, r.Username)
 
 	// write response
 	oauth2.WriteTokenResponse(w, res)
@@ -173,12 +173,12 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, r *oauth
 func handleClientCredentialsGrant(w http.ResponseWriter, r *oauth2.TokenRequest) {
 	// check scope
 	if !allowedScope.Includes(r.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(r.State, oauth2.NoDescription))
+		oauth2.WriteError(w, oauth2.InvalidScope(oauth2.NoState, oauth2.NoDescription))
 		return
 	}
 
 	// save tokens
-	res := issueTokens(true, r.Scope, r.State, r.ClientID, "")
+	res := issueTokens(true, r.Scope, oauth2.NoState, r.ClientID, "")
 
 	// write response
 	oauth2.WriteTokenResponse(w, res)
@@ -188,43 +188,43 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, r *oauth2.TokenRequest)
 	// parse authorization code
 	authorizationCode, err := hmacsha.Parse(secret, r.Code)
 	if err != nil {
-		oauth2.WriteError(w, oauth2.InvalidRequest(r.State, err.Error()))
+		oauth2.WriteError(w, oauth2.InvalidRequest(oauth2.NoState, err.Error()))
 		return
 	}
 
 	// get stored authorization code by signature
 	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidGrant(r.State, "Unknown authorization code"))
+		oauth2.WriteError(w, oauth2.InvalidGrant(oauth2.NoState, "Unknown authorization code"))
 		return
 	}
 
 	// validate expiration
 	if storedAuthorizationCode.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidGrant(r.State, "Expired authorization code"))
+		oauth2.WriteError(w, oauth2.InvalidGrant(oauth2.NoState, "Expired authorization code"))
 		return
 	}
 
 	// validate ownership
 	if storedAuthorizationCode.clientID != r.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidGrant(r.State, "Invalid authorization code ownership"))
+		oauth2.WriteError(w, oauth2.InvalidGrant(oauth2.NoState, "Invalid authorization code ownership"))
 		return
 	}
 
 	// validate redirect uri
 	if storedAuthorizationCode.redirectURI != r.RedirectURI {
-		oauth2.WriteError(w, oauth2.InvalidGrant(r.State, "Changed redirect uri"))
+		oauth2.WriteError(w, oauth2.InvalidGrant(oauth2.NoState, "Changed redirect uri"))
 		return
 	}
 
 	// validate scope
 	if !storedAuthorizationCode.scope.Includes(r.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(r.State, "Scope exceeds the originally granted scope"))
+		oauth2.WriteError(w, oauth2.InvalidScope(oauth2.NoState, "Scope exceeds the originally granted scope"))
 		return
 	}
 
 	// issue tokens
-	res := issueTokens(true, r.Scope, r.State, r.ClientID, storedAuthorizationCode.username)
+	res := issueTokens(true, r.Scope, oauth2.NoState, r.ClientID, storedAuthorizationCode.username)
 
 	// delete used authorization code
 	delete(authorizationCodes, authorizationCode.SignatureString())
@@ -237,26 +237,26 @@ func handleRefreshTokenGrant(w http.ResponseWriter, r *oauth2.TokenRequest) {
 	// parse refresh token
 	refreshToken, err := hmacsha.Parse(secret, r.RefreshToken)
 	if err != nil {
-		oauth2.WriteError(w, oauth2.InvalidRequest(r.State, err.Error()))
+		oauth2.WriteError(w, oauth2.InvalidRequest(oauth2.NoState, err.Error()))
 		return
 	}
 
 	// get stored refresh token by signature
 	storedRefreshToken, found := refreshTokens[refreshToken.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidGrant(r.State, "Unknown refresh token"))
+		oauth2.WriteError(w, oauth2.InvalidGrant(oauth2.NoState, "Unknown refresh token"))
 		return
 	}
 
 	// validate expiration
 	if storedRefreshToken.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidGrant(r.State, "Expired refresh token"))
+		oauth2.WriteError(w, oauth2.InvalidGrant(oauth2.NoState, "Expired refresh token"))
 		return
 	}
 
 	// validate ownership
 	if storedRefreshToken.clientID != r.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidGrant(r.State, "Invalid refresh token ownership"))
+		oauth2.WriteError(w, oauth2.InvalidGrant(oauth2.NoState, "Invalid refresh token ownership"))
 		return
 	}
 
@@ -267,12 +267,12 @@ func handleRefreshTokenGrant(w http.ResponseWriter, r *oauth2.TokenRequest) {
 
 	// validate scope - a missing scope is always included
 	if !storedRefreshToken.scope.Includes(r.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(r.State, "Scope exceeds the originally granted scope"))
+		oauth2.WriteError(w, oauth2.InvalidScope(oauth2.NoState, "Scope exceeds the originally granted scope"))
 		return
 	}
 
 	// issue tokens
-	res := issueTokens(true, r.Scope, r.State, r.ClientID, storedRefreshToken.username)
+	res := issueTokens(true, r.Scope, oauth2.NoState, r.ClientID, storedRefreshToken.username)
 
 	// delete used refresh token
 	delete(refreshTokens, refreshToken.SignatureString())

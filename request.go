@@ -16,7 +16,6 @@ type TokenRequest struct {
 	Password     string
 	RefreshToken string
 	RedirectURI  string
-	State        string
 	Code         string
 
 	HTTP *http.Request
@@ -90,7 +89,6 @@ func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 		Password:     password,
 		RefreshToken: refreshToken,
 		RedirectURI:  redirectURIString,
-		State:        state,
 		Code:         code,
 		HTTP:         r,
 	}, nil
