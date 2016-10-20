@@ -217,14 +217,8 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, r *oauth2.TokenRequest)
 		return
 	}
 
-	// validate scope
-	if !storedAuthorizationCode.scope.Includes(r.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(oauth2.NoState, "Scope exceeds the originally granted scope"))
-		return
-	}
-
 	// issue tokens
-	res := issueTokens(true, r.Scope, oauth2.NoState, r.ClientID, storedAuthorizationCode.username)
+	res := issueTokens(true, storedAuthorizationCode.scope, oauth2.NoState, r.ClientID, storedAuthorizationCode.username)
 
 	// delete used authorization code
 	delete(authorizationCodes, authorizationCode.SignatureString())

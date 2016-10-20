@@ -458,24 +458,6 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
-	// exceeding scope
-	Do(c.Handler, &Request{
-		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.PrimaryClientID,
-		Password: c.PrimaryClientSecret,
-		Form: map[string]string{
-			"grant_type":   oauth2.AuthorizationCodeGrantType,
-			"scope":        c.ExceedingScope,
-			"code":         authorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
-		},
-		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
-		},
-	})
-
 	var accessToken, refreshToken string
 
 	// get access token
