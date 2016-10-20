@@ -18,6 +18,8 @@ type TokenRequest struct {
 	RedirectURI  string
 	State        string
 	Code         string
+
+	HTTP *http.Request
 }
 
 // ParseTokenRequest parses an incoming request and returns a TokenRequest.
@@ -25,45 +27,45 @@ type TokenRequest struct {
 //
 // Note: Obtaining the client id and secret from the request body (form data)
 // is not implemented by default due to security considerations.
-func ParseTokenRequest(req *http.Request) (*TokenRequest, error) {
+func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 	// check method
-	if req.Method != "POST" {
+	if r.Method != "POST" {
 		return nil, InvalidRequest(NoState, "Invalid HTTP method")
 	}
 
 	// parse query params and body params to form
-	err := req.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		return nil, InvalidRequest(NoState, "Malformed query parameters or body form")
 	}
 
 	// get state
-	state := req.PostForm.Get("state")
+	state := r.PostForm.Get("state")
 
 	// get grant type
-	grantType := req.PostForm.Get("grant_type")
+	grantType := r.PostForm.Get("grant_type")
 	if grantType == "" {
 		return nil, InvalidRequest(state, "Missing grant type")
 	}
 
 	// get scope
-	scope := ParseScope(req.PostForm.Get("scope"))
+	scope := ParseScope(r.PostForm.Get("scope"))
 
 	// get client id and secret
-	clientID, clientSecret, ok := req.BasicAuth()
+	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
 		return nil, InvalidRequest(state, "Missing or invalid HTTP authorization header")
 	}
 
 	// get username and password
-	username := req.PostForm.Get("username")
-	password := req.PostForm.Get("password")
+	username := r.PostForm.Get("username")
+	password := r.PostForm.Get("password")
 
 	// get refresh token
-	refreshToken := req.PostForm.Get("refresh_token")
+	refreshToken := r.PostForm.Get("refresh_token")
 
 	// get redirect uri
-	redirectURIString, err := url.QueryUnescape(req.Form.Get("redirect_uri"))
+	redirectURIString, err := url.QueryUnescape(r.Form.Get("redirect_uri"))
 	if err != nil {
 		return nil, InvalidRequest(state, "Invalid redirect URI")
 	}
@@ -77,7 +79,7 @@ func ParseTokenRequest(req *http.Request) (*TokenRequest, error) {
 	}
 
 	// get code
-	code := req.PostForm.Get("code")
+	code := r.PostForm.Get("code")
 
 	return &TokenRequest{
 		GrantType:    grantType,
@@ -90,6 +92,7 @@ func ParseTokenRequest(req *http.Request) (*TokenRequest, error) {
 		RedirectURI:  redirectURIString,
 		State:        state,
 		Code:         code,
+		HTTP:         r,
 	}, nil
 }
 
@@ -107,43 +110,45 @@ type AuthorizationRequest struct {
 	ClientID     string
 	RedirectURI  string
 	State        string
+
+	HTTP *http.Request
 }
 
 // ParseAuthorizationRequest parses an incoming request and returns an
 // AuthorizationRequest. The functions validates basic constraints given by the
 // OAuth2 spec.
-func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error) {
+func ParseAuthorizationRequest(r *http.Request) (*AuthorizationRequest, error) {
 	// check method
-	if req.Method != "GET" && req.Method != "POST" {
+	if r.Method != "GET" && r.Method != "POST" {
 		return nil, InvalidRequest(NoState, "Invalid HTTP method")
 	}
 
 	// parse query params and body params to form
-	err := req.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		return nil, InvalidRequest(NoState, "Malformed query parameters or form data")
 	}
 
 	// get state
-	state := req.Form.Get("state")
+	state := r.Form.Get("state")
 
 	// get response type
-	responseType := req.Form.Get("response_type")
+	responseType := r.Form.Get("response_type")
 	if responseType == "" {
 		return nil, InvalidRequest(state, "Missing response type")
 	}
 
 	// get scope
-	scope := ParseScope(req.Form.Get("scope"))
+	scope := ParseScope(r.Form.Get("scope"))
 
 	// get client id
-	clientID := req.Form.Get("client_id")
+	clientID := r.Form.Get("client_id")
 	if clientID == "" {
 		return nil, InvalidRequest(state, "Missing client ID")
 	}
 
 	// get redirect uri
-	redirectURIString, err := url.QueryUnescape(req.Form.Get("redirect_uri"))
+	redirectURIString, err := url.QueryUnescape(r.Form.Get("redirect_uri"))
 	if err != nil || redirectURIString == "" {
 		return nil, InvalidRequest(state, "Missing redirect URI")
 	}
@@ -160,5 +165,6 @@ func ParseAuthorizationRequest(req *http.Request) (*AuthorizationRequest, error)
 		ClientID:     clientID,
 		RedirectURI:  redirectURIString,
 		State:        state,
+		HTTP:         r,
 	}, nil
 }

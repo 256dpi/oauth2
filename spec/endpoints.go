@@ -24,8 +24,8 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 
 	// unknown client
 	Do(c.Handler, &Request{
-		Method: "POST",
-		Path:   c.TokenEndpoint,
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
 		Username: "unknown",
 		Form: map[string]string{
 			"grant_type": oauth2.PasswordGrantType,
