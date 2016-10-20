@@ -130,12 +130,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// at this point the authentication server may check if the authenticated
-	// client is public or confidential
-	//
-	// see: req.Confidential()
-
-	// validate client
+	// basic client validation (we just check the secret if one is provided)
 	if req.Confidential() && !sameHash(client.secret, req.ClientSecret) {
 		oauth2.WriteError(w, oauth2.InvalidClient(req.State, "Unknown client"))
 		return
