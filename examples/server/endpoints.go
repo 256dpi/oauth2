@@ -175,15 +175,15 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, r *oauth
 	oauth2.WriteTokenResponse(w, res)
 }
 
-func handleClientCredentialsGrant(w http.ResponseWriter, req *oauth2.TokenRequest) {
+func handleClientCredentialsGrant(w http.ResponseWriter, r *oauth2.TokenRequest) {
 	// check scope
-	if !allowedScope.Includes(req.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(req.State, oauth2.NoDescription))
+	if !allowedScope.Includes(r.Scope) {
+		oauth2.WriteError(w, oauth2.InvalidScope(r.State, oauth2.NoDescription))
 		return
 	}
 
 	// save tokens
-	res := issueTokens(true, req.Scope, req.State, req.ClientID, "")
+	res := issueTokens(true, r.Scope, r.State, r.ClientID, "")
 
 	// write response
 	oauth2.WriteTokenResponse(w, res)
