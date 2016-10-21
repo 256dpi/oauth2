@@ -7,9 +7,17 @@ import (
 	"github.com/gonfire/oauth2"
 )
 
+// ErrNotFound can be returned by the delegate to indicate that the requested
+// client, resource owner, authorization code or refresh token has not been found,
 var ErrNotFound = errors.New("not found")
+
+// ErrMalformed can be returned by the delegate to indicate that the provided
+// authorization code or refresh token is malformed.
 var ErrMalformed = errors.New("malformed")
-var ErrRejected = errors.New("rejected") // TODO: Rename to refused?
+
+// ErrRejected can be returned by the delegate to indicate that the provided
+// scope has been rejected and the current request should be denied.
+var ErrRejected = errors.New("rejected")
 
 type Delegate interface {
 	LookupClient(string) (Client, error)
