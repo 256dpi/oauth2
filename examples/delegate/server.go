@@ -21,7 +21,7 @@ var requiredScope = oauth2.ParseScope("foo")
 func newHandler(d *Delegate) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/oauth2/token", tokenEndpoint(d))
-	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint)
+	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint(d))
 	mux.HandleFunc("/api/protected", protectedResource)
 	return mux
 }

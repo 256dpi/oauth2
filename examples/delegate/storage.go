@@ -26,6 +26,10 @@ func (o *owner) ValidSecret(pw string) bool {
 	return sameHash(o.secret, pw)
 }
 
+func (o *owner) ValidRedirectURI(uri string) bool {
+	return o.redirectURI == uri
+}
+
 func (o *owner) Username() string {
 	return o.id
 }

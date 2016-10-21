@@ -38,6 +38,7 @@ type Client interface {
 	ID() string
 	Confidential() bool
 	ValidSecret(string) bool
+	ValidRedirectURI(string) bool
 }
 
 type ResourceOwner interface {

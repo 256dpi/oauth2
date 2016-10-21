@@ -10,45 +10,28 @@ import (
 	"github.com/gonfire/oauth2/hmacsha"
 )
 
-func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
-	// parse authorization request
-	req, err := oauth2.ParseAuthorizationRequest(r)
-	if err != nil {
-		oauth2.WriteError(w, err)
-		return
-	}
+func authorizationEndpoint(d *Delegate) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// show info notice on a GET request
+		if r.Method == "GET" {
+			w.Write([]byte("This authentication server does not provide an authorization form."))
+			return
+		}
 
-	// make sure the response type is known
-	if !oauth2.KnownResponseType(req.ResponseType) {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Unknown response type"))
-		return
-	}
+		// process authorization request
+		ar, _, err := delegate.ProcessAuthorizationRequest(d, r)
+		if err != nil {
+			oauth2.WriteError(w, err)
+			return
+		}
 
-	// get client
-	client, found := clients[req.ClientID]
-	if !found {
-		oauth2.WriteError(w, oauth2.InvalidClient(req.State, "Unknown client"))
-		return
-	}
-
-	// validate redirect uri
-	if client.redirectURI != req.RedirectURI {
-		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Invalid redirect URI"))
-		return
-	}
-
-	// show info notice on a GET request
-	if r.Method == "GET" {
-		w.Write([]byte("This authentication server does not provide an authorization form."))
-		return
-	}
-
-	// triage based on response type
-	switch req.ResponseType {
-	case oauth2.TokenResponseType:
-		handleImplicitGrant(w, req)
-	case oauth2.CodeResponseType:
-		handleAuthorizationCodeGrantAuthorization(w, req)
+		// triage based on response type
+		switch ar.ResponseType {
+		case oauth2.TokenResponseType:
+			handleImplicitGrant(w, ar)
+		case oauth2.CodeResponseType:
+			handleAuthorizationCodeGrantAuthorization(w, ar)
+		}
 	}
 }
 
