@@ -12,7 +12,7 @@ import (
 var secret = []byte("abcd1234abcd1234")
 
 var tokenLifespan = time.Hour
-
+var refreshTokenLifeSpan = 7 * 24 * time.Hour
 var authorizationCodeLifespan = 10 * time.Minute
 
 var allowedScope = oauth2.ParseScope("foo bar")

@@ -319,7 +319,7 @@ func issueTokens(issueRefreshToken bool, scope oauth2.Scope, state, clientID, us
 			clientID:  clientID,
 			username:  username,
 			signature: refreshToken.SignatureString(),
-			expiresAt: time.Now().Add(tokenLifespan),
+			expiresAt: time.Now().Add(refreshTokenLifeSpan),
 			scope:     scope,
 		}
 	}

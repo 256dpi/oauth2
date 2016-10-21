@@ -95,7 +95,7 @@ func (d *Delegate) IssueAuthorizationCode(c delegate.Client, ro delegate.Resourc
 		clientID:        c.ID(),
 		resourceOwnerID: roID,
 		signature:       t.SignatureString(),
-		expiresAt:       time.Now().Add(tokenLifespan),
+		expiresAt:       time.Now().Add(authorizationCodeLifespan),
 		scope:           scope,
 		redirectURI:     uri,
 	})
@@ -143,7 +143,7 @@ func (d *Delegate) IssueRefreshToken(c delegate.Client, ro delegate.ResourceOwne
 		clientID:        c.ID(),
 		resourceOwnerID: roID,
 		signature:       t.SignatureString(),
-		expiresAt:       time.Now().Add(tokenLifespan),
+		expiresAt:       time.Now().Add(refreshTokenLifespan),
 		scope:           scope,
 	})
 
