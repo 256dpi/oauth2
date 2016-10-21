@@ -76,7 +76,7 @@ func TestSpec(t *testing.T) {
 		expiresAt: time.Now().Add(-time.Hour),
 	})
 
-	config := spec.Default(newHandler(&Delegate{}))
+	config := spec.Default(newHandler(&manager{}))
 
 	config.PasswordGrantSupport = true
 	config.ClientCredentialsGrantSupport = true

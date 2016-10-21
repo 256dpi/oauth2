@@ -8,9 +8,9 @@ import (
 	"github.com/gonfire/oauth2/hmacsha"
 )
 
-type Delegate struct{}
+type manager struct{}
 
-func (d *Delegate) LookupClient(id string) (delegate.Client, error) {
+func (m *manager) LookupClient(id string) (delegate.Client, error) {
 	c, ok := clients[id]
 	if !ok {
 		return nil, delegate.ErrNotFound
@@ -19,7 +19,7 @@ func (d *Delegate) LookupClient(id string) (delegate.Client, error) {
 	return c, nil
 }
 
-func (d *Delegate) LookupResourceOwner(id string) (delegate.ResourceOwner, error) {
+func (m *manager) LookupResourceOwner(id string) (delegate.ResourceOwner, error) {
 	ro, ok := users[id]
 	if !ok {
 		return nil, delegate.ErrNotFound
@@ -28,7 +28,7 @@ func (d *Delegate) LookupResourceOwner(id string) (delegate.ResourceOwner, error
 	return ro, nil
 }
 
-func (d *Delegate) GrantScope(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (oauth2.Scope, error) {
+func (m *manager) GrantScope(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (oauth2.Scope, error) {
 	ok := allowedScope.Includes(scope)
 	if !ok {
 		return nil, delegate.ErrRejected
@@ -37,7 +37,7 @@ func (d *Delegate) GrantScope(c delegate.Client, ro delegate.ResourceOwner, scop
 	return scope, nil
 }
 
-func (d *Delegate) IssueAccessToken(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (string, int, error) {
+func (m *manager) IssueAccessToken(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (string, int, error) {
 	// generate new token
 	t := hmacsha.MustGenerate(secret, 32)
 
@@ -59,14 +59,14 @@ func (d *Delegate) IssueAccessToken(c delegate.Client, ro delegate.ResourceOwner
 	return t.String(), int(tokenLifespan / time.Second), nil
 }
 
-func (d *Delegate) ParseConsent(r *oauth2.AuthorizationRequest) (string, string, oauth2.Scope, error) {
+func (m *manager) ParseConsent(r *oauth2.AuthorizationRequest) (string, string, oauth2.Scope, error) {
 	username := r.HTTP.PostForm.Get("username")
 	password := r.HTTP.PostForm.Get("password")
 
 	return username, password, r.Scope, nil
 }
 
-func (d *Delegate) LookupAuthorizationCode(code string) (delegate.AuthorizationCode, error) {
+func (m *manager) LookupAuthorizationCode(code string) (delegate.AuthorizationCode, error) {
 	t, err := hmacsha.Parse(secret, code)
 	if err != nil {
 		return nil, delegate.ErrMalformed
@@ -80,7 +80,7 @@ func (d *Delegate) LookupAuthorizationCode(code string) (delegate.AuthorizationC
 	return ac, nil
 }
 
-func (d *Delegate) IssueAuthorizationCode(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope, uri string) (string, error) {
+func (m *manager) IssueAuthorizationCode(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope, uri string) (string, error) {
 	// generate new token
 	t := hmacsha.MustGenerate(secret, 32)
 
@@ -103,7 +103,7 @@ func (d *Delegate) IssueAuthorizationCode(c delegate.Client, ro delegate.Resourc
 	return t.String(), nil
 }
 
-func (d *Delegate) RemoveAuthorizationCode(code string) error {
+func (m *manager) RemoveAuthorizationCode(code string) error {
 	t, err := hmacsha.Parse(secret, code)
 	if err != nil {
 		return err
@@ -114,7 +114,7 @@ func (d *Delegate) RemoveAuthorizationCode(code string) error {
 	return nil
 }
 
-func (d *Delegate) LookupRefreshToken(token string) (delegate.RefreshToken, error) {
+func (m *manager) LookupRefreshToken(token string) (delegate.RefreshToken, error) {
 	t, err := hmacsha.Parse(secret, token)
 	if err != nil {
 		return nil, delegate.ErrMalformed
@@ -128,7 +128,7 @@ func (d *Delegate) LookupRefreshToken(token string) (delegate.RefreshToken, erro
 	return rt, nil
 }
 
-func (d *Delegate) IssueRefreshToken(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (string, error) {
+func (m *manager) IssueRefreshToken(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (string, error) {
 	// generate new token
 	t := hmacsha.MustGenerate(secret, 32)
 
@@ -150,7 +150,7 @@ func (d *Delegate) IssueRefreshToken(c delegate.Client, ro delegate.ResourceOwne
 	return t.String(), nil
 }
 
-func (d *Delegate) RemoveRefreshToken(token string) error {
+func (m *manager) RemoveRefreshToken(token string) error {
 	t, err := hmacsha.Parse(secret, token)
 	if err != nil {
 		return err

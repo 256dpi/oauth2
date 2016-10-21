@@ -18,7 +18,7 @@ var authorizationCodeLifespan = 10 * time.Minute
 var allowedScope = oauth2.ParseScope("foo bar")
 var requiredScope = oauth2.ParseScope("foo")
 
-func newHandler(d *Delegate) http.Handler {
+func newHandler(d *manager) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/oauth2/token", tokenEndpoint(d))
 	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint(d))

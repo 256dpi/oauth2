@@ -7,7 +7,7 @@ import (
 	"github.com/gonfire/oauth2/delegate"
 )
 
-func authorizationEndpoint(d *Delegate) http.HandlerFunc {
+func authorizationEndpoint(d *manager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process authorization request
 		ar, c, err := delegate.ProcessAuthorizationRequest(d, r)
@@ -49,7 +49,7 @@ func authorizationEndpoint(d *Delegate) http.HandlerFunc {
 	}
 }
 
-func tokenEndpoint(d *Delegate) http.HandlerFunc {
+func tokenEndpoint(d *manager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process token request
 		tr, c, err := delegate.ProcessTokenRequest(d, r)
