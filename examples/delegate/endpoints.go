@@ -112,18 +112,17 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *oauth2.
 
 func tokenEndpoint(d *Delegate) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// pre process token request
-		tr, c, err := delegate.TokenRequest(d, r)
+		// process token request
+		tr, c, err := delegate.ProcessTokenRequest(d, r)
 		if err != nil {
 			oauth2.WriteError(w, err)
 			return
 		}
 
-		// handle grant type
 		switch tr.GrantType {
 		case oauth2.PasswordGrantType:
 			// handle resource owner password credentials grant
-			res, err := delegate.PasswordGrant(d, c, tr)
+			res, err := delegate.HandlePasswordGrant(d, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -133,7 +132,7 @@ func tokenEndpoint(d *Delegate) http.HandlerFunc {
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.ClientCredentialsGrantType:
 			// handle client credentials grant
-			res, err := delegate.ClientCredentialsGrant(d, c, tr)
+			res, err := delegate.HandleClientCredentialsGrant(d, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -143,7 +142,7 @@ func tokenEndpoint(d *Delegate) http.HandlerFunc {
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.AuthorizationCodeGrantType:
 			// handle client credentials grant
-			res, err := delegate.AuthorizationCodeGrant(d, c, tr)
+			res, err := delegate.HandleAuthorizationCodeGrant(d, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -152,8 +151,8 @@ func tokenEndpoint(d *Delegate) http.HandlerFunc {
 			// write response
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.RefreshTokenGrantType:
-			// handle client credentials grant
-			res, err := delegate.RefreshTokenGrant(d, c, tr)
+			// handle refresh token grant
+			res, err := delegate.HandleRefreshTokenGrant(d, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return

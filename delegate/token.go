@@ -8,7 +8,7 @@ import (
 	"github.com/gonfire/oauth2/bearer"
 )
 
-func TokenRequest(d Delegate, r *http.Request) (*oauth2.TokenRequest, Client, error) {
+func ProcessTokenRequest(d Delegate, r *http.Request) (*oauth2.TokenRequest, Client, error) {
 	// parse token request
 	req, err := oauth2.ParseTokenRequest(r)
 	if err != nil {
@@ -36,7 +36,7 @@ func TokenRequest(d Delegate, r *http.Request) (*oauth2.TokenRequest, Client, er
 	return req, client, nil
 }
 
-func PasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
+func HandlePasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
 	// get resource owner
 	ro, err := d.LookupResourceOwner(r.Username)
 	if err == ErrNotFound {
@@ -67,7 +67,7 @@ func PasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenR
 	return res, nil
 }
 
-func ClientCredentialsGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
+func HandleClientCredentialsGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
 	// grant scope
 	grantedScope, err := d.GrantScope(c, nil, r.Scope)
 	if err == ErrRejected {
@@ -85,7 +85,7 @@ func ClientCredentialsGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oaut
 	return res, nil
 }
 
-func AuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
+func HandleAuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
 	// get authorization code
 	ac, err := d.LookupAuthorizationCode(r.Code)
 	if err == ErrMalformed {
@@ -139,7 +139,7 @@ func AuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oauth2.Tok
 	return res, nil
 }
 
-func RefreshTokenGrant(d RefreshTokenDelegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
+func HandleRefreshTokenGrant(d RefreshTokenDelegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
 	// get refresh token
 	rt, err := d.LookupRefreshToken(r.RefreshToken)
 	if err == ErrMalformed {
