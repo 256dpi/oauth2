@@ -58,28 +58,10 @@ func PasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenR
 		return nil, oauth2.ServerError(oauth2.NoState, "Failed to grant scope")
 	}
 
-	// issue access token
-	accessToken, expiresIn, err := d.IssueAccessToken(c, ro, grantedScope)
+	// issue tokens
+	res, err := HandleTokenResponse(d, c, ro, grantedScope, true)
 	if err != nil {
-		return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue access token")
-	}
-
-	// prepare response
-	res := bearer.NewTokenResponse(accessToken, expiresIn)
-
-	// set granted scope
-	res.Scope = grantedScope
-
-	// issue refresh token if available
-	rtd, ok := d.(RefreshTokenDelegate)
-	if ok {
-		refreshToken, err := rtd.IssueRefreshToken(c, nil, grantedScope)
-		if err != nil {
-			return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue refresh token")
-		}
-
-		// set refresh token
-		res.RefreshToken = refreshToken
+		return nil, err
 	}
 
 	return res, nil
@@ -94,28 +76,10 @@ func ClientCredentialsGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oaut
 		return nil, oauth2.ServerError(oauth2.NoState, "Failed to grant scope")
 	}
 
-	// issue access token
-	accessToken, expiresIn, err := d.IssueAccessToken(c, nil, grantedScope)
+	// issue tokens
+	res, err := HandleTokenResponse(d, c, nil, grantedScope, true)
 	if err != nil {
-		return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue access token")
-	}
-
-	// prepare response
-	res := bearer.NewTokenResponse(accessToken, expiresIn)
-
-	// set granted scope
-	res.Scope = grantedScope
-
-	// issue refresh token if available
-	rtd, ok := d.(RefreshTokenDelegate)
-	if ok {
-		refreshToken, err := rtd.IssueRefreshToken(c, nil, grantedScope)
-		if err != nil {
-			return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue refresh token")
-		}
-
-		// set refresh token
-		res.RefreshToken = refreshToken
+		return nil, err
 	}
 
 	return res, nil
@@ -160,28 +124,10 @@ func AuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oauth2.Tok
 		}
 	}
 
-	// issue access token
-	accessToken, expiresIn, err := d.IssueAccessToken(c, ro, ac.Scope())
+	// issue tokens
+	res, err := HandleTokenResponse(d, c, ro, ac.Scope(), true)
 	if err != nil {
-		return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue access token")
-	}
-
-	// prepare response
-	res := bearer.NewTokenResponse(accessToken, expiresIn)
-
-	// set granted scope
-	res.Scope = ac.Scope()
-
-	// issue refresh token if available
-	rtd, ok := d.(RefreshTokenDelegate)
-	if ok {
-		refreshToken, err := rtd.IssueRefreshToken(c, nil, ac.Scope())
-		if err != nil {
-			return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue refresh token")
-		}
-
-		// set refresh token
-		res.RefreshToken = refreshToken
+		return nil, err
 	}
 
 	// remove used authorization code
@@ -237,8 +183,24 @@ func RefreshTokenGrant(d RefreshTokenDelegate, c Client, r *oauth2.TokenRequest)
 		}
 	}
 
+	// issue tokens
+	res, err := HandleTokenResponse(d, c, ro, r.Scope, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// remove used refresh token
+	err = d.RemoveRefreshToken(r.RefreshToken)
+	if err != nil {
+		return nil, oauth2.ServerError(oauth2.NoState, "Failed to remove refresh token")
+	}
+
+	return res, nil
+}
+
+func HandleTokenResponse(d Delegate, c Client, ro ResourceOwner, scope oauth2.Scope, issueRefreshToken bool) (*oauth2.TokenResponse, error) {
 	// issue access token
-	accessToken, expiresIn, err := d.IssueAccessToken(c, ro, r.Scope)
+	accessToken, expiresIn, err := d.IssueAccessToken(c, ro, scope)
 	if err != nil {
 		return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue access token")
 	}
@@ -247,21 +209,18 @@ func RefreshTokenGrant(d RefreshTokenDelegate, c Client, r *oauth2.TokenRequest)
 	res := bearer.NewTokenResponse(accessToken, expiresIn)
 
 	// set granted scope
-	res.Scope = r.Scope
+	res.Scope = scope
 
-	// issue refresh token
-	refreshToken, err := d.IssueRefreshToken(c, ro, r.Scope)
-	if err != nil {
-		return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue refresh token")
-	}
+	// issue refresh token if available and implemented
+	rtd, ok := d.(RefreshTokenDelegate)
+	if ok && issueRefreshToken {
+		refreshToken, err := rtd.IssueRefreshToken(c, nil, scope)
+		if err != nil {
+			return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue refresh token")
+		}
 
-	// set refresh token
-	res.RefreshToken = refreshToken
-
-	// remove used refresh token
-	err = d.RemoveRefreshToken(r.RefreshToken)
-	if err != nil {
-		return nil, oauth2.ServerError(oauth2.NoState, "Failed to remove refresh token")
+		// set refresh token
+		res.RefreshToken = refreshToken
 	}
 
 	return res, nil
