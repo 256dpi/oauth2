@@ -20,9 +20,9 @@ func ProcessAuthorizationRequest(d Delegate, r *http.Request) (*oauth2.Authoriza
 	// load client
 	client, err := d.LookupClient(req.ClientID)
 	if err == ErrNotFound {
-		return nil, nil, oauth2.InvalidClient(oauth2.NoState, "Unknown client")
+		return nil, nil, oauth2.InvalidClient(req.State, "Unknown client")
 	} else if err != nil {
-		return nil, nil, oauth2.ServerError(oauth2.NoState, "Failed to lookup client")
+		return nil, nil, oauth2.ServerError(req.State, "Failed to lookup client")
 	}
 
 	// validate redirect uri
