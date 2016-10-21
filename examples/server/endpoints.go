@@ -10,6 +10,13 @@ import (
 )
 
 func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
+	// show info notice on a GET request
+	if r.Method == "GET" {
+		w.Write([]byte("This authentication server does not provide an authorization form.\n" +
+			"Please submit the resource owners username and password in the request body."))
+		return
+	}
+
 	// parse authorization request
 	req, err := oauth2.ParseAuthorizationRequest(r)
 	if err != nil {
@@ -33,12 +40,6 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 	// validate redirect uri
 	if client.redirectURI != req.RedirectURI {
 		oauth2.WriteError(w, oauth2.InvalidRequest(req.State, "Invalid redirect URI"))
-		return
-	}
-
-	// show info notice on a GET request
-	if r.Method == "GET" {
-		w.Write([]byte("This authentication server does not provide an authorization form."))
 		return
 	}
 

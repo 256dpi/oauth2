@@ -14,7 +14,8 @@ func authorizationEndpoint(d *Delegate) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// show info notice on a GET request
 		if r.Method == "GET" {
-			w.Write([]byte("This authentication server does not provide an authorization form."))
+			w.Write([]byte("This authentication server does not provide an authorization form.\n" +
+				"Please submit the resource owners username and password in the request body."))
 			return
 		}
 
