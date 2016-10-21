@@ -59,6 +59,13 @@ func (d *Delegate) IssueAccessToken(c delegate.Client, ro delegate.ResourceOwner
 	return t.String(), int(tokenLifespan / time.Second), nil
 }
 
+func (d *Delegate) ParseConsent(r *oauth2.AuthorizationRequest) (string, string, oauth2.Scope, error) {
+	username := r.HTTP.PostForm.Get("username")
+	password := r.HTTP.PostForm.Get("password")
+
+	return username, password, r.Scope, nil
+}
+
 func (d *Delegate) LookupAuthorizationCode(code string) (delegate.AuthorizationCode, error) {
 	t, err := hmacsha.Parse(secret, code)
 	if err != nil {
@@ -71,6 +78,29 @@ func (d *Delegate) LookupAuthorizationCode(code string) (delegate.AuthorizationC
 	}
 
 	return ac, nil
+}
+
+func (d *Delegate) IssueAuthorizationCode(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope, uri string) (string, error) {
+	// generate new token
+	t := hmacsha.MustGenerate(secret, 32)
+
+	// set resource owner id if present
+	roID := ""
+	if ro != nil {
+		roID = ro.ID()
+	}
+
+	// save access token
+	addToken(authorizationCodes, &token{
+		clientID:        c.ID(),
+		resourceOwnerID: roID,
+		signature:       t.SignatureString(),
+		expiresAt:       time.Now().Add(tokenLifespan),
+		scope:           scope,
+		redirectURI:     uri,
+	})
+
+	return t.String(), nil
 }
 
 func (d *Delegate) RemoveAuthorizationCode(code string) error {

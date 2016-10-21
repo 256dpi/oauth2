@@ -9,7 +9,7 @@ import (
 
 var ErrNotFound = errors.New("not found")
 var ErrMalformed = errors.New("malformed")
-var ErrRejected = errors.New("rejected")
+var ErrRejected = errors.New("rejected") // TODO: Rename to refused?
 
 type Delegate interface {
 	LookupClient(string) (Client, error)
@@ -19,10 +19,17 @@ type Delegate interface {
 	IssueAccessToken(Client, ResourceOwner, oauth2.Scope) (string, int, error)
 }
 
-type AuthorizationCodeDelegate interface {
+type AuthorizationDelegate interface {
 	Delegate
 
+	ParseConsent(r *oauth2.AuthorizationRequest) (string, string, oauth2.Scope, error)
+}
+
+type AuthorizationCodeDelegate interface {
+	AuthorizationDelegate
+
 	LookupAuthorizationCode(string) (AuthorizationCode, error)
+	IssueAuthorizationCode(Client, ResourceOwner, oauth2.Scope, string) (string, error)
 	RemoveAuthorizationCode(string) error
 }
 
