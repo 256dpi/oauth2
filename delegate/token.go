@@ -214,7 +214,7 @@ func HandleTokenResponse(d Delegate, c Client, ro ResourceOwner, scope oauth2.Sc
 	// issue refresh token if available and implemented
 	rtd, ok := d.(RefreshTokenDelegate)
 	if ok && issueRefreshToken {
-		refreshToken, err := rtd.IssueRefreshToken(c, nil, scope)
+		refreshToken, err := rtd.IssueRefreshToken(c, ro, scope)
 		if err != nil {
 			return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue refresh token")
 		}
