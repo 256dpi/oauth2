@@ -34,14 +34,14 @@ func TestSpec(t *testing.T) {
 	expiredToken := hmacsha.MustGenerate(secret, 16)
 	insufficientToken := hmacsha.MustGenerate(secret, 16)
 
-	addToken(accessTokens, token{
+	addCredential(accessTokens, credential{
 		clientID:  "client1",
 		signature: expiredToken.SignatureString(),
 		scope:     allowedScope,
 		expiresAt: time.Now().Add(-time.Hour),
 	})
 
-	addToken(accessTokens, token{
+	addCredential(accessTokens, credential{
 		clientID:  "client1",
 		signature: insufficientToken.SignatureString(),
 		scope:     oauth2.Scope{},
@@ -52,14 +52,14 @@ func TestSpec(t *testing.T) {
 	validRefreshToken := hmacsha.MustGenerate(secret, 16)
 	expiredRefreshToken := hmacsha.MustGenerate(secret, 16)
 
-	addToken(refreshTokens, token{
+	addCredential(refreshTokens, credential{
 		clientID:  "client1",
 		signature: validRefreshToken.SignatureString(),
 		scope:     allowedScope,
 		expiresAt: time.Now().Add(time.Hour),
 	})
 
-	addToken(refreshTokens, token{
+	addCredential(refreshTokens, credential{
 		clientID:  "client1",
 		signature: expiredRefreshToken.SignatureString(),
 		scope:     allowedScope,
@@ -69,7 +69,7 @@ func TestSpec(t *testing.T) {
 	unknownAuthorizationCode := hmacsha.MustGenerate(secret, 16)
 	expiredAuthorizationCode := hmacsha.MustGenerate(secret, 16)
 
-	addToken(authorizationCodes, token{
+	addCredential(authorizationCodes, credential{
 		clientID:  "client1",
 		signature: expiredAuthorizationCode.SignatureString(),
 		scope:     allowedScope,

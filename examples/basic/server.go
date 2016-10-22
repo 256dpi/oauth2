@@ -29,7 +29,7 @@ type owner struct {
 var clients = map[string]owner{}
 var users = map[string]owner{}
 
-type token struct {
+type credential struct {
 	clientID    string
 	username    string
 	signature   string
@@ -38,22 +38,22 @@ type token struct {
 	redirectURI string
 }
 
-var accessTokens = make(map[string]token)
-var refreshTokens = make(map[string]token)
-var authorizationCodes = make(map[string]token)
+var accessTokens = make(map[string]credential)
+var refreshTokens = make(map[string]credential)
+var authorizationCodes = make(map[string]credential)
 
 func addOwner(list map[string]owner, o owner) owner {
 	list[o.id] = o
 	return o
 }
 
-func addToken(list map[string]token, t token) token {
+func addCredential(list map[string]credential, t credential) credential {
 	list[t.signature] = t
 	return t
 }
 
-func sameHash(hash []byte, password string) bool {
-	return bcrypt.CompareHashAndPassword(hash, []byte(password)) == nil
+func sameHash(hash []byte, str string) bool {
+	return bcrypt.CompareHashAndPassword(hash, []byte(str)) == nil
 }
 
 func newHandler() http.Handler {
@@ -91,7 +91,7 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// show info notice on a GET request
+	// show notice for a GET request
 	if r.Method == "GET" {
 		w.Write([]byte("This authentication server does not provide an authorization form.\n" +
 			"Please submit the resource owners username and password in a POST request."))
@@ -156,7 +156,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, 
 	res.State = r.State
 
 	// save authorization code
-	authorizationCodes[authorizationCode.SignatureString()] = token{
+	authorizationCodes[authorizationCode.SignatureString()] = credential{
 		clientID:    r.ClientID,
 		username:    owner.id,
 		signature:   authorizationCode.SignatureString(),
@@ -360,7 +360,7 @@ func issueTokens(issueRefreshToken bool, scope oauth2.Scope, state, clientID, us
 	}
 
 	// save access token
-	accessTokens[accessToken.SignatureString()] = token{
+	accessTokens[accessToken.SignatureString()] = credential{
 		clientID:  clientID,
 		username:  username,
 		signature: accessToken.SignatureString(),
@@ -370,7 +370,7 @@ func issueTokens(issueRefreshToken bool, scope oauth2.Scope, state, clientID, us
 
 	// save refresh token if present
 	if refreshToken != nil {
-		refreshTokens[refreshToken.SignatureString()] = token{
+		refreshTokens[refreshToken.SignatureString()] = credential{
 			clientID:  clientID,
 			username:  username,
 			signature: refreshToken.SignatureString(),
