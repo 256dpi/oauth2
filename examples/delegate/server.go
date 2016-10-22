@@ -6,7 +6,9 @@ import (
 
 	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/bearer"
+	"github.com/gonfire/oauth2/delegate"
 	"github.com/gonfire/oauth2/hmacsha"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var secret = []byte("abcd1234abcd1234")
@@ -17,6 +19,236 @@ var authorizationCodeLifespan = 10 * time.Minute
 
 var allowedScope = oauth2.ParseScope("foo bar")
 var requiredScope = oauth2.ParseScope("foo")
+
+type owner struct {
+	id           string
+	secret       []byte
+	redirectURI  string
+	confidential bool
+}
+
+func (o *owner) ID() string {
+	return o.id
+}
+
+func (o *owner) Confidential() bool {
+	return o.confidential
+}
+
+func (o *owner) ValidSecret(pw string) bool {
+	return sameHash(o.secret, pw)
+}
+
+func (o *owner) ValidRedirectURI(uri string) bool {
+	return o.redirectURI == uri
+}
+
+func (o *owner) Username() string {
+	return o.id
+}
+
+var clients = map[string]*owner{}
+var users = map[string]*owner{}
+
+type credential struct {
+	clientID        string
+	resourceOwnerID string
+	signature       string
+	expiresAt       time.Time
+	scope           oauth2.Scope
+	redirectURI     string
+}
+
+func (t *credential) ClientID() string {
+	return t.clientID
+}
+
+func (t *credential) ResourceOwnerID() string {
+	return t.resourceOwnerID
+}
+
+func (t *credential) ExpiresAt() time.Time {
+	return t.expiresAt
+}
+
+func (t *credential) Scope() oauth2.Scope {
+	return t.scope
+}
+
+func (t *credential) RedirectURI() string {
+	return t.redirectURI
+}
+
+var accessTokens = make(map[string]*credential)
+var refreshTokens = make(map[string]*credential)
+var authorizationCodes = make(map[string]*credential)
+
+func addOwner(list map[string]*owner, o *owner) *owner {
+	list[o.id] = o
+	return o
+}
+
+func addCredential(list map[string]*credential, t *credential) *credential {
+	list[t.signature] = t
+	return t
+}
+
+func sameHash(hash []byte, str string) bool {
+	return bcrypt.CompareHashAndPassword(hash, []byte(str)) == nil
+}
+
+type manager struct{}
+
+func (m *manager) LookupClient(id string) (delegate.Client, error) {
+	c, ok := clients[id]
+	if !ok {
+		return nil, delegate.ErrNotFound
+	}
+
+	return c, nil
+}
+
+func (m *manager) LookupResourceOwner(id string) (delegate.ResourceOwner, error) {
+	ro, ok := users[id]
+	if !ok {
+		return nil, delegate.ErrNotFound
+	}
+
+	return ro, nil
+}
+
+func (m *manager) GrantScope(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (oauth2.Scope, error) {
+	ok := allowedScope.Includes(scope)
+	if !ok {
+		return nil, delegate.ErrRejected
+	}
+
+	return scope, nil
+}
+
+func (m *manager) IssueAccessToken(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (string, int, error) {
+	// generate new token
+	t := hmacsha.MustGenerate(secret, 32)
+
+	// set resource owner id if present
+	roID := ""
+	if ro != nil {
+		roID = ro.ID()
+	}
+
+	// save access token
+	addCredential(accessTokens, &credential{
+		clientID:        c.ID(),
+		resourceOwnerID: roID,
+		signature:       t.SignatureString(),
+		expiresAt:       time.Now().Add(tokenLifespan),
+		scope:           scope,
+	})
+
+	return t.String(), int(tokenLifespan / time.Second), nil
+}
+
+func (m *manager) ParseConsent(r *oauth2.AuthorizationRequest) (string, string, oauth2.Scope, error) {
+	username := r.HTTP.PostForm.Get("username")
+	password := r.HTTP.PostForm.Get("password")
+
+	return username, password, r.Scope, nil
+}
+
+func (m *manager) LookupAuthorizationCode(code string) (delegate.AuthorizationCode, error) {
+	t, err := hmacsha.Parse(secret, code)
+	if err != nil {
+		return nil, delegate.ErrMalformed
+	}
+
+	ac, ok := authorizationCodes[t.SignatureString()]
+	if !ok {
+		return nil, delegate.ErrNotFound
+	}
+
+	return ac, nil
+}
+
+func (m *manager) IssueAuthorizationCode(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope, uri string) (string, error) {
+	// generate new token
+	t := hmacsha.MustGenerate(secret, 32)
+
+	// set resource owner id if present
+	roID := ""
+	if ro != nil {
+		roID = ro.ID()
+	}
+
+	// save access token
+	addCredential(authorizationCodes, &credential{
+		clientID:        c.ID(),
+		resourceOwnerID: roID,
+		signature:       t.SignatureString(),
+		expiresAt:       time.Now().Add(authorizationCodeLifespan),
+		scope:           scope,
+		redirectURI:     uri,
+	})
+
+	return t.String(), nil
+}
+
+func (m *manager) RemoveAuthorizationCode(code string) error {
+	t, err := hmacsha.Parse(secret, code)
+	if err != nil {
+		return err
+	}
+
+	delete(authorizationCodes, t.SignatureString())
+
+	return nil
+}
+
+func (m *manager) LookupRefreshToken(token string) (delegate.RefreshToken, error) {
+	t, err := hmacsha.Parse(secret, token)
+	if err != nil {
+		return nil, delegate.ErrMalformed
+	}
+
+	rt, ok := refreshTokens[t.SignatureString()]
+	if !ok {
+		return nil, delegate.ErrNotFound
+	}
+
+	return rt, nil
+}
+
+func (m *manager) IssueRefreshToken(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (string, error) {
+	// generate new token
+	t := hmacsha.MustGenerate(secret, 32)
+
+	// set resource owner id if present
+	roID := ""
+	if ro != nil {
+		roID = ro.ID()
+	}
+
+	// save refresh token
+	addCredential(refreshTokens, &credential{
+		clientID:        c.ID(),
+		resourceOwnerID: roID,
+		signature:       t.SignatureString(),
+		expiresAt:       time.Now().Add(refreshTokenLifespan),
+		scope:           scope,
+	})
+
+	return t.String(), nil
+}
+
+func (m *manager) RemoveRefreshToken(token string) error {
+	t, err := hmacsha.Parse(secret, token)
+	if err != nil {
+		return err
+	}
+
+	delete(refreshTokens, t.SignatureString())
+
+	return nil
+}
 
 func newHandler(d *manager) http.Handler {
 	mux := http.NewServeMux()
@@ -61,4 +293,100 @@ func protectedResource(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte("OK"))
+}
+
+func authorizationEndpoint(d *manager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// process authorization request
+		ar, c, err := delegate.ProcessAuthorizationRequest(d, r)
+		if err != nil {
+			oauth2.WriteError(w, err)
+			return
+		}
+
+		// show info notice on a GET request
+		if r.Method == "GET" {
+			w.Write([]byte("This authentication server does not provide an authorization form.\n" +
+				"Please submit the resource owners username and password in the request body."))
+			return
+		}
+
+		// triage based on response type
+		switch ar.ResponseType {
+		case oauth2.TokenResponseType:
+			// authorize implicit grant
+			res, err := delegate.AuthorizeImplicitGrant(d, c, ar)
+			if err != nil {
+				oauth2.RedirectError(w, ar.RedirectURI, true, err)
+				return
+			}
+
+			// redirect response
+			oauth2.RedirectTokenResponse(w, ar.RedirectURI, res)
+		case oauth2.CodeResponseType:
+			// authorize authorization code grant
+			res, err := delegate.AuthorizeAuthorizationCodeGrant(d, c, ar)
+			if err != nil {
+				oauth2.RedirectError(w, ar.RedirectURI, false, err)
+				return
+			}
+
+			// redirect response
+			oauth2.RedirectCodeResponse(w, ar.RedirectURI, res)
+		}
+	}
+}
+
+func tokenEndpoint(d *manager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// process token request
+		tr, c, err := delegate.ProcessTokenRequest(d, r)
+		if err != nil {
+			oauth2.WriteError(w, err)
+			return
+		}
+
+		switch tr.GrantType {
+		case oauth2.PasswordGrantType:
+			// handle resource owner password credentials grant
+			res, err := delegate.HandlePasswordGrant(d, c, tr)
+			if err != nil {
+				oauth2.WriteError(w, err)
+				return
+			}
+
+			// write response
+			oauth2.WriteTokenResponse(w, res)
+		case oauth2.ClientCredentialsGrantType:
+			// handle client credentials grant
+			res, err := delegate.HandleClientCredentialsGrant(d, c, tr)
+			if err != nil {
+				oauth2.WriteError(w, err)
+				return
+			}
+
+			// write response
+			oauth2.WriteTokenResponse(w, res)
+		case oauth2.AuthorizationCodeGrantType:
+			// handle client credentials grant
+			res, err := delegate.HandleAuthorizationCodeGrant(d, c, tr)
+			if err != nil {
+				oauth2.WriteError(w, err)
+				return
+			}
+
+			// write response
+			oauth2.WriteTokenResponse(w, res)
+		case oauth2.RefreshTokenGrantType:
+			// handle refresh token grant
+			res, err := delegate.HandleRefreshTokenGrant(d, c, tr)
+			if err != nil {
+				oauth2.WriteError(w, err)
+				return
+			}
+
+			// write response
+			oauth2.WriteTokenResponse(w, res)
+		}
+	}
 }
