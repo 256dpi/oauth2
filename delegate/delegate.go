@@ -58,7 +58,6 @@ type Client interface {
 
 type ResourceOwner interface {
 	ID() string
-	Username() string
 	ValidSecret(string) bool
 }
 

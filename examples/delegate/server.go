@@ -43,10 +43,6 @@ func (o *owner) ValidRedirectURI(uri string) bool {
 	return o.redirectURI == uri
 }
 
-func (o *owner) Username() string {
-	return o.id
-}
-
 var clients = map[string]*owner{}
 var users = map[string]*owner{}
 
