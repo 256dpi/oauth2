@@ -1,4 +1,4 @@
-package server
+package basic
 
 import (
 	"net/http"
@@ -7,7 +7,62 @@ import (
 	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/bearer"
 	"github.com/gonfire/oauth2/hmacsha"
+	"golang.org/x/crypto/bcrypt"
 )
+
+var secret = []byte("abcd1234abcd1234")
+
+var tokenLifespan = time.Hour
+var refreshTokenLifeSpan = 7 * 24 * time.Hour
+var authorizationCodeLifespan = 10 * time.Minute
+
+var allowedScope = oauth2.ParseScope("foo bar")
+var requiredScope = oauth2.ParseScope("foo")
+
+type owner struct {
+	id           string
+	secret       []byte
+	redirectURI  string
+	confidential bool
+}
+
+var clients = map[string]owner{}
+var users = map[string]owner{}
+
+type token struct {
+	clientID    string
+	username    string
+	signature   string
+	expiresAt   time.Time
+	scope       oauth2.Scope
+	redirectURI string
+}
+
+var accessTokens = make(map[string]token)
+var refreshTokens = make(map[string]token)
+var authorizationCodes = make(map[string]token)
+
+func addOwner(list map[string]owner, o owner) owner {
+	list[o.id] = o
+	return o
+}
+
+func addToken(list map[string]token, t token) token {
+	list[t.signature] = t
+	return t
+}
+
+func sameHash(hash []byte, password string) bool {
+	return bcrypt.CompareHashAndPassword(hash, []byte(password)) == nil
+}
+
+func newHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/oauth2/token", tokenEndpoint)
+	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint)
+	mux.HandleFunc("/api/protected", protectedResource)
+	return mux
+}
 
 func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse authorization request
@@ -325,4 +380,41 @@ func issueTokens(issueRefreshToken bool, scope oauth2.Scope, state, clientID, us
 	}
 
 	return res
+}
+
+func protectedResource(w http.ResponseWriter, r *http.Request) {
+	// parse bearer token
+	tk, res := bearer.ParseToken(r)
+	if res != nil {
+		bearer.WriteError(w, res)
+		return
+	}
+
+	// parse token
+	token, err := hmacsha.Parse(secret, tk)
+	if err != nil {
+		bearer.WriteError(w, bearer.InvalidToken("Malformed token"))
+		return
+	}
+
+	// get token
+	accessToken, found := accessTokens[token.SignatureString()]
+	if !found {
+		bearer.WriteError(w, bearer.InvalidToken("Unkown token"))
+		return
+	}
+
+	// validate expiration
+	if accessToken.expiresAt.Before(time.Now()) {
+		bearer.WriteError(w, bearer.InvalidToken("Expired token"))
+		return
+	}
+
+	// validate scope
+	if !accessToken.scope.Includes(requiredScope) {
+		bearer.WriteError(w, bearer.InsufficientScope(requiredScope.String()))
+		return
+	}
+
+	w.Write([]byte("OK"))
 }

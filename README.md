@@ -22,7 +22,7 @@ The library considers and implements the following specifications:
 
 The following examples show the usage of this package:
 
-- The [server](https://github.com/gonfire/oauth2/blob/master/examples/server) example implements a complete authentication server using the standard HTTP package.
+- The [basic](https://github.com/gonfire/oauth2/blob/master/examples/basic/server.go) example implements a complete authentication server using only the low-level protocol abstraction. This example can be used as a template to implement an authentication server from scratch.
 
 ## Installation
 

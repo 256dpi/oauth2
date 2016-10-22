@@ -5,7 +5,7 @@ test:
 	go test -cover ./bearer
 	go test -cover ./hmacsha
 	go test -cover ./delegate
-	go test -cover ./examples/server
+	go test -cover ./examples/basic
 	go test -cover ./examples/delegate
 
 vet:
@@ -14,7 +14,7 @@ vet:
 	go vet ./hmacsha
 	go vet ./delegate
 	go vet ./spec
-	go vet ./examples/server
+	go vet ./examples/basic
 	go vet ./examples/delegate
 
 fmt:
@@ -23,7 +23,7 @@ fmt:
 	go fmt ./hmacsha
 	go fmt ./delegate
 	go fmt ./spec
-	go fmt ./examples/server
+	go fmt ./examples/basic
 	go fmt ./examples/delegate
 
 lint:
@@ -32,5 +32,5 @@ lint:
 	golint ./hmacsha
 	golint ./delegate
 	golint ./spec
-	golint ./examples/server
+	golint ./examples/basic
 	golint ./examples/delegate
