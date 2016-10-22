@@ -8,6 +8,8 @@ import (
 	"github.com/gonfire/oauth2/bearer"
 )
 
+// ProcessTokenRequest will parse the specified request as a token request and
+// perform some basic validation.
 func ProcessTokenRequest(d Delegate, r *http.Request) (*oauth2.TokenRequest, Client, error) {
 	// parse token request
 	req, err := oauth2.ParseTokenRequest(r)
@@ -36,6 +38,7 @@ func ProcessTokenRequest(d Delegate, r *http.Request) (*oauth2.TokenRequest, Cli
 	return req, client, nil
 }
 
+// HandlePasswordGrant will handle the resource owner password credentials grant.
 func HandlePasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
 	// get resource owner
 	ro, err := d.LookupResourceOwner(r.Username)
@@ -59,7 +62,7 @@ func HandlePasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.
 	}
 
 	// issue tokens
-	res, err := HandleTokenResponse(d, c, ro, grantedScope, true)
+	res, err := BuildTokenResponse(d, c, ro, grantedScope)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +70,7 @@ func HandlePasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.
 	return res, nil
 }
 
+// HandleClientCredentialsGrant will handle the client credentials grant for.
 func HandleClientCredentialsGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
 	// grant scope
 	grantedScope, err := d.GrantScope(c, nil, r.Scope)
@@ -77,7 +81,7 @@ func HandleClientCredentialsGrant(d Delegate, c Client, r *oauth2.TokenRequest) 
 	}
 
 	// issue tokens
-	res, err := HandleTokenResponse(d, c, nil, grantedScope, true)
+	res, err := BuildTokenResponse(d, c, nil, grantedScope)
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +89,7 @@ func HandleClientCredentialsGrant(d Delegate, c Client, r *oauth2.TokenRequest) 
 	return res, nil
 }
 
+// HandleAuthorizationCodeGrant will handle the authorization code grant.
 func HandleAuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
 	// get authorization code
 	ac, err := d.LookupAuthorizationCode(r.Code)
@@ -125,7 +130,7 @@ func HandleAuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oaut
 	}
 
 	// issue tokens
-	res, err := HandleTokenResponse(d, c, ro, ac.Scope(), true)
+	res, err := BuildTokenResponse(d, c, ro, ac.Scope())
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +144,7 @@ func HandleAuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oaut
 	return res, nil
 }
 
+// HandleRefreshTokenGrant will handle the refresh token grant.
 func HandleRefreshTokenGrant(d RefreshTokenDelegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
 	// get refresh token
 	rt, err := d.LookupRefreshToken(r.RefreshToken)
@@ -184,7 +190,7 @@ func HandleRefreshTokenGrant(d RefreshTokenDelegate, c Client, r *oauth2.TokenRe
 	}
 
 	// issue tokens
-	res, err := HandleTokenResponse(d, c, ro, r.Scope, true)
+	res, err := BuildTokenResponse(d, c, ro, r.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +204,14 @@ func HandleRefreshTokenGrant(d RefreshTokenDelegate, c Client, r *oauth2.TokenRe
 	return res, nil
 }
 
-func HandleTokenResponse(d Delegate, c Client, ro ResourceOwner, scope oauth2.Scope, issueRefreshToken bool) (*oauth2.TokenResponse, error) {
+// BuildTokenResponse constructs a token response for the specified client and
+// resource owner by issuing an access and refresh token with the specified scope.
+//
+// Note: The function will determine on runtime if the specified delegate
+// is able to issue refresh tokens. If the delegate is capable of issuing refresh
+// tokens it will always issue a refresh token. This means that the function
+// should not be used to build token responses for the authorization endpoint.
+func BuildTokenResponse(d Delegate, c Client, ro ResourceOwner, scope oauth2.Scope) (*oauth2.TokenResponse, error) {
 	// issue access token
 	accessToken, expiresIn, err := d.IssueAccessToken(c, ro, scope)
 	if err != nil {
@@ -213,7 +226,7 @@ func HandleTokenResponse(d Delegate, c Client, ro ResourceOwner, scope oauth2.Sc
 
 	// issue refresh token if available and implemented
 	rtd, ok := d.(RefreshTokenDelegate)
-	if ok && issueRefreshToken {
+	if ok {
 		refreshToken, err := rtd.IssueRefreshToken(c, ro, scope)
 		if err != nil {
 			return nil, oauth2.ServerError(oauth2.NoState, "Failed to issue refresh token")
