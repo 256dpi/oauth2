@@ -61,17 +61,19 @@ type ResourceOwner interface {
 	ValidSecret(string) bool
 }
 
-type AuthorizationCode interface {
+type Credential interface {
 	ClientID() string
 	ResourceOwnerID() string
 	ExpiresAt() time.Time
 	Scope() oauth2.Scope
+}
+
+type AuthorizationCode interface {
+	Credential
+
 	RedirectURI() string
 }
 
 type RefreshToken interface {
-	ClientID() string
-	ResourceOwnerID() string
-	ExpiresAt() time.Time
-	Scope() oauth2.Scope
+	Credential
 }
