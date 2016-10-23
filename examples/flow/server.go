@@ -159,13 +159,6 @@ func (m *manager) IssueAccessToken(c flow.Client, ro flow.ResourceOwner, scope o
 	return t.String(), int(tokenLifespan / time.Second), nil
 }
 
-func (m *manager) ParseConsent(r *oauth2.AuthorizationRequest) (string, string, oauth2.Scope, error) {
-	username := r.HTTP.PostForm.Get("username")
-	password := r.HTTP.PostForm.Get("password")
-
-	return username, password, r.Scope, nil
-}
-
 func (m *manager) LookupAuthorizationCode(code string) (flow.AuthorizationCode, error) {
 	t, err := hmacsha.Parse(secret, code)
 	if err != nil {
@@ -247,6 +240,20 @@ func (m *manager) IssueRefreshToken(c flow.Client, ro flow.ResourceOwner, scope 
 func (m *manager) RemoveRefreshToken(rt flow.RefreshToken) error {
 	delete(refreshTokens, rt.(*credential).signature)
 	return nil
+}
+
+func (m *manager) ObtainConsent(w http.ResponseWriter, ar *oauth2.AuthorizationRequest) *flow.Consent {
+	if ar.HTTP.Method == "GET" {
+		w.Write([]byte("This authentication server does not provide an authorization form.\n" +
+			"Please submit the resource owners username and password in the request body."))
+		return nil
+	}
+
+	return &flow.Consent{
+		ResourceOwnerID:     ar.HTTP.PostForm.Get("username"),
+		ResourceOwnerSecret: ar.HTTP.PostForm.Get("password"),
+		RequestedScope:      ar.Scope,
+	}
 }
 
 func (m *manager) ValidateFlow(c flow.Client, f flow.Flow) error {

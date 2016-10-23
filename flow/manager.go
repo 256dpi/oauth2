@@ -44,6 +44,17 @@ type ManagerDelegate interface {
 	Delegate
 
 	ValidateFlow(Client, Flow) error
+
+	// ObtainConsent should parse the specified request and return the id and
+	// secret of the to be authorized resource owner together with the requested
+	// scope. Any returned error is treated as an internal server error.
+	ObtainConsent(w http.ResponseWriter, r *oauth2.AuthorizationRequest) *Consent
+}
+
+type Consent struct {
+	ResourceOwnerID     string
+	ResourceOwnerSecret string
+	RequestedScope      oauth2.Scope
 }
 
 type ErrorHandler func(error)
@@ -58,13 +69,6 @@ func ManagedAuthorizationEndpoint(d ManagerDelegate, eh ErrorHandler) http.Handl
 			return
 		}
 
-		// show info notice on a GET request
-		if r.Method == "GET" {
-			w.Write([]byte("This authentication server does not provide an authorization form.\n" +
-				"Please submit the resource owners username and password in the request body."))
-			return
-		}
-
 		// approve flow
 		approveErr := d.ValidateFlow(c, ToFlow(ar.ResponseType))
 		if approveErr == ErrUnapproved {
@@ -76,11 +80,17 @@ func ManagedAuthorizationEndpoint(d ManagerDelegate, eh ErrorHandler) http.Handl
 			return
 		}
 
+		// obtain consent and return when missing
+		consent := d.ObtainConsent(w, ar)
+		if consent == nil {
+			return
+		}
+
 		// triage based on response type
 		switch ar.ResponseType {
 		case oauth2.TokenResponseType:
 			// authorize implicit grant
-			res, err := AuthorizeImplicitGrant(d, c, ar)
+			res, err := AuthorizeImplicitGrant(d, c, consent, ar)
 			if err != nil {
 				ForwardError(eh, err.Cause())
 				HandleError(w, err)
@@ -94,7 +104,7 @@ func ManagedAuthorizationEndpoint(d ManagerDelegate, eh ErrorHandler) http.Handl
 			acd := d.(AuthorizationCodeDelegate)
 
 			// authorize authorization code grant
-			res, err := HandleAuthorizationCodeGrantAuthorization(acd, c, ar)
+			res, err := HandleAuthorizationCodeGrantAuthorization(acd, c, consent, ar)
 			if err != nil {
 				ForwardError(eh, err.Cause())
 				HandleError(w, err)

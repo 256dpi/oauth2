@@ -36,11 +36,6 @@ type Delegate interface {
 	// as internal server errors.
 	LookupResourceOwner(string) (ResourceOwner, error)
 
-	// ParseConsent should parse the specified request and return the id and
-	// secret of the to be authorized resource owner together with the requested
-	// scope. Any returned error is treated as an internal server error.
-	ParseConsent(r *oauth2.AuthorizationRequest) (string, string, oauth2.Scope, error)
-
 	GrantScope(Client, ResourceOwner, oauth2.Scope) (oauth2.Scope, error)
 
 	// LookupAccessToken should look for an access token with the specified key.

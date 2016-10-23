@@ -49,20 +49,9 @@ func ProcessAuthorizationRequest(d Delegate, r *http.Request) (*oauth2.Authoriza
 }
 
 // AuthorizeImplicitGrant will handle the implicit grant.
-func AuthorizeImplicitGrant(d Delegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, Error) {
-	// parse consent
-	roID, roSecret, scope, err := d.ParseConsent(r)
-	if err != nil {
-		return nil, &OAuth2Error{
-			Source:      err,
-			Error:       oauth2.ServerError(r.State, "Failed to parse consent"),
-			RedirectURI: r.RedirectURI,
-			UseFragment: true,
-		}
-	}
-
+func AuthorizeImplicitGrant(d Delegate, c Client, cn *Consent, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, Error) {
 	// lookup resource owner
-	ro, err := d.LookupResourceOwner(roID)
+	ro, err := d.LookupResourceOwner(cn.ResourceOwnerID)
 	if err == ErrNotFound {
 		return nil, &OAuth2Error{
 			Error:       oauth2.AccessDenied(r.State, "Unknown resource owner"),
@@ -79,7 +68,7 @@ func AuthorizeImplicitGrant(d Delegate, c Client, r *oauth2.AuthorizationRequest
 	}
 
 	// authenticate resource owner
-	if !ro.ValidSecret(roSecret) {
+	if !ro.ValidSecret(cn.ResourceOwnerSecret) {
 		return nil, &OAuth2Error{
 			Error:       oauth2.AccessDenied(r.State, "Unknown resource owner"),
 			RedirectURI: r.RedirectURI,
@@ -88,7 +77,7 @@ func AuthorizeImplicitGrant(d Delegate, c Client, r *oauth2.AuthorizationRequest
 	}
 
 	// grant scope
-	grantedScope, err := d.GrantScope(c, ro, scope)
+	grantedScope, err := d.GrantScope(c, ro, cn.RequestedScope)
 	if err == ErrRejected {
 		return nil, &OAuth2Error{
 			Error:       oauth2.InvalidScope(r.State, "The scope has not been granted"),
@@ -129,19 +118,9 @@ func AuthorizeImplicitGrant(d Delegate, c Client, r *oauth2.AuthorizationRequest
 
 // HandleAuthorizationCodeGrantAuthorization will authorize the authorization
 // code grant.
-func HandleAuthorizationCodeGrantAuthorization(d AuthorizationCodeDelegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.CodeResponse, Error) {
-	// parse consent
-	roID, roSecret, scope, err := d.ParseConsent(r)
-	if err != nil {
-		return nil, &OAuth2Error{
-			Source:      err,
-			Error:       oauth2.ServerError(r.State, "Failed to parse consent"),
-			RedirectURI: r.RedirectURI,
-		}
-	}
-
+func HandleAuthorizationCodeGrantAuthorization(d AuthorizationCodeDelegate, c Client, cn *Consent, r *oauth2.AuthorizationRequest) (*oauth2.CodeResponse, Error) {
 	// lookup resource owner
-	ro, err := d.LookupResourceOwner(roID)
+	ro, err := d.LookupResourceOwner(cn.ResourceOwnerID)
 	if err == ErrNotFound {
 		return nil, &OAuth2Error{
 			Error:       oauth2.AccessDenied(r.State, "Unknown resource owner"),
@@ -156,7 +135,7 @@ func HandleAuthorizationCodeGrantAuthorization(d AuthorizationCodeDelegate, c Cl
 	}
 
 	// authenticate resource owner
-	if !ro.ValidSecret(roSecret) {
+	if !ro.ValidSecret(cn.ResourceOwnerSecret) {
 		return nil, &OAuth2Error{
 			Error:       oauth2.AccessDenied(r.State, "Unknown resource owner"),
 			RedirectURI: r.RedirectURI,
@@ -164,7 +143,7 @@ func HandleAuthorizationCodeGrantAuthorization(d AuthorizationCodeDelegate, c Cl
 	}
 
 	// grant scope
-	grantedScope, err := d.GrantScope(c, ro, scope)
+	grantedScope, err := d.GrantScope(c, ro, cn.RequestedScope)
 	if err == ErrRejected {
 		return nil, &OAuth2Error{
 			Error:       oauth2.InvalidScope(r.State, "The scope has not been granted"),
