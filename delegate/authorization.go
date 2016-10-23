@@ -7,6 +7,8 @@ import (
 	"github.com/gonfire/oauth2/bearer"
 )
 
+// ProcessAuthorizationRequest will parse the specified request as a
+// authorization request and perform some basic validation.
 func ProcessAuthorizationRequest(d Delegate, r *http.Request) (*oauth2.AuthorizationRequest, Client, error) {
 	// parse authorization request
 	ar, err := oauth2.ParseAuthorizationRequest(r)
@@ -35,6 +37,7 @@ func ProcessAuthorizationRequest(d Delegate, r *http.Request) (*oauth2.Authoriza
 	return ar, client, nil
 }
 
+// AuthorizeImplicitGrant will handle the implicit grant.
 func AuthorizeImplicitGrant(d AuthorizationDelegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, error) {
 	// parse consent
 	roID, roSecret, scope, err := d.ParseConsent(r)
@@ -81,6 +84,7 @@ func AuthorizeImplicitGrant(d AuthorizationDelegate, c Client, r *oauth2.Authori
 	return res, nil
 }
 
+// AuthorizeAuthorizationCodeGrant will authorize the authorization code grant.
 func AuthorizeAuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.CodeResponse, error) {
 	// parse consent
 	roID, roSecret, scope, err := d.ParseConsent(r)
