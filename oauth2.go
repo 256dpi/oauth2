@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-// The available known OAuth2 grant types.
+// The known OAuth2 grant types.
 const (
 	PasswordGrantType          = "password"
 	ClientCredentialsGrantType = "client_credentials"
@@ -31,7 +31,7 @@ func KnownGrantType(str string) bool {
 	return false
 }
 
-// The available known OAuth2 response types.
+// The known OAuth2 response types.
 const (
 	TokenResponseType = "token"
 	CodeResponseType  = "code"
