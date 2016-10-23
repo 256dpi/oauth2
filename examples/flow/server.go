@@ -263,7 +263,7 @@ func protectedResource(m *manager) http.HandlerFunc {
 		// authorize resource access
 		_, err := flow.AuthorizeResourceAccess(m, r, requiredScope)
 		if err != nil {
-			bearer.WriteError(w, err)
+			bearer.WriteError(w, err.Error)
 			return
 		}
 
@@ -276,7 +276,7 @@ func authorizationEndpoint(m *manager) http.HandlerFunc {
 		// process authorization request
 		ar, c, err := flow.ProcessAuthorizationRequest(m, r)
 		if err != nil {
-			oauth2.WriteError(w, err)
+			oauth2.WriteError(w, err.Error)
 			return
 		}
 
@@ -293,7 +293,7 @@ func authorizationEndpoint(m *manager) http.HandlerFunc {
 			// authorize implicit grant
 			res, err := flow.AuthorizeImplicitGrant(m, c, ar)
 			if err != nil {
-				oauth2.RedirectError(w, ar.RedirectURI, true, err)
+				oauth2.RedirectError(w, ar.RedirectURI, true, err.Error)
 				return
 			}
 
@@ -303,7 +303,7 @@ func authorizationEndpoint(m *manager) http.HandlerFunc {
 			// authorize authorization code grant
 			res, err := flow.HandleAuthorizationCodeGrantAuthorization(m, c, ar)
 			if err != nil {
-				oauth2.RedirectError(w, ar.RedirectURI, false, err)
+				oauth2.RedirectError(w, ar.RedirectURI, false, err.Error)
 				return
 			}
 
@@ -318,7 +318,7 @@ func tokenEndpoint(m *manager) http.HandlerFunc {
 		// process token request
 		tr, c, err := flow.ProcessTokenRequest(m, r)
 		if err != nil {
-			oauth2.WriteError(w, err)
+			oauth2.WriteError(w, err.Error)
 			return
 		}
 
@@ -339,7 +339,7 @@ func tokenEndpoint(m *manager) http.HandlerFunc {
 
 		// check error
 		if err != nil {
-			oauth2.WriteError(w, err)
+			oauth2.WriteError(w, err.Error)
 			return
 		}
 
