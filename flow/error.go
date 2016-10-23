@@ -1,9 +1,10 @@
 package flow
 
 import (
+	"net/http"
+
 	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/bearer"
-	"net/http"
 )
 
 // Error is returned by all functions in this package to mainly retain the
