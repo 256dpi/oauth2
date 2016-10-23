@@ -249,10 +249,14 @@ func (m *manager) RemoveRefreshToken(rt flow.RefreshToken) error {
 	return nil
 }
 
+func (m *manager) ValidateFlow(c flow.Client, f flow.Flow) error {
+	return nil
+}
+
 func newHandler(m *manager) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/oauth2/token", tokenEndpoint(m))
-	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint(m))
+	mux.HandleFunc("/oauth2/token", flow.ManagedTokenEndpoint(m, nil))
+	mux.HandleFunc("/oauth2/authorize", flow.ManagedAuthorizationEndpoint(m, nil))
 	mux.HandleFunc("/api/protected", protectedResource(m))
 	return mux
 }
@@ -267,82 +271,5 @@ func protectedResource(m *manager) http.HandlerFunc {
 		}
 
 		w.Write([]byte("OK"))
-	}
-}
-
-func authorizationEndpoint(m *manager) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// process authorization request
-		ar, c, err := flow.ProcessAuthorizationRequest(m, r)
-		if err != nil {
-			flow.HandleError(w, err)
-			return
-		}
-
-		// show info notice on a GET request
-		if r.Method == "GET" {
-			w.Write([]byte("This authentication server does not provide an authorization form.\n" +
-				"Please submit the resource owners username and password in the request body."))
-			return
-		}
-
-		// triage based on response type
-		switch ar.ResponseType {
-		case oauth2.TokenResponseType:
-			// authorize implicit grant
-			res, err := flow.AuthorizeImplicitGrant(m, c, ar)
-			if err != nil {
-				flow.HandleError(w, err)
-				return
-			}
-
-			// redirect response
-			oauth2.RedirectTokenResponse(w, ar.RedirectURI, res)
-		case oauth2.CodeResponseType:
-			// authorize authorization code grant
-			res, err := flow.HandleAuthorizationCodeGrantAuthorization(m, c, ar)
-			if err != nil {
-				flow.HandleError(w, err)
-				return
-			}
-
-			// redirect response
-			oauth2.RedirectCodeResponse(w, ar.RedirectURI, res)
-		}
-	}
-}
-
-func tokenEndpoint(m *manager) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// process token request
-		tr, c, err := flow.ProcessTokenRequest(m, r)
-		if err != nil {
-			flow.HandleError(w, err)
-			return
-		}
-
-		// prepare response
-		var res *oauth2.TokenResponse
-
-		// handle grant
-		switch tr.GrantType {
-		case oauth2.PasswordGrantType:
-			res, err = flow.HandlePasswordGrant(m, c, tr)
-		case oauth2.ClientCredentialsGrantType:
-			res, err = flow.HandleClientCredentialsGrant(m, c, tr)
-		case oauth2.AuthorizationCodeGrantType:
-			res, err = flow.HandleAuthorizationCodeGrant(m, c, tr)
-		case oauth2.RefreshTokenGrantType:
-			res, err = flow.HandleRefreshTokenGrant(m, c, tr)
-		}
-
-		// check error
-		if err != nil {
-			flow.HandleError(w, err)
-			return
-		}
-
-		// write response
-		oauth2.WriteTokenResponse(w, res)
 	}
 }
