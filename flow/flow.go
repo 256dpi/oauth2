@@ -21,6 +21,14 @@ var ErrMalformed = errors.New("malformed")
 // scope has been rejected and the current request should be denied.
 var ErrRejected = errors.New("rejected")
 
+// A Consent represents the consents of a resource owner to move forward with
+// the authorization request.
+type Consent struct {
+	ResourceOwnerID     string
+	ResourceOwnerSecret string
+	RequestedScope      oauth2.Scope
+}
+
 // The Delegate interface defines the basic set of methods needed to implement
 // a delegate that can be used in conjunction with the functions in this package
 // to implement an OAuth2 compatible authentication server.

@@ -44,6 +44,9 @@ func ToFlow(str string) Flow {
 // flow has not been approved.
 var ErrUnapproved = errors.New("unapproved")
 
+// The ManagerDelegate defines an additional set of methods needed to
+// implement a delegate that can be used in conjunction with the managed token
+// and authorization endpoint functions.
 type ManagerDelegate interface {
 	Delegate
 
@@ -59,14 +62,11 @@ type ManagerDelegate interface {
 	ObtainConsent(w http.ResponseWriter, r *oauth2.AuthorizationRequest) *Consent
 }
 
-type Consent struct {
-	ResourceOwnerID     string
-	ResourceOwnerSecret string
-	RequestedScope      oauth2.Scope
-}
-
+// The ErrorHandler receives unexpected errors returned by delegates.
 type ErrorHandler func(error)
 
+// ManagedAuthorizationEndpoint constructs a request handler that manages the
+// authorization endpoint using the specified delegate.
 func ManagedAuthorizationEndpoint(d ManagerDelegate, eh ErrorHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process authorization request
@@ -125,6 +125,8 @@ func ManagedAuthorizationEndpoint(d ManagerDelegate, eh ErrorHandler) http.Handl
 	}
 }
 
+// ManagedTokenEndpoint constructs a request handler that manages the token
+// endpoint using the specified delegate.
 func ManagedTokenEndpoint(d ManagerDelegate, eh ErrorHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process token request
@@ -179,6 +181,8 @@ func ManagedTokenEndpoint(d ManagerDelegate, eh ErrorHandler) http.HandlerFunc {
 	}
 }
 
+// ForwardError will call the specified error handler with the error if both
+// are available.
 func ForwardError(eh ErrorHandler, err error) {
 	if eh != nil && err != nil {
 		eh(err)
