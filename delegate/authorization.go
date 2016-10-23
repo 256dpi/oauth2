@@ -38,7 +38,7 @@ func ProcessAuthorizationRequest(d Delegate, r *http.Request) (*oauth2.Authoriza
 }
 
 // AuthorizeImplicitGrant will handle the implicit grant.
-func AuthorizeImplicitGrant(d AuthorizationDelegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, error) {
+func AuthorizeImplicitGrant(d Delegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, error) {
 	// parse consent
 	roID, roSecret, scope, err := d.ParseConsent(r)
 	if err != nil {
