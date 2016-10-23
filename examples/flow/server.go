@@ -1,4 +1,6 @@
-package server
+// Package flow implements a complete example authentication server using the
+// flow package to abstract the common protocol flows.
+package flow
 
 import (
 	"net/http"
@@ -6,7 +8,7 @@ import (
 
 	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/bearer"
-	"github.com/gonfire/oauth2/delegate"
+	"github.com/gonfire/oauth2/flow"
 	"github.com/gonfire/oauth2/hmacsha"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -95,34 +97,34 @@ func sameHash(hash []byte, str string) bool {
 
 type manager struct{}
 
-func (m *manager) LookupClient(id string) (delegate.Client, error) {
+func (m *manager) LookupClient(id string) (flow.Client, error) {
 	c, ok := clients[id]
 	if !ok {
-		return nil, delegate.ErrNotFound
+		return nil, flow.ErrNotFound
 	}
 
 	return c, nil
 }
 
-func (m *manager) LookupResourceOwner(id string) (delegate.ResourceOwner, error) {
+func (m *manager) LookupResourceOwner(id string) (flow.ResourceOwner, error) {
 	ro, ok := users[id]
 	if !ok {
-		return nil, delegate.ErrNotFound
+		return nil, flow.ErrNotFound
 	}
 
 	return ro, nil
 }
 
-func (m *manager) GrantScope(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (oauth2.Scope, error) {
+func (m *manager) GrantScope(c flow.Client, ro flow.ResourceOwner, scope oauth2.Scope) (oauth2.Scope, error) {
 	ok := allowedScope.Includes(scope)
 	if !ok {
-		return nil, delegate.ErrRejected
+		return nil, flow.ErrRejected
 	}
 
 	return scope, nil
 }
 
-func (m *manager) IssueAccessToken(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (string, int, error) {
+func (m *manager) IssueAccessToken(c flow.Client, ro flow.ResourceOwner, scope oauth2.Scope) (string, int, error) {
 	// generate new token
 	t := hmacsha.MustGenerate(secret, 32)
 
@@ -151,21 +153,21 @@ func (m *manager) ParseConsent(r *oauth2.AuthorizationRequest) (string, string, 
 	return username, password, r.Scope, nil
 }
 
-func (m *manager) LookupAuthorizationCode(code string) (delegate.AuthorizationCode, error) {
+func (m *manager) LookupAuthorizationCode(code string) (flow.AuthorizationCode, error) {
 	t, err := hmacsha.Parse(secret, code)
 	if err != nil {
-		return nil, delegate.ErrMalformed
+		return nil, flow.ErrMalformed
 	}
 
 	ac, ok := authorizationCodes[t.SignatureString()]
 	if !ok {
-		return nil, delegate.ErrNotFound
+		return nil, flow.ErrNotFound
 	}
 
 	return ac, nil
 }
 
-func (m *manager) IssueAuthorizationCode(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope, uri string) (string, error) {
+func (m *manager) IssueAuthorizationCode(c flow.Client, ro flow.ResourceOwner, scope oauth2.Scope, uri string) (string, error) {
 	// generate new token
 	t := hmacsha.MustGenerate(secret, 32)
 
@@ -199,21 +201,21 @@ func (m *manager) RemoveAuthorizationCode(code string) error {
 	return nil
 }
 
-func (m *manager) LookupRefreshToken(token string) (delegate.RefreshToken, error) {
+func (m *manager) LookupRefreshToken(token string) (flow.RefreshToken, error) {
 	t, err := hmacsha.Parse(secret, token)
 	if err != nil {
-		return nil, delegate.ErrMalformed
+		return nil, flow.ErrMalformed
 	}
 
 	rt, ok := refreshTokens[t.SignatureString()]
 	if !ok {
-		return nil, delegate.ErrNotFound
+		return nil, flow.ErrNotFound
 	}
 
 	return rt, nil
 }
 
-func (m *manager) IssueRefreshToken(c delegate.Client, ro delegate.ResourceOwner, scope oauth2.Scope) (string, error) {
+func (m *manager) IssueRefreshToken(c flow.Client, ro flow.ResourceOwner, scope oauth2.Scope) (string, error) {
 	// generate new token
 	t := hmacsha.MustGenerate(secret, 32)
 
@@ -294,7 +296,7 @@ func protectedResource(w http.ResponseWriter, r *http.Request) {
 func authorizationEndpoint(d *manager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process authorization request
-		ar, c, err := delegate.ProcessAuthorizationRequest(d, r)
+		ar, c, err := flow.ProcessAuthorizationRequest(d, r)
 		if err != nil {
 			oauth2.WriteError(w, err)
 			return
@@ -311,7 +313,7 @@ func authorizationEndpoint(d *manager) http.HandlerFunc {
 		switch ar.ResponseType {
 		case oauth2.TokenResponseType:
 			// authorize implicit grant
-			res, err := delegate.AuthorizeImplicitGrant(d, c, ar)
+			res, err := flow.AuthorizeImplicitGrant(d, c, ar)
 			if err != nil {
 				oauth2.RedirectError(w, ar.RedirectURI, true, err)
 				return
@@ -321,7 +323,7 @@ func authorizationEndpoint(d *manager) http.HandlerFunc {
 			oauth2.RedirectTokenResponse(w, ar.RedirectURI, res)
 		case oauth2.CodeResponseType:
 			// authorize authorization code grant
-			res, err := delegate.HandleAuthorizationCodeGrantAuthorization(d, c, ar)
+			res, err := flow.HandleAuthorizationCodeGrantAuthorization(d, c, ar)
 			if err != nil {
 				oauth2.RedirectError(w, ar.RedirectURI, false, err)
 				return
@@ -336,7 +338,7 @@ func authorizationEndpoint(d *manager) http.HandlerFunc {
 func tokenEndpoint(d *manager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process token request
-		tr, c, err := delegate.ProcessTokenRequest(d, r)
+		tr, c, err := flow.ProcessTokenRequest(d, r)
 		if err != nil {
 			oauth2.WriteError(w, err)
 			return
@@ -345,7 +347,7 @@ func tokenEndpoint(d *manager) http.HandlerFunc {
 		switch tr.GrantType {
 		case oauth2.PasswordGrantType:
 			// handle resource owner password credentials grant
-			res, err := delegate.HandlePasswordGrant(d, c, tr)
+			res, err := flow.HandlePasswordGrant(d, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -355,7 +357,7 @@ func tokenEndpoint(d *manager) http.HandlerFunc {
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.ClientCredentialsGrantType:
 			// handle client credentials grant
-			res, err := delegate.HandleClientCredentialsGrant(d, c, tr)
+			res, err := flow.HandleClientCredentialsGrant(d, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -365,7 +367,7 @@ func tokenEndpoint(d *manager) http.HandlerFunc {
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.AuthorizationCodeGrantType:
 			// handle client credentials grant
-			res, err := delegate.HandleAuthorizationCodeGrant(d, c, tr)
+			res, err := flow.HandleAuthorizationCodeGrant(d, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -375,7 +377,7 @@ func tokenEndpoint(d *manager) http.HandlerFunc {
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.RefreshTokenGrantType:
 			// handle refresh token grant
-			res, err := delegate.HandleRefreshTokenGrant(d, c, tr)
+			res, err := flow.HandleRefreshTokenGrant(d, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return

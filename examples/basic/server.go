@@ -1,3 +1,5 @@
+// Package basic implements a complete example authentication server using only
+// the low-level protocol abstraction.
 package basic
 
 import (
