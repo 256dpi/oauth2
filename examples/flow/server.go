@@ -250,11 +250,11 @@ func (m *manager) RemoveRefreshToken(rt flow.RefreshToken) error {
 	return nil
 }
 
-func newHandler(d *manager) http.Handler {
+func newHandler(m *manager) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/oauth2/token", tokenEndpoint(d))
-	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint(d))
-	mux.HandleFunc("/api/protected", protectedResource(d))
+	mux.HandleFunc("/oauth2/token", tokenEndpoint(m))
+	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint(m))
+	mux.HandleFunc("/api/protected", protectedResource(m))
 	return mux
 }
 
@@ -271,10 +271,10 @@ func protectedResource(m *manager) http.HandlerFunc {
 	}
 }
 
-func authorizationEndpoint(d *manager) http.HandlerFunc {
+func authorizationEndpoint(m *manager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process authorization request
-		ar, c, err := flow.ProcessAuthorizationRequest(d, r)
+		ar, c, err := flow.ProcessAuthorizationRequest(m, r)
 		if err != nil {
 			oauth2.WriteError(w, err)
 			return
@@ -291,7 +291,7 @@ func authorizationEndpoint(d *manager) http.HandlerFunc {
 		switch ar.ResponseType {
 		case oauth2.TokenResponseType:
 			// authorize implicit grant
-			res, err := flow.AuthorizeImplicitGrant(d, c, ar)
+			res, err := flow.AuthorizeImplicitGrant(m, c, ar)
 			if err != nil {
 				oauth2.RedirectError(w, ar.RedirectURI, true, err)
 				return
@@ -301,7 +301,7 @@ func authorizationEndpoint(d *manager) http.HandlerFunc {
 			oauth2.RedirectTokenResponse(w, ar.RedirectURI, res)
 		case oauth2.CodeResponseType:
 			// authorize authorization code grant
-			res, err := flow.HandleAuthorizationCodeGrantAuthorization(d, c, ar)
+			res, err := flow.HandleAuthorizationCodeGrantAuthorization(m, c, ar)
 			if err != nil {
 				oauth2.RedirectError(w, ar.RedirectURI, false, err)
 				return
@@ -313,10 +313,10 @@ func authorizationEndpoint(d *manager) http.HandlerFunc {
 	}
 }
 
-func tokenEndpoint(d *manager) http.HandlerFunc {
+func tokenEndpoint(m *manager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process token request
-		tr, c, err := flow.ProcessTokenRequest(d, r)
+		tr, c, err := flow.ProcessTokenRequest(m, r)
 		if err != nil {
 			oauth2.WriteError(w, err)
 			return
@@ -325,7 +325,7 @@ func tokenEndpoint(d *manager) http.HandlerFunc {
 		switch tr.GrantType {
 		case oauth2.PasswordGrantType:
 			// handle resource owner password credentials grant
-			res, err := flow.HandlePasswordGrant(d, c, tr)
+			res, err := flow.HandlePasswordGrant(m, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -335,7 +335,7 @@ func tokenEndpoint(d *manager) http.HandlerFunc {
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.ClientCredentialsGrantType:
 			// handle client credentials grant
-			res, err := flow.HandleClientCredentialsGrant(d, c, tr)
+			res, err := flow.HandleClientCredentialsGrant(m, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -345,7 +345,7 @@ func tokenEndpoint(d *manager) http.HandlerFunc {
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.AuthorizationCodeGrantType:
 			// handle client credentials grant
-			res, err := flow.HandleAuthorizationCodeGrant(d, c, tr)
+			res, err := flow.HandleAuthorizationCodeGrant(m, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
@@ -355,7 +355,7 @@ func tokenEndpoint(d *manager) http.HandlerFunc {
 			oauth2.WriteTokenResponse(w, res)
 		case oauth2.RefreshTokenGrantType:
 			// handle refresh token grant
-			res, err := flow.HandleRefreshTokenGrant(d, c, tr)
+			res, err := flow.HandleRefreshTokenGrant(m, c, tr)
 			if err != nil {
 				oauth2.WriteError(w, err)
 				return
