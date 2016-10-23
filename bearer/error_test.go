@@ -49,6 +49,7 @@ func TestErrorBuilders(t *testing.T) {
 		{InvalidRequest("foo"), "invalid_request", http.StatusBadRequest},
 		{InvalidToken("foo"), "invalid_token", http.StatusUnauthorized},
 		{InsufficientScope("foo"), "insufficient_scope", http.StatusForbidden},
+		{ServerError(), "", http.StatusInternalServerError},
 	}
 
 	for _, i := range matrix {

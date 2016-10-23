@@ -111,13 +111,24 @@ func InsufficientScope(necessaryScope string) *Error {
 	}
 }
 
+// ServerError constructs an error that indicates that there was an internal
+// server error.
+//
+// Note: This error type is not defined by the spec, but has been added to
+// increase the readability of the source code.
+func ServerError() *Error {
+	return &Error{
+		Status: http.StatusInternalServerError,
+	}
+}
+
 // WriteError will write the specified error to the response writer. The function
 // will fall back and write an internal server error if the specified error is
 // not known.
 func WriteError(w http.ResponseWriter, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
-	if !ok {
+	if !ok || anError.Status == http.StatusInternalServerError {
 		// write internal server error
 		w.WriteHeader(http.StatusInternalServerError)
 
