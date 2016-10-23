@@ -5,6 +5,7 @@ test:
 	go test -cover ./bearer
 	go test -cover ./hmacsha
 	go test -cover ./flow
+	go test -cover ./spec
 	go test -cover ./examples/basic
 	go test -cover ./examples/flow
 

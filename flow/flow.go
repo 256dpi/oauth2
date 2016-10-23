@@ -43,6 +43,12 @@ type Delegate interface {
 
 	GrantScope(Client, ResourceOwner, oauth2.Scope) (oauth2.Scope, error)
 
+	// LookupAccessToken should look for an access token with the specified key.
+	// If the access token has not been found the method should return
+	// ErrNotFound to indicate the absence. Any other returned errors are treated
+	// as internal server errors.
+	LookupAccessToken(string) (AccessToken, error)
+
 	// IssueAccessToken should issue an access token for the specified client and
 	// return the key and expiry in seconds or any potential errors. The access
 	// token is issued on the behalf of the specified resource owner with the
@@ -127,6 +133,16 @@ type ResourceOwner interface {
 	// ValidSecret should return true if the specified secret matches the
 	// stored secret.
 	ValidSecret(string) bool
+}
+
+// The AccessToken interface defines the abstract model of an access token that
+// is used to access protected resources.
+type AccessToken interface {
+	// ExpiresAt should return the date on which this access token expires.
+	ExpiresAt() time.Time
+
+	// Scope should return the scope that has been originally granted.
+	Scope() oauth2.Scope
 }
 
 // The AuthorizationCode interface defines the abstract model of an authorization

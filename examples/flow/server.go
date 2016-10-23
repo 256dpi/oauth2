@@ -124,6 +124,20 @@ func (m *manager) GrantScope(c flow.Client, ro flow.ResourceOwner, scope oauth2.
 	return scope, nil
 }
 
+func (m *manager) LookupAccessToken(key string) (flow.AccessToken, error) {
+	t, err := hmacsha.Parse(secret, key)
+	if err != nil {
+		return nil, flow.ErrMalformed
+	}
+
+	at, ok := accessTokens[t.SignatureString()]
+	if !ok {
+		return nil, flow.ErrNotFound
+	}
+
+	return at, nil
+}
+
 func (m *manager) IssueAccessToken(c flow.Client, ro flow.ResourceOwner, scope oauth2.Scope) (string, int, error) {
 	// generate new token
 	t := hmacsha.MustGenerate(secret, 32)
@@ -240,45 +254,21 @@ func newHandler(d *manager) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/oauth2/token", tokenEndpoint(d))
 	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint(d))
-	mux.HandleFunc("/api/protected", protectedResource)
+	mux.HandleFunc("/api/protected", protectedResource(d))
 	return mux
 }
 
-func protectedResource(w http.ResponseWriter, r *http.Request) {
-	// parse bearer token
-	tk, res := bearer.ParseToken(r)
-	if res != nil {
-		bearer.WriteError(w, res)
-		return
-	}
+func protectedResource(m *manager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// authorize resource access
+		_, err := flow.AuthorizeResourceAccess(m, r, requiredScope)
+		if err != nil {
+			bearer.WriteError(w, err)
+			return
+		}
 
-	// parse token
-	token, err := hmacsha.Parse(secret, tk)
-	if err != nil {
-		bearer.WriteError(w, bearer.InvalidToken("Malformed token"))
-		return
+		w.Write([]byte("OK"))
 	}
-
-	// get token
-	accessToken, found := accessTokens[token.SignatureString()]
-	if !found {
-		bearer.WriteError(w, bearer.InvalidToken("Unkown token"))
-		return
-	}
-
-	// validate expiration
-	if accessToken.expiresAt.Before(time.Now()) {
-		bearer.WriteError(w, bearer.InvalidToken("Expired token"))
-		return
-	}
-
-	// validate scope
-	if !accessToken.scope.Includes(requiredScope) {
-		bearer.WriteError(w, bearer.InsufficientScope(requiredScope.String()))
-		return
-	}
-
-	w.Write([]byte("OK"))
 }
 
 func authorizationEndpoint(d *manager) http.HandlerFunc {
