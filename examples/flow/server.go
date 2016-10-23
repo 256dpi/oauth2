@@ -322,47 +322,28 @@ func tokenEndpoint(m *manager) http.HandlerFunc {
 			return
 		}
 
+		// prepare response
+		var res *oauth2.TokenResponse
+
+		// handle grant
 		switch tr.GrantType {
 		case oauth2.PasswordGrantType:
-			// handle resource owner password credentials grant
-			res, err := flow.HandlePasswordGrant(m, c, tr)
-			if err != nil {
-				oauth2.WriteError(w, err)
-				return
-			}
-
-			// write response
-			oauth2.WriteTokenResponse(w, res)
+			res, err = flow.HandlePasswordGrant(m, c, tr)
 		case oauth2.ClientCredentialsGrantType:
-			// handle client credentials grant
-			res, err := flow.HandleClientCredentialsGrant(m, c, tr)
-			if err != nil {
-				oauth2.WriteError(w, err)
-				return
-			}
-
-			// write response
-			oauth2.WriteTokenResponse(w, res)
+			res, err = flow.HandleClientCredentialsGrant(m, c, tr)
 		case oauth2.AuthorizationCodeGrantType:
-			// handle client credentials grant
-			res, err := flow.HandleAuthorizationCodeGrant(m, c, tr)
-			if err != nil {
-				oauth2.WriteError(w, err)
-				return
-			}
-
-			// write response
-			oauth2.WriteTokenResponse(w, res)
+			res, err = flow.HandleAuthorizationCodeGrant(m, c, tr)
 		case oauth2.RefreshTokenGrantType:
-			// handle refresh token grant
-			res, err := flow.HandleRefreshTokenGrant(m, c, tr)
-			if err != nil {
-				oauth2.WriteError(w, err)
-				return
-			}
-
-			// write response
-			oauth2.WriteTokenResponse(w, res)
+			res, err = flow.HandleRefreshTokenGrant(m, c, tr)
 		}
+
+		// check error
+		if err != nil {
+			oauth2.WriteError(w, err)
+			return
+		}
+
+		// write response
+		oauth2.WriteTokenResponse(w, res)
 	}
 }
