@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gonfire/oauth2"
-	"github.com/gonfire/oauth2/bearer"
 	"github.com/gonfire/oauth2/flow"
 	"github.com/gonfire/oauth2/hmacsha"
 	"golang.org/x/crypto/bcrypt"
@@ -263,7 +262,7 @@ func protectedResource(m *manager) http.HandlerFunc {
 		// authorize resource access
 		_, err := flow.AuthorizeResourceAccess(m, r, requiredScope)
 		if err != nil {
-			bearer.WriteError(w, err.Error)
+			flow.HandleError(w, err)
 			return
 		}
 
@@ -276,7 +275,7 @@ func authorizationEndpoint(m *manager) http.HandlerFunc {
 		// process authorization request
 		ar, c, err := flow.ProcessAuthorizationRequest(m, r)
 		if err != nil {
-			oauth2.WriteError(w, err.Error)
+			flow.HandleError(w, err)
 			return
 		}
 
@@ -293,7 +292,7 @@ func authorizationEndpoint(m *manager) http.HandlerFunc {
 			// authorize implicit grant
 			res, err := flow.AuthorizeImplicitGrant(m, c, ar)
 			if err != nil {
-				oauth2.RedirectError(w, ar.RedirectURI, true, err.Error)
+				flow.HandleError(w, err)
 				return
 			}
 
@@ -303,7 +302,7 @@ func authorizationEndpoint(m *manager) http.HandlerFunc {
 			// authorize authorization code grant
 			res, err := flow.HandleAuthorizationCodeGrantAuthorization(m, c, ar)
 			if err != nil {
-				oauth2.RedirectError(w, ar.RedirectURI, false, err.Error)
+				flow.HandleError(w, err)
 				return
 			}
 
@@ -318,7 +317,7 @@ func tokenEndpoint(m *manager) http.HandlerFunc {
 		// process token request
 		tr, c, err := flow.ProcessTokenRequest(m, r)
 		if err != nil {
-			oauth2.WriteError(w, err.Error)
+			flow.HandleError(w, err)
 			return
 		}
 
@@ -339,7 +338,7 @@ func tokenEndpoint(m *manager) http.HandlerFunc {
 
 		// check error
 		if err != nil {
-			oauth2.WriteError(w, err.Error)
+			flow.HandleError(w, err)
 			return
 		}
 

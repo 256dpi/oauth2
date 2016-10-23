@@ -9,67 +9,110 @@ import (
 
 // ProcessAuthorizationRequest will parse the specified request as a
 // authorization request and perform some basic validation.
-func ProcessAuthorizationRequest(d Delegate, r *http.Request) (*oauth2.AuthorizationRequest, Client, *Error) {
+func ProcessAuthorizationRequest(d Delegate, r *http.Request) (*oauth2.AuthorizationRequest, Client, Error) {
 	// parse authorization request
 	ar, err := oauth2.ParseAuthorizationRequest(r)
 	if err != nil {
-		return nil, nil, WrapError(nil, err)
+		return nil, nil, &OAuth2Error{
+			Error: err,
+		}
 	}
 
 	// make sure the response type is known
 	if !oauth2.KnownResponseType(ar.ResponseType) {
-		return nil, nil, WrapError(nil, oauth2.InvalidRequest(ar.State, "Unknown response type"))
+		return nil, nil, &OAuth2Error{
+			Error: oauth2.InvalidRequest(ar.State, "Unknown response type"),
+		}
 	}
 
 	// load client
 	client, err := d.LookupClient(ar.ClientID)
 	if err == ErrNotFound {
-		return nil, nil, WrapError(nil, oauth2.InvalidClient(ar.State, "Unknown client"))
+		return nil, nil, &OAuth2Error{
+			Error: oauth2.InvalidClient(ar.State, "Unknown client"),
+		}
 	} else if err != nil {
-		return nil, nil, WrapError(err, oauth2.ServerError(ar.State, "Failed to lookup client"))
+		return nil, nil, &OAuth2Error{
+			Source: err,
+			Error:  oauth2.ServerError(ar.State, "Failed to lookup client"),
+		}
 	}
 
 	// validate redirect uri
 	if !client.ValidRedirectURI(ar.RedirectURI) {
-		return nil, nil, WrapError(nil, oauth2.InvalidRequest(ar.State, "Invalid redirect URI"))
+		return nil, nil, &OAuth2Error{
+			Error: oauth2.InvalidRequest(ar.State, "Invalid redirect URI"),
+		}
 	}
 
 	return ar, client, nil
 }
 
 // AuthorizeImplicitGrant will handle the implicit grant.
-func AuthorizeImplicitGrant(d Delegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, *Error) {
+func AuthorizeImplicitGrant(d Delegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, Error) {
 	// parse consent
 	roID, roSecret, scope, err := d.ParseConsent(r)
 	if err != nil {
-		return nil, WrapError(err, oauth2.ServerError(r.State, "Failed to validate consent"))
+		return nil, &OAuth2Error{
+			Source:      err,
+			Error:       oauth2.ServerError(r.State, "Failed to parse consent"),
+			RedirectURI: r.RedirectURI,
+			UseFragment: true,
+		}
 	}
 
 	// lookup resource owner
 	ro, err := d.LookupResourceOwner(roID)
 	if err == ErrNotFound {
-		return nil, WrapError(nil, oauth2.AccessDenied(r.State, "Unknown resource owner"))
+		return nil, &OAuth2Error{
+			Error:       oauth2.AccessDenied(r.State, "Unknown resource owner"),
+			RedirectURI: r.RedirectURI,
+			UseFragment: true,
+		}
 	} else if err != nil {
-		return nil, WrapError(err, oauth2.ServerError(r.State, "Failed to lookup resource owner"))
+		return nil, &OAuth2Error{
+			Source:      err,
+			Error:       oauth2.ServerError(r.State, "Failed to lookup resource owner"),
+			RedirectURI: r.RedirectURI,
+			UseFragment: true,
+		}
 	}
 
 	// authenticate resource owner
 	if !ro.ValidSecret(roSecret) {
-		return nil, WrapError(nil, oauth2.AccessDenied(r.State, "Unknown resource owner"))
+		return nil, &OAuth2Error{
+			Error:       oauth2.AccessDenied(r.State, "Unknown resource owner"),
+			RedirectURI: r.RedirectURI,
+			UseFragment: true,
+		}
 	}
 
 	// grant scope
 	grantedScope, err := d.GrantScope(c, ro, scope)
 	if err == ErrRejected {
-		return nil, WrapError(nil, oauth2.InvalidScope(r.State, "The scope has not been granted"))
+		return nil, &OAuth2Error{
+			Error:       oauth2.InvalidScope(r.State, "The scope has not been granted"),
+			RedirectURI: r.RedirectURI,
+			UseFragment: true,
+		}
 	} else if err != nil {
-		return nil, WrapError(err, oauth2.ServerError(r.State, "Failed to grant scope"))
+		return nil, &OAuth2Error{
+			Source:      err,
+			Error:       oauth2.ServerError(r.State, "Failed to grant scope"),
+			RedirectURI: r.RedirectURI,
+			UseFragment: true,
+		}
 	}
 
 	// issue access token
 	accessToken, expiresIn, err := d.IssueAccessToken(c, ro, grantedScope)
 	if err != nil {
-		return nil, WrapError(err, oauth2.ServerError(r.State, "Failed to issue access token"))
+		return nil, &OAuth2Error{
+			Source:      err,
+			Error:       oauth2.ServerError(r.State, "Failed to issue access token"),
+			RedirectURI: r.RedirectURI,
+			UseFragment: true,
+		}
 	}
 
 	// prepare response
@@ -86,38 +129,63 @@ func AuthorizeImplicitGrant(d Delegate, c Client, r *oauth2.AuthorizationRequest
 
 // HandleAuthorizationCodeGrantAuthorization will authorize the authorization
 // code grant.
-func HandleAuthorizationCodeGrantAuthorization(d AuthorizationCodeDelegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.CodeResponse, *Error) {
+func HandleAuthorizationCodeGrantAuthorization(d AuthorizationCodeDelegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.CodeResponse, Error) {
 	// parse consent
 	roID, roSecret, scope, err := d.ParseConsent(r)
 	if err != nil {
-		return nil, WrapError(err, oauth2.ServerError(r.State, "Failed to validate consent"))
+		return nil, &OAuth2Error{
+			Source:      err,
+			Error:       oauth2.ServerError(r.State, "Failed to parse consent"),
+			RedirectURI: r.RedirectURI,
+		}
 	}
 
 	// lookup resource owner
 	ro, err := d.LookupResourceOwner(roID)
 	if err == ErrNotFound {
-		return nil, WrapError(nil, oauth2.AccessDenied(r.State, "Unknown resource owner"))
+		return nil, &OAuth2Error{
+			Error:       oauth2.AccessDenied(r.State, "Unknown resource owner"),
+			RedirectURI: r.RedirectURI,
+		}
 	} else if err != nil {
-		return nil, WrapError(err, oauth2.ServerError(r.State, "Failed to lookup resource owner"))
+		return nil, &OAuth2Error{
+			Source:      err,
+			Error:       oauth2.ServerError(r.State, "Failed to lookup resource owner"),
+			RedirectURI: r.RedirectURI,
+		}
 	}
 
 	// authenticate resource owner
 	if !ro.ValidSecret(roSecret) {
-		return nil, WrapError(nil, oauth2.AccessDenied(r.State, "Unknown resource owner"))
+		return nil, &OAuth2Error{
+			Error:       oauth2.AccessDenied(r.State, "Unknown resource owner"),
+			RedirectURI: r.RedirectURI,
+		}
 	}
 
 	// grant scope
 	grantedScope, err := d.GrantScope(c, ro, scope)
 	if err == ErrRejected {
-		return nil, WrapError(nil, oauth2.InvalidScope(r.State, "The scope has not been granted"))
+		return nil, &OAuth2Error{
+			Error:       oauth2.InvalidScope(r.State, "The scope has not been granted"),
+			RedirectURI: r.RedirectURI,
+		}
 	} else if err != nil {
-		return nil, WrapError(err, oauth2.ServerError(r.State, "Failed to grant scope"))
+		return nil, &OAuth2Error{
+			Source:      err,
+			Error:       oauth2.ServerError(r.State, "Failed to grant scope"),
+			RedirectURI: r.RedirectURI,
+		}
 	}
 
 	// issue authorization code
 	authorizationCode, err := d.IssueAuthorizationCode(c, ro, grantedScope, r.RedirectURI)
 	if err != nil {
-		return nil, WrapError(err, oauth2.ServerError(r.State, "Failed to issue access token"))
+		return nil, &OAuth2Error{
+			Source:      err,
+			Error:       oauth2.ServerError(r.State, "Failed to issue access token"),
+			RedirectURI: r.RedirectURI,
+		}
 	}
 
 	// prepare response

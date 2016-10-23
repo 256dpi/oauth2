@@ -10,31 +10,44 @@ import (
 
 // AuthorizeResourceAccess will parse the bearer token from the specified request
 // and return any error.
-func AuthorizeResourceAccess(d Delegate, r *http.Request, requiredScope oauth2.Scope) (AccessToken, *Error) {
+func AuthorizeResourceAccess(d Delegate, r *http.Request, requiredScope oauth2.Scope) (AccessToken, Error) {
 	// parse bearer token
 	bt, err := bearer.ParseToken(r)
 	if err != nil {
-		return nil, WrapError(nil, err)
+		return nil, &BearerError{
+			Error: err,
+		}
 	}
 
 	// lookup access token
 	at, err := d.LookupAccessToken(bt)
 	if err == ErrMalformed {
-		return nil, WrapError(nil, bearer.InvalidToken("Malformed access token"))
+		return nil, &BearerError{
+			Error: bearer.InvalidToken("Malformed access token"),
+		}
 	} else if err == ErrNotFound {
-		return nil, WrapError(nil, bearer.InvalidToken("Unkown token"))
+		return nil, &BearerError{
+			Error: bearer.InvalidToken("Unkown token"),
+		}
 	} else if err != nil {
-		return nil, WrapError(err, bearer.ServerError())
+		return nil, &BearerError{
+			Source: err,
+			Error:  bearer.ServerError(),
+		}
 	}
 
 	// validate expiration
 	if at.ExpiresAt().Before(time.Now()) {
-		return nil, WrapError(nil, bearer.InvalidToken("Expired token"))
+		return nil, &BearerError{
+			Error: bearer.InvalidToken("Expired token"),
+		}
 	}
 
 	// validate scope
 	if !at.Scope().Includes(requiredScope) {
-		return nil, WrapError(nil, bearer.InsufficientScope(requiredScope.String()))
+		return nil, &BearerError{
+			Error: bearer.InsufficientScope(requiredScope.String()),
+		}
 	}
 
 	return at, nil
