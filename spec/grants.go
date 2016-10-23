@@ -578,4 +578,20 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 
 	// test refresh token
 	RefreshTokenTest(t, c, c.ValidRefreshToken)
+
+	// test refresh token invalidation
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Form: map[string]string{
+			"grant_type":    oauth2.RefreshTokenGrantType,
+			"refresh_token": c.ValidRefreshToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
+		},
+	})
 }
