@@ -1,3 +1,5 @@
+// Package flow implements common protocol flows to simplify the implementation
+// of OAuth2 compatible authentication servers.
 package flow
 
 import (
