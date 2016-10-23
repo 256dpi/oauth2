@@ -7,8 +7,10 @@ import (
 	"github.com/gonfire/oauth2"
 )
 
+// Flow represents an applicable OAuth2 flow.
 type Flow int
 
+// All known OAuth2 flows.
 const (
 	_ Flow = iota
 	PasswordFlow
@@ -38,12 +40,18 @@ func ToFlow(str string) Flow {
 	panic("unknown grant or response type")
 }
 
+// ErrUnapproved can be returned by the delegate to indicate that the requested
+// flow has not been approved.
 var ErrUnapproved = errors.New("unapproved")
 
 type ManagerDelegate interface {
 	Delegate
 
-	ValidateFlow(Client, Flow) error
+	// ValidateFlow should validate the requested flow and return nil if it is
+	// allowed. If the flow in general or for the specified client is not allowed
+	// it should return ErrUnapproved. Any other returned error is treated as an
+	// internal server error.
+	ValidateFlow(Flow, Client) error
 
 	// ObtainConsent should parse the specified request and return the id and
 	// secret of the to be authorized resource owner together with the requested
@@ -70,7 +78,7 @@ func ManagedAuthorizationEndpoint(d ManagerDelegate, eh ErrorHandler) http.Handl
 		}
 
 		// approve flow
-		approveErr := d.ValidateFlow(c, ToFlow(ar.ResponseType))
+		approveErr := d.ValidateFlow(ToFlow(ar.ResponseType), c)
 		if approveErr == ErrUnapproved {
 			oauth2.WriteError(w, oauth2.UnauthorizedClient(ar.State, "Unpermitted response type"))
 			return
@@ -128,7 +136,7 @@ func ManagedTokenEndpoint(d ManagerDelegate, eh ErrorHandler) http.HandlerFunc {
 		}
 
 		// approve flow
-		approveErr := d.ValidateFlow(c, ToFlow(tr.GrantType))
+		approveErr := d.ValidateFlow(ToFlow(tr.GrantType), c)
 		if approveErr == ErrUnapproved {
 			oauth2.WriteError(w, oauth2.UnauthorizedClient(oauth2.NoState, "Unpermitted grant type"))
 			return

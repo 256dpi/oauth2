@@ -256,7 +256,7 @@ func (m *manager) ObtainConsent(w http.ResponseWriter, ar *oauth2.AuthorizationR
 	}
 }
 
-func (m *manager) ValidateFlow(c flow.Client, f flow.Flow) error {
+func (m *manager) ValidateFlow(f flow.Flow, c flow.Client) error {
 	return nil
 }
 
