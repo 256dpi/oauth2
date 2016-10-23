@@ -136,7 +136,7 @@ func HandleAuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oaut
 	}
 
 	// remove used authorization code
-	err = d.RemoveAuthorizationCode(r.Code)
+	err = d.RemoveAuthorizationCode(ac)
 	if err != nil {
 		return nil, oauth2.ServerError(oauth2.NoState, "Failed to remove authorization code")
 	}
@@ -196,7 +196,7 @@ func HandleRefreshTokenGrant(d RefreshTokenDelegate, c Client, r *oauth2.TokenRe
 	}
 
 	// remove used refresh token
-	err = d.RemoveRefreshToken(r.RefreshToken)
+	err = d.RemoveRefreshToken(rt)
 	if err != nil {
 		return nil, oauth2.ServerError(oauth2.NoState, "Failed to remove refresh token")
 	}

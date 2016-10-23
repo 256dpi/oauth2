@@ -73,7 +73,7 @@ type AuthorizationCodeDelegate interface {
 	IssueAuthorizationCode(Client, ResourceOwner, oauth2.Scope, string) (string, error)
 
 	// RemoveAuthorizationCode should remove the specified authorization code.
-	RemoveAuthorizationCode(string) error
+	RemoveAuthorizationCode(AuthorizationCode) error
 }
 
 // The RefreshTokenDelegate defines an additional set of methods needed to
@@ -96,7 +96,7 @@ type RefreshTokenDelegate interface {
 	IssueRefreshToken(Client, ResourceOwner, oauth2.Scope) (string, error)
 
 	// RemoveRefreshToken should remove the specified refresh token.
-	RemoveRefreshToken(string) error
+	RemoveRefreshToken(RefreshToken) error
 }
 
 // The Client interface defines the abstracts model of a client that requests

@@ -190,14 +190,8 @@ func (m *manager) IssueAuthorizationCode(c flow.Client, ro flow.ResourceOwner, s
 	return t.String(), nil
 }
 
-func (m *manager) RemoveAuthorizationCode(code string) error {
-	t, err := hmacsha.Parse(secret, code)
-	if err != nil {
-		return err
-	}
-
-	delete(authorizationCodes, t.SignatureString())
-
+func (m *manager) RemoveAuthorizationCode(ac flow.AuthorizationCode) error {
+	delete(authorizationCodes, ac.(*credential).signature)
 	return nil
 }
 
@@ -237,14 +231,8 @@ func (m *manager) IssueRefreshToken(c flow.Client, ro flow.ResourceOwner, scope 
 	return t.String(), nil
 }
 
-func (m *manager) RemoveRefreshToken(token string) error {
-	t, err := hmacsha.Parse(secret, token)
-	if err != nil {
-		return err
-	}
-
-	delete(refreshTokens, t.SignatureString())
-
+func (m *manager) RemoveRefreshToken(rt flow.RefreshToken) error {
+	delete(refreshTokens, rt.(*credential).signature)
 	return nil
 }
 
