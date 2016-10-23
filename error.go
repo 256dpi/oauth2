@@ -206,7 +206,7 @@ func WriteError(w http.ResponseWriter, err error) error {
 
 // RedirectError will write a redirection based on the specified error to the
 // response writer. The function will fall back and write a server error
-// redirection if the specified error is not know.
+// redirection if the specified error is not known.
 func RedirectError(w http.ResponseWriter, uri string, useFragment bool, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)

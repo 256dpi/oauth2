@@ -1,4 +1,6 @@
-package server
+// Package basic implements a complete example authentication server using only
+// the low-level protocol abstraction.
+package basic
 
 import (
 	"net/http"
@@ -7,7 +9,62 @@ import (
 	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/bearer"
 	"github.com/gonfire/oauth2/hmacsha"
+	"golang.org/x/crypto/bcrypt"
 )
+
+var secret = []byte("abcd1234abcd1234")
+
+var tokenLifespan = time.Hour
+var refreshTokenLifeSpan = 7 * 24 * time.Hour
+var authorizationCodeLifespan = 10 * time.Minute
+
+var allowedScope = oauth2.ParseScope("foo bar")
+var requiredScope = oauth2.ParseScope("foo")
+
+type owner struct {
+	id           string
+	secret       []byte
+	redirectURI  string
+	confidential bool
+}
+
+var clients = map[string]owner{}
+var users = map[string]owner{}
+
+type credential struct {
+	clientID    string
+	username    string
+	signature   string
+	expiresAt   time.Time
+	scope       oauth2.Scope
+	redirectURI string
+}
+
+var accessTokens = make(map[string]credential)
+var refreshTokens = make(map[string]credential)
+var authorizationCodes = make(map[string]credential)
+
+func addOwner(list map[string]owner, o owner) owner {
+	list[o.id] = o
+	return o
+}
+
+func addCredential(list map[string]credential, t credential) credential {
+	list[t.signature] = t
+	return t
+}
+
+func sameHash(hash []byte, str string) bool {
+	return bcrypt.CompareHashAndPassword(hash, []byte(str)) == nil
+}
+
+func newHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/oauth2/token", tokenEndpoint)
+	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint)
+	mux.HandleFunc("/api/protected", protectedResource)
+	return mux
+}
 
 func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse authorization request
@@ -36,22 +93,27 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// show info notice on a GET request
+	// show notice for a GET request
 	if r.Method == "GET" {
-		w.Write([]byte("This authentication server does not provide an authorization form."))
+		w.Write([]byte("This authentication server does not provide an authorization form.\n" +
+			"Please submit the resource owners username and password in a POST request."))
 		return
 	}
+
+	// read username and password
+	username := r.PostForm.Get("username")
+	password := r.PostForm.Get("password")
 
 	// triage based on response type
 	switch req.ResponseType {
 	case oauth2.TokenResponseType:
-		handleImplicitGrant(w, req)
+		handleImplicitGrant(w, username, password, req)
 	case oauth2.CodeResponseType:
-		handleAuthorizationCodeGrantAuthorization(w, req)
+		handleAuthorizationCodeGrantAuthorization(w, username, password, req)
 	}
 }
 
-func handleImplicitGrant(w http.ResponseWriter, r *oauth2.AuthorizationRequest) {
+func handleImplicitGrant(w http.ResponseWriter, username, password string, r *oauth2.AuthorizationRequest) {
 	// validate scope
 	if !allowedScope.Includes(r.Scope) {
 		oauth2.RedirectError(w, r.RedirectURI, true, oauth2.InvalidScope(r.State, oauth2.NoDescription))
@@ -59,8 +121,8 @@ func handleImplicitGrant(w http.ResponseWriter, r *oauth2.AuthorizationRequest) 
 	}
 
 	// validate user credentials
-	owner, found := users[r.HTTP.PostForm.Get("username")]
-	if !found || !sameHash(owner.secret, r.HTTP.PostForm.Get("password")) {
+	owner, found := users[username]
+	if !found || !sameHash(owner.secret, password) {
 		oauth2.RedirectError(w, r.RedirectURI, true, oauth2.AccessDenied(r.State, oauth2.NoDescription))
 		return
 	}
@@ -72,7 +134,7 @@ func handleImplicitGrant(w http.ResponseWriter, r *oauth2.AuthorizationRequest) 
 	oauth2.RedirectTokenResponse(w, r.RedirectURI, res)
 }
 
-func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *oauth2.AuthorizationRequest) {
+func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, password string, r *oauth2.AuthorizationRequest) {
 	// validate scope
 	if !allowedScope.Includes(r.Scope) {
 		oauth2.RedirectError(w, r.RedirectURI, false, oauth2.InvalidScope(r.State, oauth2.NoDescription))
@@ -80,8 +142,8 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *oauth2.
 	}
 
 	// validate user credentials
-	owner, found := users[r.HTTP.PostForm.Get("username")]
-	if !found || !sameHash(owner.secret, r.HTTP.PostForm.Get("password")) {
+	owner, found := users[username]
+	if !found || !sameHash(owner.secret, password) {
 		oauth2.RedirectError(w, r.RedirectURI, false, oauth2.AccessDenied(r.State, oauth2.NoDescription))
 		return
 	}
@@ -96,7 +158,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, r *oauth2.
 	res.State = r.State
 
 	// save authorization code
-	authorizationCodes[authorizationCode.SignatureString()] = token{
+	authorizationCodes[authorizationCode.SignatureString()] = credential{
 		clientID:    r.ClientID,
 		username:    owner.id,
 		signature:   authorizationCode.SignatureString(),
@@ -300,7 +362,7 @@ func issueTokens(issueRefreshToken bool, scope oauth2.Scope, state, clientID, us
 	}
 
 	// save access token
-	accessTokens[accessToken.SignatureString()] = token{
+	accessTokens[accessToken.SignatureString()] = credential{
 		clientID:  clientID,
 		username:  username,
 		signature: accessToken.SignatureString(),
@@ -310,14 +372,51 @@ func issueTokens(issueRefreshToken bool, scope oauth2.Scope, state, clientID, us
 
 	// save refresh token if present
 	if refreshToken != nil {
-		refreshTokens[refreshToken.SignatureString()] = token{
+		refreshTokens[refreshToken.SignatureString()] = credential{
 			clientID:  clientID,
 			username:  username,
 			signature: refreshToken.SignatureString(),
-			expiresAt: time.Now().Add(tokenLifespan),
+			expiresAt: time.Now().Add(refreshTokenLifeSpan),
 			scope:     scope,
 		}
 	}
 
 	return res
+}
+
+func protectedResource(w http.ResponseWriter, r *http.Request) {
+	// parse bearer token
+	tk, res := bearer.ParseToken(r)
+	if res != nil {
+		bearer.WriteError(w, res)
+		return
+	}
+
+	// parse token
+	token, err := hmacsha.Parse(secret, tk)
+	if err != nil {
+		bearer.WriteError(w, bearer.InvalidToken("Malformed token"))
+		return
+	}
+
+	// get token
+	accessToken, found := accessTokens[token.SignatureString()]
+	if !found {
+		bearer.WriteError(w, bearer.InvalidToken("Unkown token"))
+		return
+	}
+
+	// validate expiration
+	if accessToken.expiresAt.Before(time.Now()) {
+		bearer.WriteError(w, bearer.InvalidToken("Expired token"))
+		return
+	}
+
+	// validate scope
+	if !accessToken.scope.Includes(requiredScope) {
+		bearer.WriteError(w, bearer.InsufficientScope(requiredScope.String()))
+		return
+	}
+
+	w.Write([]byte("OK"))
 }

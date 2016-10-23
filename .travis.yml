@@ -12,7 +12,8 @@ script:
   - go test -coverprofile=jsonapi.coverprofile
   - go test -coverprofile=jsonapi.coverprofile ./bearer
   - go test -coverprofile=jsonapi.coverprofile ./hmacsha
-  - go test -coverprofile=jsonapi.coverprofile ./examples/server
+  - go test -coverprofile=jsonapi.coverprofile ./examples/basic
+  - go test -coverprofile=jsonapi.coverprofile ./examples/flow
   - $HOME/gopath/bin/gover
   - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
 matrix:
