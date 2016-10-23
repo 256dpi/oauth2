@@ -321,7 +321,7 @@ func authorizationEndpoint(d *manager) http.HandlerFunc {
 			oauth2.RedirectTokenResponse(w, ar.RedirectURI, res)
 		case oauth2.CodeResponseType:
 			// authorize authorization code grant
-			res, err := delegate.AuthorizeAuthorizationCodeGrant(d, c, ar)
+			res, err := delegate.HandleAuthorizationCodeGrantAuthorization(d, c, ar)
 			if err != nil {
 				oauth2.RedirectError(w, ar.RedirectURI, false, err)
 				return

@@ -84,8 +84,9 @@ func AuthorizeImplicitGrant(d AuthorizationDelegate, c Client, r *oauth2.Authori
 	return res, nil
 }
 
-// AuthorizeAuthorizationCodeGrant will authorize the authorization code grant.
-func AuthorizeAuthorizationCodeGrant(d AuthorizationCodeDelegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.CodeResponse, error) {
+// HandleAuthorizationCodeGrantAuthorization will authorize the authorization
+// code grant.
+func HandleAuthorizationCodeGrantAuthorization(d AuthorizationCodeDelegate, c Client, r *oauth2.AuthorizationRequest) (*oauth2.CodeResponse, error) {
 	// parse consent
 	roID, roSecret, scope, err := d.ParseConsent(r)
 	if err != nil {
