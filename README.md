@@ -20,10 +20,7 @@ The library considers and implements the following specifications:
 
 ## Example
 
-The following examples show the usage of this package:
-
-- The [basic](https://github.com/gonfire/oauth2/blob/master/examples/basic/server.go) example implements a complete authentication server using only the low-level protocol abstraction.
-- The [flow](https://github.com/gonfire/oauth2/blob/master/examples/flow/server.go) example implements a complete authentication server using the flow package to abstract the common protocol flows.
+The [example](https://github.com/gonfire/oauth2/blob/master/example/server.go) package implements a complete in-memory OAuth2 authentication server. The example can be used as a template to build a custom implementation of an OAuth2 compatible authentication server. 
 
 ## Installation
 

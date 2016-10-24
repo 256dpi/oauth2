@@ -1,6 +1,7 @@
-// Package basic implements a complete example authentication server using only
-// the low-level protocol abstraction.
-package basic
+// Package example implements a complete in-memory OAuth2 authentication server.
+// The example can be used as a template to build a custom implementation of an
+// OAuth2 compatible authentication server.
+package example
 
 import (
 	"net/http"
