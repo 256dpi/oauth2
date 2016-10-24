@@ -20,7 +20,7 @@ The library considers and implements the following specifications:
 
 ## Example
 
-The [example](https://github.com/gonfire/oauth2/blob/master/example/server.go) package implements a complete in-memory OAuth2 authentication server. The example can be used as a template to build a custom implementation of an OAuth2 compatible authentication server. 
+The [example](https://github.com/gonfire/oauth2/blob/master/example/server.go) package implements a basic but feature-complete in-memory OAuth2 authentication server. The example can be used as a template to build a custom implementation of an OAuth2 compatible authentication server. 
 
 ## Installation
 

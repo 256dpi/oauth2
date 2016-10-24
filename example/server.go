@@ -1,6 +1,6 @@
-// Package example implements a complete in-memory OAuth2 authentication server.
-// The example can be used as a template to build a custom implementation of an
-// OAuth2 compatible authentication server.
+// Package example implements a basic but feature-complete in-memory OAuth2
+// authentication server. The example can be used as a template to build a
+// custom implementation of an OAuth2 compatible authentication server.
 package example
 
 import (
