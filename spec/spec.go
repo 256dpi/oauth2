@@ -1,4 +1,4 @@
-// Package spec implements reusable integration tests to test any OAuth2
+// Package spec implements reusable integration tests to test against any OAuth2
 // authentication server.
 package spec
 

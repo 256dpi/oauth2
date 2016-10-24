@@ -1,3 +1,5 @@
+// Package bearer provides structures and functions to implement the additional
+// OAuth2 Bearer Token specification.
 package bearer
 
 import (

@@ -8,7 +8,7 @@
 
 **A fundamental and extendable OAuth2 library for Go.**
 
-Package [`oauth2`](http://godoc.org/github.com/gonfire/oauth2) provides structures and functions to implement [OAuth2](https://oauth.net/2/) compatible authentication servers. The library can be used with any framework and is built on top of the standard Go http library.
+Package [`oauth2`](http://godoc.org/github.com/gonfire/oauth2) provides structures and functions to implement [OAuth2](https://oauth.net/2/) compatible authentication servers. The library can be used standalone or with any framework as it is built on top of the standard Go http library.
 
 ## Specifications
 

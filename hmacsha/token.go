@@ -1,3 +1,5 @@
+// Package hmacsha provides a simple token implementation using the hmac-sha256
+// algorithm.
 package hmacsha
 
 import (
