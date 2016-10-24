@@ -4,34 +4,26 @@ test:
 	go test -cover .
 	go test -cover ./bearer
 	go test -cover ./hmacsha
-	go test -cover ./flow
 	go test -cover ./spec
-	go test -cover ./examples/basic
-	go test -cover ./examples/flow
+	go test -cover ./example
 
 vet:
 	go vet .
 	go vet ./bearer
 	go vet ./hmacsha
-	go vet ./flow
 	go vet ./spec
-	go vet ./examples/basic
-	go vet ./examples/flow
+	go vet ./example
 
 fmt:
 	go fmt .
 	go fmt ./bearer
 	go fmt ./hmacsha
-	go fmt ./flow
 	go fmt ./spec
-	go fmt ./examples/basic
-	go fmt ./examples/flow
+	go fmt ./example
 
 lint:
 	golint .
 	golint ./bearer
 	golint ./hmacsha
-	golint ./flow
 	golint ./spec
-	golint ./examples/basic
-	golint ./examples/flow
+	golint ./example
