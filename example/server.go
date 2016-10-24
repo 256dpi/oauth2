@@ -404,7 +404,7 @@ func protectedResource(w http.ResponseWriter, r *http.Request) {
 	// get token
 	accessToken, found := accessTokens[token.SignatureString()]
 	if !found {
-		bearer.WriteError(w, bearer.InvalidToken("Unkown token"))
+		bearer.WriteError(w, bearer.InvalidToken("Unknown token"))
 		return
 	}
 
