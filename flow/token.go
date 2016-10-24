@@ -71,8 +71,8 @@ func HandlePasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.
 		}
 	}
 
-	// grant scope
-	grantedScope, err := d.GrantScope(c, ro, r.Scope)
+	// validate scope
+	grantedScope, err := d.ValidateScope(c, ro, r.Scope)
 	if err == ErrRejected {
 		return nil, &OAuth2Error{
 			Error: oauth2.InvalidScope(oauth2.NoState, "The scope has not been granted"),
@@ -95,8 +95,8 @@ func HandlePasswordGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.
 
 // HandleClientCredentialsGrant will handle the client credentials grant for.
 func HandleClientCredentialsGrant(d Delegate, c Client, r *oauth2.TokenRequest) (*oauth2.TokenResponse, Error) {
-	// grant scope
-	grantedScope, err := d.GrantScope(c, nil, r.Scope)
+	// validate scope
+	grantedScope, err := d.ValidateScope(c, nil, r.Scope)
 	if err == ErrRejected {
 		return nil, &OAuth2Error{
 			Error: oauth2.InvalidScope(oauth2.NoState, "The scope has not been granted"),

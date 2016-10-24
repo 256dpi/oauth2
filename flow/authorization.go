@@ -48,8 +48,8 @@ func ProcessAuthorizationRequest(d Delegate, r *http.Request) (*oauth2.Authoriza
 	return ar, client, nil
 }
 
-// AuthorizeImplicitGrant will handle the implicit grant.
-func AuthorizeImplicitGrant(d Delegate, c Client, cn *Consent, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, Error) {
+// HandleImplicitGrant will handle the implicit grant.
+func HandleImplicitGrant(d Delegate, c Client, cn *Consent, r *oauth2.AuthorizationRequest) (*oauth2.TokenResponse, Error) {
 	// lookup resource owner
 	ro, err := d.LookupResourceOwner(cn.ResourceOwnerID)
 	if err == ErrNotFound {
@@ -76,8 +76,8 @@ func AuthorizeImplicitGrant(d Delegate, c Client, cn *Consent, r *oauth2.Authori
 		}
 	}
 
-	// grant scope
-	grantedScope, err := d.GrantScope(c, ro, cn.RequestedScope)
+	// validate scope
+	grantedScope, err := d.ValidateScope(c, ro, cn.RequestedScope)
 	if err == ErrRejected {
 		return nil, &OAuth2Error{
 			Error:       oauth2.InvalidScope(r.State, "The scope has not been granted"),
@@ -142,8 +142,8 @@ func HandleAuthorizationCodeGrantAuthorization(d AuthorizationCodeDelegate, c Cl
 		}
 	}
 
-	// grant scope
-	grantedScope, err := d.GrantScope(c, ro, cn.RequestedScope)
+	// validate scope
+	grantedScope, err := d.ValidateScope(c, ro, cn.RequestedScope)
 	if err == ErrRejected {
 		return nil, &OAuth2Error{
 			Error:       oauth2.InvalidScope(r.State, "The scope has not been granted"),

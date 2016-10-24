@@ -114,7 +114,7 @@ func (m *manager) LookupResourceOwner(id string) (flow.ResourceOwner, error) {
 	return ro, nil
 }
 
-func (m *manager) GrantScope(c flow.Client, ro flow.ResourceOwner, scope oauth2.Scope) (oauth2.Scope, error) {
+func (m *manager) ValidateScope(c flow.Client, ro flow.ResourceOwner, scope oauth2.Scope) (oauth2.Scope, error) {
 	ok := allowedScope.Includes(scope)
 	if !ok {
 		return nil, flow.ErrRejected

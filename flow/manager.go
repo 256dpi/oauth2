@@ -7,7 +7,7 @@ import (
 	"github.com/gonfire/oauth2"
 )
 
-// Flow represents an applicable OAuth2 flow.
+// Flow represents a known OAuth2 flow.
 type Flow int
 
 // All known OAuth2 flows.
@@ -21,6 +21,8 @@ const (
 )
 
 // ToFlow will return the corresponding flow for a known grant or response type.
+//
+// Note: ToFlow will panic if the provide grant or response type is not known.
 func ToFlow(str string) Flow {
 	switch str {
 	case oauth2.PasswordGrantType:
@@ -54,11 +56,15 @@ type ManagerDelegate interface {
 	// allowed. If the flow in general or for the specified client is not allowed
 	// it should return ErrUnapproved. Any other returned error is treated as an
 	// internal server error.
+	//
+	// Note: Only allow flows that are implemented by the delegate. Using a non
+	// implemented flow will result in a runtime panic.
 	ValidateFlow(Flow, Client) error
 
-	// ObtainConsent should parse the specified request and return the id and
-	// secret of the to be authorized resource owner together with the requested
-	// scope. Any returned error is treated as an internal server error.
+	// ObtainConsent should parse the specified request and if all data is
+	// available return a consent with the parsed data. If data is missing the
+	// delegate should completely handle the request (to inform the user) and
+	// return nil.
 	ObtainConsent(w http.ResponseWriter, r *oauth2.AuthorizationRequest) *Consent
 }
 
@@ -67,6 +73,11 @@ type ErrorHandler func(error)
 
 // ManagedAuthorizationEndpoint constructs a request handler that manages the
 // authorization endpoint using the specified delegate.
+//
+// It will parse all requests and perform basic validations recommended by the
+// OAuth2 spec. When the specified flow has been approved using ValidateFlow it
+// will call ObtainConsent to inquire the resources owners consent. If the
+// the resource owner has given his consent the flows are handled.
 func ManagedAuthorizationEndpoint(d ManagerDelegate, eh ErrorHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// process authorization request
@@ -98,7 +109,7 @@ func ManagedAuthorizationEndpoint(d ManagerDelegate, eh ErrorHandler) http.Handl
 		switch ar.ResponseType {
 		case oauth2.TokenResponseType:
 			// authorize implicit grant
-			res, err := AuthorizeImplicitGrant(d, c, consent, ar)
+			res, err := HandleImplicitGrant(d, c, consent, ar)
 			if err != nil {
 				ForwardError(eh, err.Cause())
 				HandleError(w, err)

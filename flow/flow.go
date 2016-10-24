@@ -24,6 +24,7 @@ var ErrRejected = errors.New("rejected")
 // A Consent represents the consents of a resource owner to move forward with
 // the authorization request.
 type Consent struct {
+	// TODO: A server may not know the resource owner secret.
 	ResourceOwnerID     string
 	ResourceOwnerSecret string
 	RequestedScope      oauth2.Scope
@@ -44,7 +45,14 @@ type Delegate interface {
 	// as internal server errors.
 	LookupResourceOwner(string) (ResourceOwner, error)
 
-	GrantScope(Client, ResourceOwner, oauth2.Scope) (oauth2.Scope, error)
+	// ValidateScope should validate the specified scope for the specified client
+	// and potential resource owner. The delegate should return a granted scope
+	// that may be different to the specified scope. If the scope cannot be
+	// granted the delegate should return ErrRejected. Any other returned errors
+	// are treated as internal server errors.
+	//
+	// Note: The resource owner is not set during the client credentials grant.
+	ValidateScope(Client, ResourceOwner, oauth2.Scope) (oauth2.Scope, error)
 
 	// LookupAccessToken should look for an access token with the specified key.
 	// If the access token has not been found the method should return
