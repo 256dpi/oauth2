@@ -5,8 +5,6 @@ package spec
 import (
 	"net/http"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 // A Config declares the needed info for testing an OAuth2 authentication server.
@@ -45,7 +43,7 @@ type Config struct {
 	ExceedingScope string
 
 	// The expected "expire_in" value of returned tokens.
-	ExpectedExpireIn int
+	ExpectedExpiresIn int
 
 	// The tokens for the protected resource tests.
 	InvalidToken      string
@@ -100,27 +98,27 @@ func Default(handler http.Handler) *Config {
 		TokenEndpoint:     "/oauth2/token",
 		AuthorizeEndpoint: "/oauth2/authorize",
 		ProtectedResource: "/api/protected",
-		ExpectedExpireIn:  3600,
+		ExpectedExpiresIn: 3600,
 	}
 }
 
 // Run will run all tests using the specified config.
 func Run(t *testing.T, c *Config) {
 	// validate config
-	assert.NotEmpty(t, c.Handler)
-	assert.NotEmpty(t, c.TokenEndpoint)
-	assert.NotEmpty(t, c.AuthorizeEndpoint)
-	assert.NotEmpty(t, c.ProtectedResource)
-	assert.NotEmpty(t, c.PrimaryClientID)
-	assert.NotEmpty(t, c.PrimaryClientSecret)
-	assert.NotEmpty(t, c.SecondaryClientID)
-	assert.NotEmpty(t, c.SecondaryClientSecret)
-	assert.NotEmpty(t, c.InvalidScope)
-	assert.NotEmpty(t, c.ValidScope)
-	assert.NotEmpty(t, c.ExceedingScope)
-	assert.NotEmpty(t, c.InvalidToken)
-	assert.NotEmpty(t, c.UnknownToken)
-	assert.NotEmpty(t, c.ExpiredToken)
+	assert(t, c.Handler != nil, "setting Handler is required")
+	assert(t, c.TokenEndpoint != "", "setting TokenEndpoint is required")
+	assert(t, c.AuthorizeEndpoint != "", "setting AuthorizeEndpoint is required")
+	assert(t, c.ProtectedResource != "", "setting ProtectedResource is required")
+	assert(t, c.PrimaryClientID != "", "setting PrimaryClientID is required")
+	assert(t, c.PrimaryClientSecret != "", "setting PrimaryClientSecret is required")
+	assert(t, c.SecondaryClientID != "", "setting SecondaryClientID is required")
+	assert(t, c.SecondaryClientSecret != "", "setting SecondaryClientSecret is required")
+	assert(t, c.InvalidScope != "", "setting InvalidScope is required")
+	assert(t, c.ValidScope != "", "setting ValidScope is required")
+	assert(t, c.ExceedingScope != "", "setting ExceedingScope is required")
+	assert(t, c.InvalidToken != "", "setting InvalidToken is required")
+	assert(t, c.UnknownToken != "", "setting UnknownToken is required")
+	assert(t, c.ExpiredToken != "", "setting ExpiredToken is required")
 
 	t.Run("ProtectedResourceTest", func(t *testing.T) {
 		ProtectedResourceTest(t, c)
@@ -134,9 +132,9 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.ImplicitGrantSupport || c.AuthorizationCodeGrantSupport {
-		assert.NotEmpty(t, c.InvalidRedirectURI)
-		assert.NotEmpty(t, c.PrimaryRedirectURI)
-		assert.NotEmpty(t, c.SecondaryRedirectURI)
+		assert(t, c.InvalidRedirectURI != "", "setting InvalidRedirectURI is required")
+		assert(t, c.PrimaryRedirectURI != "", "setting PrimaryRedirectURI is required")
+		assert(t, c.SecondaryRedirectURI != "", "setting SecondaryRedirectURI is required")
 
 		t.Run("AuthorizationEndpointTest", func(t *testing.T) {
 			AuthorizationEndpointTest(t, c)
@@ -144,8 +142,8 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.PasswordGrantSupport {
-		assert.NotEmpty(t, c.ResourceOwnerUsername)
-		assert.NotEmpty(t, c.ResourceOwnerPassword)
+		assert(t, c.ResourceOwnerUsername != "", "setting ResourceOwnerUsername is required")
+		assert(t, c.ResourceOwnerPassword != "", "setting ResourceOwnerPassword is required")
 
 		t.Run("PasswordGrantTest", func(t *testing.T) {
 			PasswordGrantTest(t, c)
@@ -159,7 +157,7 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.ImplicitGrantSupport {
-		assert.NotEmpty(t, c.AuthorizationParams)
+		assert(t, c.AuthorizationParams != nil, "setting AuthorizationParams is required")
 
 		t.Run("ImplicitGrantTest", func(t *testing.T) {
 			ImplicitGrantTest(t, c)
@@ -167,10 +165,10 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.AuthorizationCodeGrantSupport {
-		assert.NotEmpty(t, c.AuthorizationParams)
-		assert.NotEmpty(t, c.InvalidAuthorizationCode)
-		assert.NotEmpty(t, c.UnknownAuthorizationCode)
-		assert.NotEmpty(t, c.ExpiredAuthorizationCode)
+		assert(t, c.AuthorizationParams != nil, "setting AuthorizationParams is required")
+		assert(t, c.InvalidAuthorizationCode != "", "setting InvalidAuthorizationCode is required")
+		assert(t, c.UnknownAuthorizationCode != "", "setting UnknownAuthorizationCode is required")
+		assert(t, c.ExpiredAuthorizationCode != "", "setting ExpiredAuthorizationCode is required")
 
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
 			AuthorizationCodeGrantTest(t, c)
@@ -178,10 +176,10 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.RefreshTokenGrantSupport {
-		assert.NotEmpty(t, c.InvalidRefreshToken)
-		assert.NotEmpty(t, c.UnknownRefreshToken)
-		assert.NotEmpty(t, c.ValidRefreshToken)
-		assert.NotEmpty(t, c.ExpiredRefreshToken)
+		assert(t, c.InvalidRefreshToken != "", "setting InvalidRefreshToken is required")
+		assert(t, c.UnknownRefreshToken != "", "setting UnknownRefreshToken is required")
+		assert(t, c.ValidRefreshToken != "", "setting ValidRefreshToken is required")
+		assert(t, c.ExpiredRefreshToken != "", "setting ExpiredRefreshToken is required")
 
 		t.Run("RefreshTokenGrantTest", func(t *testing.T) {
 			RefreshTokenGrantTest(t, c)

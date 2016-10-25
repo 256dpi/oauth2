@@ -96,7 +96,7 @@ func TestSpec(t *testing.T) {
 	config.ValidScope = "foo bar"
 	config.ExceedingScope = "foo bar baz"
 
-	config.ExpectedExpireIn = int(tokenLifespan / time.Second)
+	config.ExpectedExpiresIn = int(tokenLifespan / time.Second)
 
 	config.InvalidToken = "invalid"
 	config.UnknownToken = unknownToken.String()

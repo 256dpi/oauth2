@@ -4,12 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
-
-	"github.com/gonfire/oauth2"
-	"github.com/gonfire/oauth2/bearer"
-	"github.com/stretchr/testify/assert"
-	"github.com/tidwall/gjson"
 )
 
 // PasswordGrantTest tests the password grant.
@@ -21,14 +17,19 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type": oauth2.PasswordGrantType,
+			"grant_type": "password",
 			"username":   "invalid",
 			"password":   c.ResourceOwnerPassword,
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
-			assert.Equal(t, "access_denied", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusForbidden {
+				t.Error("expected status forbidden", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "access_denied" {
+				t.Error(`expected error to be "access_denied"`, debug(r))
+			}
 		},
 	})
 
@@ -39,14 +40,19 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type": oauth2.PasswordGrantType,
+			"grant_type": "password",
 			"username":   c.ResourceOwnerUsername,
 			"password":   "invalid",
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
-			assert.Equal(t, "access_denied", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusForbidden {
+				t.Error("expected status forbidden", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "access_denied" {
+				t.Error(`expected error to be "access_denied"`, debug(r))
+			}
 		},
 	})
 
@@ -57,14 +63,19 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type": oauth2.PasswordGrantType,
+			"grant_type": "password",
 			"username":   c.ResourceOwnerUsername,
 			"password":   c.ResourceOwnerPassword,
 			"scope":      c.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
 		},
 	})
 
@@ -75,14 +86,19 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type": oauth2.PasswordGrantType,
+			"grant_type": "password",
 			"username":   c.ResourceOwnerUsername,
 			"password":   c.ResourceOwnerPassword,
 			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
 		},
 	})
 
@@ -95,20 +111,35 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type": oauth2.PasswordGrantType,
+			"grant_type": "password",
 			"username":   c.ResourceOwnerUsername,
 			"password":   c.ResourceOwnerPassword,
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.Equal(t, bearer.TokenType, gjson.Get(r.Body.String(), "token_type").String(), debug(r))
-			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String(), debug(r))
-			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int(), debug(r))
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
 
-			accessToken = gjson.Get(r.Body.String(), "access_token").String()
-			refreshToken = gjson.Get(r.Body.String(), "refresh_token").String()
-			assert.NotEmpty(t, accessToken, debug(r))
+			if jsonFieldString(r, "token_type") != "bearer" {
+				t.Error(`expected token_type to be "bearer"`, debug(r))
+			}
+
+			if jsonFieldString(r, "scope") != c.ValidScope {
+				t.Error(`expected scope to be the valid scope`, debug(r))
+			}
+
+			if jsonFieldFloat(r, "expires_in") != float64(c.ExpectedExpiresIn) {
+				t.Error(`expected expires_in to be the expected expires in`, debug(r))
+			}
+
+			accessToken = jsonFieldString(r, "access_token")
+
+			if accessToken == "" {
+				t.Error(`expected access_token to be present`, debug(r))
+			}
+
+			refreshToken = jsonFieldString(r, "refresh_token")
 		},
 	})
 
@@ -130,13 +161,21 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: "invalid",
 		Form: map[string]string{
-			"grant_type": oauth2.ClientCredentialsGrantType,
+			"grant_type": "client_credentials",
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", gjson.Get(r.Body.String(), "error").Str, debug(r))
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Basic realm=`, debug(r))
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), "Basic realm=") {
+				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
+			}
 		},
 	})
 
@@ -147,12 +186,17 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type": oauth2.ClientCredentialsGrantType,
+			"grant_type": "client_credentials",
 			"scope":      c.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
 		},
 	})
 
@@ -163,12 +207,17 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type": oauth2.ClientCredentialsGrantType,
+			"grant_type": "client_credentials",
 			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
 		},
 	})
 
@@ -181,18 +230,33 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type": oauth2.ClientCredentialsGrantType,
+			"grant_type": "client_credentials",
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String(), debug(r))
-			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String(), debug(r))
-			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int(), debug(r))
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
 
-			accessToken = gjson.Get(r.Body.String(), "access_token").String()
-			refreshToken = gjson.Get(r.Body.String(), "refresh_token").String()
-			assert.NotEmpty(t, accessToken, debug(r))
+			if jsonFieldString(r, "token_type") != "bearer" {
+				t.Error(`expected token_type to be "bearer"`, debug(r))
+			}
+
+			if jsonFieldString(r, "scope") != c.ValidScope {
+				t.Error(`expected scope to be the valid scope`, debug(r))
+			}
+
+			if jsonFieldFloat(r, "expires_in") != float64(c.ExpectedExpiresIn) {
+				t.Error(`expected expires_in to be the expected expires in`, debug(r))
+			}
+
+			accessToken = jsonFieldString(r, "access_token")
+
+			if accessToken == "" {
+				t.Error(`expected access_token to be present`, debug(r))
+			}
+
+			refreshToken = jsonFieldString(r, "refresh_token")
 		},
 	})
 
@@ -212,16 +276,24 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.AuthorizationParams, map[string]string{
-			"response_type": oauth2.TokenResponseType,
+			"response_type": "token",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.InvalidScope,
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", fragment(r, "error"), debug(r))
-			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if fragment(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
+
+			if fragment(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
 		},
 	})
 
@@ -230,16 +302,24 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.AuthorizationParams, map[string]string{
-			"response_type": oauth2.TokenResponseType,
+			"response_type": "token",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ExceedingScope,
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", fragment(r, "error"), debug(r))
-			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if fragment(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
+
+			if fragment(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
 		},
 	})
 
@@ -248,16 +328,24 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
-			"response_type": oauth2.TokenResponseType,
+			"response_type": "token",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code, debug(r))
-			assert.Equal(t, "access_denied", fragment(r, "error"), debug(r))
-			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if fragment(r, "error") != "access_denied" {
+				t.Error(`expected error to be "access_denied"`, debug(r))
+			}
+
+			if fragment(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
 		},
 	})
 
@@ -268,21 +356,38 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.AuthorizationParams, map[string]string{
-			"response_type": oauth2.TokenResponseType,
+			"response_type": "token",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code, debug(r))
-			assert.Equal(t, bearer.TokenType, fragment(r, "token_type"), debug(r))
-			assert.Equal(t, c.ValidScope, fragment(r, "scope"), debug(r))
-			assert.Equal(t, strconv.Itoa(c.ExpectedExpireIn), fragment(r, "expires_in"), debug(r))
-			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if fragment(r, "token_type") != "bearer" {
+				t.Error(`expected token_type to be "bearer"`, debug(r))
+			}
+
+			if fragment(r, "scope") != c.ValidScope {
+				t.Error(`expected scope to be the valid scope`, debug(r))
+			}
+
+			if fragment(r, "expires_in") != strconv.Itoa(c.ExpectedExpiresIn) {
+				t.Error(`expected expires_in to be the expected expires in`, debug(r))
+			}
+
+			if fragment(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
 
 			accessToken = fragment(r, "access_token")
-			assert.NotEmpty(t, accessToken, debug(r))
+
+			if accessToken == "" {
+				t.Error(`expected access_token to be present`, debug(r))
+			}
 		},
 	})
 
@@ -297,16 +402,24 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.AuthorizationParams, map[string]string{
-			"response_type": oauth2.CodeResponseType,
+			"response_type": "code",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.InvalidScope,
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", query(r, "error"), debug(r))
-			assert.Equal(t, "xyz", query(r, "state"), debug(r))
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if query(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
+
+			if query(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
 		},
 	})
 
@@ -315,16 +428,24 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.AuthorizationParams, map[string]string{
-			"response_type": oauth2.CodeResponseType,
+			"response_type": "code",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ExceedingScope,
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", query(r, "error"), debug(r))
-			assert.Equal(t, "xyz", query(r, "state"), debug(r))
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if query(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
+
+			if query(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
 		},
 	})
 
@@ -333,16 +454,24 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
-			"response_type": oauth2.CodeResponseType,
+			"response_type": "code",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code, debug(r))
-			assert.Equal(t, "access_denied", query(r, "error"), debug(r))
-			assert.Equal(t, "xyz", query(r, "state"), debug(r))
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if query(r, "error") != "access_denied" {
+				t.Error(`expected error to be "access_denied"`, debug(r))
+			}
+
+			if query(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
 		},
 	})
 
@@ -353,18 +482,26 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: extend(c.AuthorizationParams, map[string]string{
-			"response_type": oauth2.CodeResponseType,
+			"response_type": "code",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		}),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusFound, r.Code, debug(r))
-			assert.Equal(t, "xyz", query(r, "state"), debug(r))
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if query(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
 
 			authorizationCode = query(r, "code")
-			assert.NotEmpty(t, authorizationCode, debug(r))
+
+			if authorizationCode == "" {
+				t.Error(`expected code to be present`, debug(r))
+			}
 		},
 	})
 
@@ -375,14 +512,19 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"grant_type":   "authorization_code",
 			"scope":        c.ValidScope,
 			"code":         c.InvalidAuthorizationCode,
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
 		},
 	})
 
@@ -393,14 +535,19 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"grant_type":   "authorization_code",
 			"scope":        c.ValidScope,
 			"code":         c.UnknownAuthorizationCode,
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
 		},
 	})
 
@@ -411,14 +558,19 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"grant_type":   "authorization_code",
 			"scope":        c.ValidScope,
 			"code":         c.ExpiredAuthorizationCode,
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
 		},
 	})
 
@@ -429,14 +581,19 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Username: c.SecondaryClientID,
 		Password: c.SecondaryClientSecret,
 		Form: map[string]string{
-			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"grant_type":   "authorization_code",
 			"scope":        c.ValidScope,
 			"code":         authorizationCode,
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
 		},
 	})
 
@@ -447,14 +604,19 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"grant_type":   "authorization_code",
 			"scope":        c.ValidScope,
 			"code":         authorizationCode,
 			"redirect_uri": c.SecondaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
 		},
 	})
 
@@ -467,20 +629,35 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":   oauth2.AuthorizationCodeGrantType,
+			"grant_type":   "authorization_code",
 			"scope":        c.ValidScope,
 			"code":         authorizationCode,
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.Equal(t, bearer.TokenType, gjson.Get(r.Body.String(), "token_type").String(), debug(r))
-			assert.Equal(t, c.ValidScope, gjson.Get(r.Body.String(), "scope").String(), debug(r))
-			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int(), debug(r))
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
 
-			accessToken = gjson.Get(r.Body.String(), "access_token").String()
-			assert.NotEmpty(t, accessToken, debug(r))
-			refreshToken = gjson.Get(r.Body.String(), "refresh_token").String()
+			if jsonFieldString(r, "token_type") != "bearer" {
+				t.Error(`expected token_type to be "bearer"`, debug(r))
+			}
+
+			if jsonFieldString(r, "scope") != c.ValidScope {
+				t.Error(`expected scope to be the valid scope`, debug(r))
+			}
+
+			if jsonFieldFloat(r, "expires_in") != float64(c.ExpectedExpiresIn) {
+				t.Error(`expected expires_in to be the expected expires in`, debug(r))
+			}
+
+			accessToken = jsonFieldString(r, "access_token")
+
+			if accessToken == "" {
+				t.Error(`expected access_token to be present`, debug(r))
+			}
+
+			refreshToken = jsonFieldString(r, "refresh_token")
 		},
 	})
 
@@ -502,12 +679,17 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":    oauth2.RefreshTokenGrantType,
+			"grant_type":    "refresh_token",
 			"refresh_token": c.InvalidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").String(), debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
 		},
 	})
 
@@ -518,12 +700,17 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":    oauth2.RefreshTokenGrantType,
+			"grant_type":    "refresh_token",
 			"refresh_token": c.UnknownRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
 		},
 	})
 
@@ -534,12 +721,17 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":    oauth2.RefreshTokenGrantType,
+			"grant_type":    "refresh_token",
 			"refresh_token": c.ExpiredRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
 		},
 	})
 
@@ -550,12 +742,17 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Username: c.SecondaryClientID,
 		Password: c.SecondaryClientSecret,
 		Form: map[string]string{
-			"grant_type":    oauth2.RefreshTokenGrantType,
+			"grant_type":    "refresh_token",
 			"refresh_token": c.ValidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
 		},
 	})
 
@@ -566,13 +763,18 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":    oauth2.RefreshTokenGrantType,
+			"grant_type":    "refresh_token",
 			"refresh_token": c.ValidRefreshToken,
 			"scope":         c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_scope", gjson.Get(r.Body.String(), "error").String(), debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_scope" {
+				t.Error(`expected error to be "invalid_scope"`, debug(r))
+			}
 		},
 	})
 
@@ -586,12 +788,17 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":    oauth2.RefreshTokenGrantType,
+			"grant_type":    "refresh_token",
 			"refresh_token": c.ValidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_grant", gjson.Get(r.Body.String(), "error").String(), debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
 		},
 	})
 }

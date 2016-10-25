@@ -3,11 +3,8 @@ package spec
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
-
-	"github.com/gonfire/oauth2"
-	"github.com/stretchr/testify/assert"
-	"github.com/tidwall/gjson"
 )
 
 // TokenEndpointTest executes general token endpoint tests.
@@ -17,8 +14,13 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.TokenEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
 		},
 	})
 
@@ -28,11 +30,16 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		Path:     c.TokenEndpoint,
 		Username: "unknown",
 		Form: map[string]string{
-			"grant_type": oauth2.PasswordGrantType,
+			"grant_type": "password",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
 		},
 	})
 
@@ -46,8 +53,13 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
 		},
 	})
 }
@@ -59,8 +71,13 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
 		},
 	})
 
@@ -69,14 +86,22 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
-			"response_type": oauth2.CodeResponseType,
+			"response_type": "code",
 			"client_id":     "invalid",
 			"redirect_uri":  c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", gjson.Get(r.Body.String(), "error").Str, debug(r))
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Basic realm=`, debug(r))
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), "Basic realm=") {
+				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
+			}
 		},
 	})
 
@@ -85,13 +110,18 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
-			"response_type": oauth2.CodeResponseType,
+			"response_type": "code",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.InvalidRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
 		},
 	})
 
@@ -106,8 +136,13 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		},
 		Username: c.PrimaryClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", gjson.Get(r.Body.String(), "error").Str, debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
 		},
 	})
 
@@ -116,13 +151,15 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Method: "GET",
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
-			"response_type": oauth2.TokenResponseType,
+			"response_type": "token",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 		},
 		Username: c.PrimaryClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.NotEqual(t, http.StatusNotFound, r.Code, debug(r))
+			if r.Code == http.StatusNotFound {
+				t.Error("expected different status than not found", debug(r))
+			}
 		},
 	})
 }
@@ -134,9 +171,17 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 		Method: "GET",
 		Path:   c.ProtectedResource,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer realm=`, debug(r))
-			assert.Empty(t, r.Body.String(), debug(r))
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer realm=`) {
+				t.Error(`expected header WWW-Authenticate to include a realm`, debug(r))
+			}
+
+			if r.Body.String() != "" {
+				t.Error("expected empty body", debug(r))
+			}
 		},
 	})
 
@@ -148,9 +193,17 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 			"Authorization": "invalid",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_request"`, debug(r))
-			assert.Empty(t, r.Body.String(), debug(r))
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_request"`) {
+				t.Error(`expected header WWW-Authenticate to include the error "invalid_request"`, debug(r))
+			}
+
+			if r.Body.String() != "" {
+				t.Error("expected empty body", debug(r))
+			}
 		},
 	})
 
@@ -162,9 +215,17 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 			"Authorization": "Bearer " + c.InvalidToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`, debug(r))
-			assert.Empty(t, r.Body.String(), debug(r))
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
+				t.Error(`expected header WWW-Authenticate to include the error "invalid_token"`, debug(r))
+			}
+
+			if r.Body.String() != "" {
+				t.Error("expected empty body", debug(r))
+			}
 		},
 	})
 
@@ -176,9 +237,17 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 			"Authorization": "Bearer " + c.UnknownToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`, debug(r))
-			assert.Empty(t, r.Body.String(), debug(r))
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
+				t.Error(`expected header WWW-Authenticate to include the error "invalid_token"`, debug(r))
+			}
+
+			if r.Body.String() != "" {
+				t.Error("expected empty body", debug(r))
+			}
 		},
 	})
 
@@ -190,9 +259,17 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 			"Authorization": "Bearer " + c.ExpiredToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`, debug(r))
-			assert.Empty(t, r.Body.String(), debug(r))
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
+				t.Error(`expected header WWW-Authenticate to include the error "invalid_token"`, debug(r))
+			}
+
+			if r.Body.String() != "" {
+				t.Error("expected empty body", debug(r))
+			}
 		},
 	})
 
@@ -204,9 +281,17 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 			"Authorization": "Bearer " + c.InsufficientToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
-			assert.Contains(t, r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="insufficient_scope"`, debug(r))
-			assert.Empty(t, r.Body.String(), debug(r))
+			if r.Code != http.StatusForbidden {
+				t.Error("expected status forbidden", debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="insufficient_scope"`) {
+				t.Error(`expected header WWW-Authenticate to include the error "insufficient_scope"`, debug(r))
+			}
+
+			if r.Body.String() != "" {
+				t.Error("expected empty body", debug(r))
+			}
 		},
 	})
 }

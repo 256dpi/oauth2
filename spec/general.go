@@ -4,10 +4,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/gonfire/oauth2"
-	"github.com/stretchr/testify/assert"
-	"github.com/tidwall/gjson"
 )
 
 // AccessTokenTest validates the specified access token by requesting the
@@ -20,8 +16,9 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 			"Authorization": "Bearer " + accessToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.NotEmpty(t, r.Body.String(), debug(r))
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
 		},
 	})
 }
@@ -38,16 +35,31 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Form: map[string]string{
-			"grant_type":    oauth2.RefreshTokenGrantType,
+			"grant_type":    "refresh_token",
 			"refresh_token": refreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.Equal(t, "bearer", gjson.Get(r.Body.String(), "token_type").String(), debug(r))
-			assert.Equal(t, int64(c.ExpectedExpireIn), gjson.Get(r.Body.String(), "expires_in").Int(), debug(r))
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
 
-			accessToken = gjson.Get(r.Body.String(), "access_token").String()
-			assert.NotEmpty(t, accessToken, debug(r))
+			if jsonFieldString(r, "token_type") != "bearer" {
+				t.Error(`expected token_type to be "bearer"`, debug(r))
+			}
+
+			if jsonFieldString(r, "scope") != c.ValidScope {
+				t.Error(`expected scope to be the valid scope`, debug(r))
+			}
+
+			if jsonFieldFloat(r, "expires_in") != float64(c.ExpectedExpiresIn) {
+				t.Error(`expected expires_in to be the expected expires in`, debug(r))
+			}
+
+			accessToken = jsonFieldString(r, "access_token")
+
+			if accessToken == "" {
+				t.Error(`expected access_token to be present`, debug(r))
+			}
 		},
 	})
 
