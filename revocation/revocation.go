@@ -1,3 +1,5 @@
+// Package revocation provides structures and functions to implement the
+// additional OAuth2 Token Revocation specification.
 package revocation
 
 import (

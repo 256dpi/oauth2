@@ -16,6 +16,7 @@ The library considers and implements the following specifications:
  
 - [OAuth 2.0 Framework](https://tools.ietf.org/html/rfc6749) - RFC 6749
 - [Bearer Token Usage](https://tools.ietf.org/html/rfc6750) - RFC 6750
+- [Token Revocation](https://tools.ietf.org/html/rfc7009) - RFC 7009
 - [Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819) - RFC 6819
 
 ## Example
