@@ -164,6 +164,103 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 	})
 }
 
+// RevocationEndpointTest executes token revocation tests.
+func RevocationEndpointTest(t *testing.T, c *Config) {
+	// invalid request
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
+		},
+	})
+
+	// invalid client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Form: map[string]string{
+			"token": c.ValidRefreshToken,
+		},
+		Username: "invalid",
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), "Basic realm=") {
+				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
+			}
+		},
+	})
+
+	// invalid client secret
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.RevocationEndpoint,
+		Username: c.PrimaryClientID,
+		Password: "invalid",
+		Form: map[string]string{
+			"token": c.ValidRefreshToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+
+			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), "Basic realm=") {
+				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
+			}
+		},
+	})
+
+	// invalid token
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Form: map[string]string{
+			"token": c.InvalidToken,
+		},
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusOK {
+				t.Error("expected status bad request", debug(r))
+			}
+		},
+	})
+
+	// revoke token
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Form: map[string]string{
+			"token": c.ValidRefreshToken,
+		},
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
+		},
+	})
+}
+
 // ProtectedResourceTest validates authorization of the protected resource.
 func ProtectedResourceTest(t *testing.T, c *Config) {
 	// missing token

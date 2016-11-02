@@ -78,6 +78,8 @@ func TestSpec(t *testing.T) {
 
 	config := spec.Default(newHandler())
 
+	config.RevocationEndpoint = "/oauth2/revoke"
+
 	config.PasswordGrantSupport = true
 	config.ClientCredentialsGrantSupport = true
 	config.ImplicitGrantSupport = true

@@ -11,6 +11,7 @@ install:
 script:
   - go test -coverprofile=jsonapi.coverprofile
   - go test -coverprofile=bearer.coverprofile ./bearer
+  - go test -coverprofile=revocation.coverprofile ./revocation
   - go test -coverprofile=hmacsha.coverprofile ./hmacsha
   - go test -coverprofile=example.coverprofile ./example
   - $HOME/gopath/bin/gover

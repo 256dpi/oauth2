@@ -11,6 +11,7 @@ import (
 	"github.com/gonfire/oauth2"
 	"github.com/gonfire/oauth2/bearer"
 	"github.com/gonfire/oauth2/hmacsha"
+	"github.com/gonfire/oauth2/revocation"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -64,6 +65,7 @@ func newHandler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/oauth2/token", tokenEndpoint)
 	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint)
+	mux.HandleFunc("/oauth2/revoke", revocationEndpoint)
 	mux.HandleFunc("/api/protected", protectedResource)
 	return mux
 }
@@ -384,6 +386,44 @@ func issueTokens(issueRefreshToken bool, scope oauth2.Scope, state, clientID, us
 	}
 
 	return res
+}
+
+func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
+	// parse authorization request
+	req, err := revocation.ParseRequest(r)
+	if err != nil {
+		oauth2.WriteError(w, err)
+		return
+	}
+
+	// get client
+	client, found := clients[req.ClientID]
+	if !found {
+		oauth2.WriteError(w, oauth2.InvalidClient(oauth2.NoState, "Unknown client"))
+		return
+	}
+
+	// authenticate client
+	if client.confidential && !sameHash(client.secret, req.ClientSecret) {
+		oauth2.WriteError(w, oauth2.InvalidClient(oauth2.NoState, "Unknown client"))
+		return
+	}
+
+	// parse token
+	token, err := hmacsha.Parse(secret, req.Token)
+	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// TODO: Only revoke tokens that belong to the provided client.
+
+	// delete tokens
+	delete(accessTokens, token.SignatureString())
+	delete(refreshTokens, token.SignatureString())
+
+	// write header
+	w.WriteHeader(http.StatusOK)
 }
 
 func protectedResource(w http.ResponseWriter, r *http.Request) {

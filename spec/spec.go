@@ -18,6 +18,9 @@ type Config struct {
 	// The authorization endpoint (e.g. /oauth2/authorize).
 	AuthorizeEndpoint string
 
+	// The revocation endpoint (e.g. /oauth2/revoke).
+	RevocationEndpoint string
+
 	// The protected resource (e.g. /api/protected).
 	ProtectedResource string
 
@@ -183,6 +186,12 @@ func Run(t *testing.T, c *Config) {
 
 		t.Run("RefreshTokenGrantTest", func(t *testing.T) {
 			RefreshTokenGrantTest(t, c)
+		})
+	}
+
+	if c.RevocationEndpoint != "" {
+		t.Run("RevocationEndpointTest", func(t *testing.T) {
+			RevocationEndpointTest(t, c)
 		})
 	}
 }
