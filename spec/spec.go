@@ -97,11 +97,15 @@ type Config struct {
 // Default returns a common used configuration that can taken as a basis.
 func Default(handler http.Handler) *Config {
 	return &Config{
-		Handler:           handler,
-		TokenEndpoint:     "/oauth2/token",
-		AuthorizeEndpoint: "/oauth2/authorize",
-		ProtectedResource: "/api/protected",
-		ExpectedExpiresIn: 3600,
+		Handler:             handler,
+		TokenEndpoint:       "/oauth2/token",
+		AuthorizeEndpoint:   "/oauth2/authorize",
+		RevocationEndpoint:  "/oauth2/revoke",
+		ProtectedResource:   "/api/protected",
+		ExpectedExpiresIn:   3600,
+		InvalidToken:        "invalid",
+		InvalidRedirectURI:  "http://invalid.com",
+		InvalidRefreshToken: "invalid",
 	}
 }
 

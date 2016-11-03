@@ -66,3 +66,41 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	// test access token
 	AccessTokenTest(t, c, accessToken)
 }
+
+// RevokeAccessTokenTest revokes the specified token and validates it.
+func RevokeAccessTokenTest(t *testing.T, c *Config, accessToken string) {
+	// check if revocation is available
+	if c.RevocationEndpoint == "" {
+		return
+	}
+
+	// revoke access token
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Form: map[string]string{
+			"token": accessToken,
+		},
+		Username: c.PrimaryClientID,
+		Password: c.PrimaryClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
+		},
+	})
+
+	// check token
+	Do(c.Handler, &Request{
+		Method: "GET",
+		Path:   c.ProtectedResource,
+		Header: map[string]string{
+			"Authorization": "Bearer " + accessToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+		},
+	})
+}

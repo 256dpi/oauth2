@@ -164,7 +164,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 	})
 }
 
-// RevocationEndpointTest executes token revocation tests.
+// RevocationEndpointTest executes general token revocation tests.
 func RevocationEndpointTest(t *testing.T, c *Config) {
 	// invalid request
 	Do(c.Handler, &Request{
@@ -204,30 +204,6 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		},
 	})
 
-	// invalid client secret
-	Do(c.Handler, &Request{
-		Method:   "POST",
-		Path:     c.RevocationEndpoint,
-		Username: c.PrimaryClientID,
-		Password: "invalid",
-		Form: map[string]string{
-			"token": c.ValidRefreshToken,
-		},
-		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusUnauthorized {
-				t.Error("expected status unauthorized", debug(r))
-			}
-
-			if jsonFieldString(r, "error") != "invalid_client" {
-				t.Error(`expected error to be "invalid_client"`, debug(r))
-			}
-
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), "Basic realm=") {
-				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
-			}
-		},
-	})
-
 	// invalid token
 	Do(c.Handler, &Request{
 		Method: "POST",
@@ -240,22 +216,6 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusOK {
 				t.Error("expected status bad request", debug(r))
-			}
-		},
-	})
-
-	// revoke token
-	Do(c.Handler, &Request{
-		Method: "POST",
-		Path:   c.RevocationEndpoint,
-		Form: map[string]string{
-			"token": c.ValidRefreshToken,
-		},
-		Username: c.PrimaryClientID,
-		Password: c.PrimaryClientSecret,
-		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusOK {
-				t.Error("expected status ok", debug(r))
 			}
 		},
 	})

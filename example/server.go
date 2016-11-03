@@ -403,12 +403,6 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// authenticate client
-	if client.confidential && !sameHash(client.secret, req.ClientSecret) {
-		oauth2.WriteError(w, oauth2.InvalidClient(oauth2.NoState, "Unknown client"))
-		return
-	}
-
 	// parse token
 	token, err := hmacsha.Parse(secret, req.Token)
 	if err != nil {
@@ -416,14 +410,28 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Only revoke tokens that belong to the provided client.
-
-	// delete tokens
-	delete(accessTokens, token.SignatureString())
-	delete(refreshTokens, token.SignatureString())
+	// revoke tokens
+	revokeToken(client, accessTokens, token.SignatureString())
+	revokeToken(client, refreshTokens, token.SignatureString())
 
 	// write header
 	w.WriteHeader(http.StatusOK)
+}
+
+func revokeToken(client owner, list map[string]credential, signature string) {
+	// get token
+	token, ok := list[signature]
+	if !ok {
+		return
+	}
+
+	// check client id
+	if token.clientID != client.id {
+		return
+	}
+
+	// remove token
+	delete(list, signature)
 }
 
 func protectedResource(w http.ResponseWriter, r *http.Request) {
