@@ -214,8 +214,10 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Username: c.PrimaryClientID,
 		Password: c.PrimaryClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			// Note: The application must not raise an error here.
+
 			if r.Code != http.StatusOK {
-				t.Error("expected status bad request", debug(r))
+				t.Error("expected status ok", debug(r))
 			}
 		},
 	})
@@ -230,8 +232,10 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Username: c.SecondaryClientID,
 		Password: c.SecondaryClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			// Note: The application must not raise an error here.
+
 			if r.Code != http.StatusOK {
-				t.Error("expected status bad request", debug(r))
+				t.Error("expected status ok", debug(r))
 			}
 		},
 	})
