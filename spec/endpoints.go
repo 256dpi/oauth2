@@ -219,6 +219,22 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 			}
 		},
 	})
+
+	// wrong client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Form: map[string]string{
+			"token": c.InsufficientToken,
+		},
+		Username: c.SecondaryClientID,
+		Password: c.SecondaryClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusOK {
+				t.Error("expected status bad request", debug(r))
+			}
+		},
+	})
 }
 
 // ProtectedResourceTest validates authorization of the protected resource.

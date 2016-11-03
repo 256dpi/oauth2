@@ -146,9 +146,6 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	// test access token
 	AccessTokenTest(t, c, accessToken)
 
-	// test token revocation
-	RevokeAccessTokenTest(t, c, accessToken)
-
 	// test refresh token if present
 	if refreshToken != "" {
 		RefreshTokenTest(t, c, refreshToken)
@@ -265,9 +262,6 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 
 	// test access token
 	AccessTokenTest(t, c, accessToken)
-
-	// test token revocation
-	RevokeAccessTokenTest(t, c, accessToken)
 
 	// test refresh token if present
 	if refreshToken != "" {
@@ -399,9 +393,6 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 
 	// test access token
 	AccessTokenTest(t, c, accessToken)
-
-	// test token revocation
-	RevokeAccessTokenTest(t, c, accessToken)
 }
 
 // AuthorizationCodeGrantTest tests the authorization code grant.
@@ -672,9 +663,6 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 
 	// test access token
 	AccessTokenTest(t, c, accessToken)
-
-	// test token revocation
-	RevokeAccessTokenTest(t, c, accessToken)
 
 	// test refresh token if present
 	if refreshToken != "" {
