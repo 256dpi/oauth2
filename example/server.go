@@ -134,11 +134,8 @@ func handleImplicitGrant(w http.ResponseWriter, username, password string, r *oa
 	// issue tokens
 	res := issueTokens(false, r.Scope, r.ClientID, owner.id)
 
-	// set redirect
-	res.Redirect(r.RedirectURI, true)
-
-	// set state
-	res.State = r.State
+	// redirect token
+	res.Redirect(r.RedirectURI, r.State, true)
 
 	// write response
 	oauth2.WriteTokenResponse(w, res)
@@ -162,10 +159,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, 
 	authorizationCode := hmacsha.MustGenerate(secret, 32)
 
 	// prepare response
-	res := oauth2.NewCodeResponse(authorizationCode.String())
-
-	// set state
-	res.State = r.State
+	res := oauth2.NewCodeResponse(authorizationCode.String(), r.RedirectURI, r.State)
 
 	// save authorization code
 	authorizationCodes[authorizationCode.SignatureString()] = credential{
@@ -178,7 +172,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, 
 	}
 
 	// write response
-	oauth2.WriteCodeResponse(w, r.RedirectURI, res)
+	oauth2.WriteCodeResponse(w, res)
 }
 
 func tokenEndpoint(w http.ResponseWriter, r *http.Request) {

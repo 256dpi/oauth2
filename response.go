@@ -32,8 +32,9 @@ func NewTokenResponse(tokenType, accessToken string, expiresIn int) *TokenRespon
 // Redirect marks the response to be redirected by setting the redirect URI and
 // whether the response should be added to the query parameter or fragment part
 // of the URI.
-func (r *TokenResponse) Redirect(uri string, useFragment bool) *TokenResponse {
+func (r *TokenResponse) Redirect(uri, state string, useFragment bool) *TokenResponse {
 	r.RedirectURI = uri
+	r.State = state
 	r.UseFragment = useFragment
 
 	return r
@@ -89,12 +90,16 @@ func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
 type CodeResponse struct {
 	Code  string `json:"code"`
 	State string `json:"state,omitempty"`
+
+	RedirectURI string `json:"-"`
 }
 
 // NewCodeResponse constructs a CodeResponse.
-func NewCodeResponse(code string) *CodeResponse {
+func NewCodeResponse(code, redirectURI, state string) *CodeResponse {
 	return &CodeResponse{
-		Code: code,
+		Code:        code,
+		State:       state,
+		RedirectURI: redirectURI,
 	}
 }
 
@@ -117,6 +122,6 @@ func (r *CodeResponse) Map() map[string]string {
 
 // WriteCodeResponse will write a redirection based on the specified code
 // response to the response writer.
-func WriteCodeResponse(w http.ResponseWriter, uri string, res *CodeResponse) error {
-	return WriteRedirect(w, uri, res.Map(), false)
+func WriteCodeResponse(w http.ResponseWriter, res *CodeResponse) error {
+	return WriteRedirect(w, res.RedirectURI, res.Map(), false)
 }
