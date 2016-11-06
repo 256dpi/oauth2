@@ -134,11 +134,14 @@ func handleImplicitGrant(w http.ResponseWriter, username, password string, r *oa
 	// issue tokens
 	res := issueTokens(false, r.Scope, r.ClientID, owner.id)
 
+	// set redirect
+	res.Redirect(r.RedirectURI, true)
+
 	// set state
 	res.State = r.State
 
 	// write response
-	oauth2.RedirectTokenResponse(w, r.RedirectURI, res)
+	oauth2.WriteTokenResponse(w, res)
 }
 
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, password string, r *oauth2.AuthorizationRequest) {
@@ -175,7 +178,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, 
 	}
 
 	// write response
-	oauth2.RedirectCodeResponse(w, r.RedirectURI, res)
+	oauth2.WriteCodeResponse(w, r.RedirectURI, res)
 }
 
 func tokenEndpoint(w http.ResponseWriter, r *http.Request) {

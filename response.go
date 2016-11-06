@@ -15,6 +15,9 @@ type TokenResponse struct {
 	RefreshToken string `json:"refresh_token,omitempty"`
 	Scope        Scope  `json:"scope,omitempty"`
 	State        string `json:"state,omitempty"`
+
+	RedirectURI string `json:"-"`
+	UseFragment bool   `json:"-"`
 }
 
 // NewTokenResponse constructs a TokenResponse.
@@ -24,6 +27,16 @@ func NewTokenResponse(tokenType, accessToken string, expiresIn int) *TokenRespon
 		AccessToken: accessToken,
 		ExpiresIn:   expiresIn,
 	}
+}
+
+// Redirect marks the response to be redirected by setting the redirect URI and
+// whether the response should be added to the query parameter or fragment part
+// of the URI.
+func (r *TokenResponse) Redirect(uri string, useFragment bool) *TokenResponse {
+	r.RedirectURI = uri
+	r.UseFragment = useFragment
+
+	return r
 }
 
 // Map returns a map of all fields that can be presented to the client. This
@@ -60,14 +73,15 @@ func (r *TokenResponse) Map() map[string]string {
 }
 
 // WriteTokenResponse will write the specified response to the response writer.
+// If the RedirectURI field is present on the response a redirection will be
+// written instead.
 func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
-	return Write(w, res, http.StatusOK)
-}
+	// write redirect if requested
+	if res.RedirectURI != "" {
+		return WriteRedirect(w, res.RedirectURI, res.Map(), res.UseFragment)
+	}
 
-// RedirectTokenResponse will write a redirection based on the specified token
-// response to the response writer.
-func RedirectTokenResponse(w http.ResponseWriter, uri string, res *TokenResponse) error {
-	return WriteRedirect(w, uri, res.Map(), true)
+	return Write(w, res, http.StatusOK)
 }
 
 // A CodeResponse is typically constructed after an authorization code request
@@ -101,8 +115,8 @@ func (r *CodeResponse) Map() map[string]string {
 	return m
 }
 
-// RedirectCodeResponse will write a redirection based on the specified code
+// WriteCodeResponse will write a redirection based on the specified code
 // response to the response writer.
-func RedirectCodeResponse(w http.ResponseWriter, uri string, res *CodeResponse) error {
+func WriteCodeResponse(w http.ResponseWriter, uri string, res *CodeResponse) error {
 	return WriteRedirect(w, uri, res.Map(), false)
 }

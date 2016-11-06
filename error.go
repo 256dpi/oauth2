@@ -20,9 +20,9 @@ type Error struct {
 	UseFragment bool              `json:"-"`
 }
 
-// AsRedirect marks an error to be redirected during WriteError by setting the
-// state value as well as the redirect URI and whether the error should be
-// added to the query parameter or fragment part of the URI.
+// Redirect marks the error to be redirected by setting the state value as well
+// as the redirect URI and whether the error should be added to the query
+// parameter or fragment part of the URI.
 func (e *Error) Redirect(uri, state string, useFragment bool) *Error {
 	e.State = state
 	e.RedirectURI = uri
@@ -181,10 +181,8 @@ func TemporarilyUnavailable(description string) *Error {
 
 // WriteError will write the specified error to the response writer. The function
 // will fall back and write a server error if the specified error is not known.
-//
-// RedirectError will write a redirection based on the specified error to the
-// response writer. The function will fall back and write a server error
-// redirection if the specified error is not known.
+// If the RedirectURI field is present on the error a redirection will be written
+// instead.
 func WriteError(w http.ResponseWriter, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
@@ -202,6 +200,5 @@ func WriteError(w http.ResponseWriter, err error) error {
 		return WriteRedirect(w, anError.RedirectURI, anError.Map(), anError.UseFragment)
 	}
 
-	// otherwise write error response
 	return Write(w, anError, anError.Status)
 }
