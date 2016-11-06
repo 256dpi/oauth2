@@ -76,13 +76,13 @@ func (r *TokenResponse) Map() map[string]string {
 // WriteTokenResponse will write the specified response to the response writer.
 // If the RedirectURI field is present on the response a redirection will be
 // written instead.
-func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
+func WriteTokenResponse(w http.ResponseWriter, r *TokenResponse) error {
 	// write redirect if requested
-	if res.RedirectURI != "" {
-		return WriteRedirect(w, res.RedirectURI, res.Map(), res.UseFragment)
+	if r.RedirectURI != "" {
+		return WriteRedirect(w, r.RedirectURI, r.Map(), r.UseFragment)
 	}
 
-	return Write(w, res, http.StatusOK)
+	return Write(w, r, http.StatusOK)
 }
 
 // A CodeResponse is typically constructed after an authorization code request
@@ -92,6 +92,7 @@ type CodeResponse struct {
 	State string `json:"state,omitempty"`
 
 	RedirectURI string `json:"-"`
+	UseFragment bool   `json:"-"`
 }
 
 // NewCodeResponse constructs a CodeResponse.
@@ -122,6 +123,6 @@ func (r *CodeResponse) Map() map[string]string {
 
 // WriteCodeResponse will write a redirection based on the specified code
 // response to the response writer.
-func WriteCodeResponse(w http.ResponseWriter, res *CodeResponse) error {
-	return WriteRedirect(w, res.RedirectURI, res.Map(), false)
+func WriteCodeResponse(w http.ResponseWriter, r *CodeResponse) error {
+	return WriteRedirect(w, r.RedirectURI, r.Map(), r.UseFragment)
 }
