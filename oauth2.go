@@ -67,10 +67,10 @@ func Write(w http.ResponseWriter, obj interface{}, status int) error {
 	return err
 }
 
-// Redirect will either add the specified parameters to the query of the
+// WriteRedirect will either add the specified parameters to the query of the
 // specified uri or encode them and it as the fragment as specified by the
 // OAuth2 spec.
-func Redirect(w http.ResponseWriter, uri string, params map[string]string, useFragment bool) error {
+func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string, useFragment bool) error {
 	// parse redirect uri
 	redirectURI, err := url.ParseRequestURI(uri)
 	if err != nil {

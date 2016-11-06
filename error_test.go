@@ -74,11 +74,11 @@ func TestWriteError(t *testing.T) {
 	}`, rec.Body.String())
 }
 
-func TestWriteErrorRedirect(t *testing.T) {
-	err1 := InvalidRequest("foo")
+func TestWriteErrorAsRedirect(t *testing.T) {
+	err1 := InvalidRequest("foo").Redirect("http://example.com", "bar", false)
 	rec := httptest.NewRecorder()
 
-	err2 := RedirectError(rec, "http://example.com", "bar", false, err1)
+	err2 := WriteError(rec, err1)
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "http://example.com?error=invalid_request&error_description=foo&state=bar", rec.HeaderMap.Get("Location"))
@@ -94,14 +94,4 @@ func TestWriteErrorFallback(t *testing.T) {
 	assert.JSONEq(t, `{
 		"error": "server_error"
 	}`, rec.Body.String())
-}
-
-func TestWriteErrorRedirectFallback(t *testing.T) {
-	err1 := errors.New("foo")
-	rec := httptest.NewRecorder()
-
-	err2 := RedirectError(rec, "http://example.com", "bar", false, err1)
-	assert.NoError(t, err2)
-	assert.Equal(t, http.StatusFound, rec.Code)
-	assert.Equal(t, "http://example.com?error=server_error&state=bar", rec.HeaderMap.Get("Location"))
 }

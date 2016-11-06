@@ -14,8 +14,21 @@ type Error struct {
 	Description string `json:"error_description,omitempty"`
 	URI         string `json:"error_uri,omitempty"`
 
-	Status  int               `json:"-"`
-	Headers map[string]string `json:"-"`
+	Status      int               `json:"-"`
+	Headers     map[string]string `json:"-"`
+	RedirectURI string            `json:"-"`
+	UseFragment bool              `json:"-"`
+}
+
+// AsRedirect marks an error to be redirected during WriteError by setting the
+// state value as well as the redirect URI and whether the error should be
+// added to the query parameter or fragment part of the URI.
+func (e *Error) Redirect(uri, state string, useFragment bool) *Error {
+	e.State = state
+	e.RedirectURI = uri
+	e.UseFragment = useFragment
+
+	return e
 }
 
 // String implements the fmt.Stringer interface.
@@ -168,6 +181,10 @@ func TemporarilyUnavailable(description string) *Error {
 
 // WriteError will write the specified error to the response writer. The function
 // will fall back and write a server error if the specified error is not known.
+//
+// RedirectError will write a redirection based on the specified error to the
+// response writer. The function will fall back and write a server error
+// redirection if the specified error is not known.
 func WriteError(w http.ResponseWriter, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
@@ -180,23 +197,11 @@ func WriteError(w http.ResponseWriter, err error) error {
 		w.Header().Set(k, v)
 	}
 
-	// write error response
-	return Write(w, anError, anError.Status)
-}
-
-// RedirectError will write a redirection based on the specified error to the
-// response writer. The function will fall back and write a server error
-// redirection if the specified error is not known.
-func RedirectError(w http.ResponseWriter, uri, state string, useFragment bool, err error) error {
-	// ensure complex error
-	anError, ok := err.(*Error)
-	if !ok {
-		anError = ServerError("")
+	// redirect error if requested
+	if anError.RedirectURI != "" {
+		return WriteRedirect(w, anError.RedirectURI, anError.Map(), anError.UseFragment)
 	}
 
-	// set state
-	anError.State = state
-
-	// write redirect
-	return Redirect(w, uri, anError.Map(), useFragment)
+	// otherwise write error response
+	return Write(w, anError, anError.Status)
 }

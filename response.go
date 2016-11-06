@@ -67,7 +67,7 @@ func WriteTokenResponse(w http.ResponseWriter, res *TokenResponse) error {
 // RedirectTokenResponse will write a redirection based on the specified token
 // response to the response writer.
 func RedirectTokenResponse(w http.ResponseWriter, uri string, res *TokenResponse) error {
-	return Redirect(w, uri, res.Map(), true)
+	return WriteRedirect(w, uri, res.Map(), true)
 }
 
 // A CodeResponse is typically constructed after an authorization code request
@@ -104,5 +104,5 @@ func (r *CodeResponse) Map() map[string]string {
 // RedirectCodeResponse will write a redirection based on the specified code
 // response to the response writer.
 func RedirectCodeResponse(w http.ResponseWriter, uri string, res *CodeResponse) error {
-	return Redirect(w, uri, res.Map(), false)
+	return WriteRedirect(w, uri, res.Map(), false)
 }

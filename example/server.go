@@ -120,14 +120,14 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 func handleImplicitGrant(w http.ResponseWriter, username, password string, r *oauth2.AuthorizationRequest) {
 	// validate scope
 	if !allowedScope.Includes(r.Scope) {
-		oauth2.RedirectError(w, r.RedirectURI, r.State, true, oauth2.InvalidScope(""))
+		oauth2.WriteError(w, oauth2.InvalidScope("").Redirect(r.RedirectURI, r.State, true))
 		return
 	}
 
 	// validate user credentials
 	owner, found := users[username]
 	if !found || !sameHash(owner.secret, password) {
-		oauth2.RedirectError(w, r.RedirectURI, r.State, true, oauth2.AccessDenied(""))
+		oauth2.WriteError(w, oauth2.AccessDenied("").Redirect(r.RedirectURI, r.State, true))
 		return
 	}
 
@@ -144,14 +144,14 @@ func handleImplicitGrant(w http.ResponseWriter, username, password string, r *oa
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, password string, r *oauth2.AuthorizationRequest) {
 	// validate scope
 	if !allowedScope.Includes(r.Scope) {
-		oauth2.RedirectError(w, r.RedirectURI, r.State, false, oauth2.InvalidScope(""))
+		oauth2.WriteError(w, oauth2.InvalidScope("").Redirect(r.RedirectURI, r.State, false))
 		return
 	}
 
 	// validate user credentials
 	owner, found := users[username]
 	if !found || !sameHash(owner.secret, password) {
-		oauth2.RedirectError(w, r.RedirectURI, r.State, false, oauth2.AccessDenied(""))
+		oauth2.WriteError(w, oauth2.AccessDenied("").Redirect(r.RedirectURI, r.State, false))
 		return
 	}
 
