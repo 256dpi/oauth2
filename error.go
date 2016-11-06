@@ -5,16 +5,6 @@ import (
 	"net/http"
 )
 
-const (
-	// NoState is and can be used with all error builders to indicate that this
-	// error gets constructed without including a state parameter.
-	NoState = ""
-
-	// NoDescription can be used with all error builders to indicate that this
-	// error gets constructed without including a description parameter.
-	NoDescription = ""
-)
-
 // An Error represents an error object defined by the OAuth2 specification. All
 // functions that are used during the authorization and token request processing
 // flow return such error instances.
@@ -68,11 +58,10 @@ func (e *Error) Map() map[string]string {
 // InvalidRequest constructs an error that indicates that the request is missing
 // a required parameter, includes an invalid parameter value, includes a parameter
 // more than once, or is otherwise malformed.
-func InvalidRequest(state, description string) *Error {
+func InvalidRequest(description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
 		Name:        "invalid_request",
-		State:       state,
 		Description: description,
 	}
 }
@@ -80,11 +69,10 @@ func InvalidRequest(state, description string) *Error {
 // InvalidClient constructs an error that indicates that the client
 // authentication failed (e.g., unknown client, no client authentication included,
 // or unsupported authentication method).
-func InvalidClient(state, description string) *Error {
+func InvalidClient(description string) *Error {
 	return &Error{
 		Status:      http.StatusUnauthorized,
 		Name:        "invalid_client",
-		State:       state,
 		Description: description,
 		Headers: map[string]string{
 			"WWW-Authenticate": `Basic realm="OAuth2"`,
@@ -96,22 +84,20 @@ func InvalidClient(state, description string) *Error {
 // authorization grant (e.g., authorization code, resource owner credentials) or
 // refresh token is invalid, expired, revoked, does not match the redirection URI
 // used in the authorization request, or was issued to another client.
-func InvalidGrant(state, description string) *Error {
+func InvalidGrant(description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
 		Name:        "invalid_grant",
-		State:       state,
 		Description: description,
 	}
 }
 
 // InvalidScope constructs an error that indicates that the requested scope is
 // invalid, unknown, malformed, or exceeds the scope granted by the resource owner.
-func InvalidScope(state, description string) *Error {
+func InvalidScope(description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
 		Name:        "invalid_scope",
-		State:       state,
 		Description: description,
 	}
 }
@@ -119,22 +105,20 @@ func InvalidScope(state, description string) *Error {
 // UnauthorizedClient constructs an error that indicates that the authenticated
 // client is not authorized to use this authorization grant type or method to
 // request and access token.
-func UnauthorizedClient(state, description string) *Error {
+func UnauthorizedClient(description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
 		Name:        "unauthorized_client",
-		State:       state,
 		Description: description,
 	}
 }
 
 // UnsupportedGrantType constructs an error that indicates that the authorization
 // grant type is not supported by the authorization server.
-func UnsupportedGrantType(state, description string) *Error {
+func UnsupportedGrantType(description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
 		Name:        "unsupported_grant_type",
-		State:       state,
 		Description: description,
 	}
 }
@@ -142,22 +126,20 @@ func UnsupportedGrantType(state, description string) *Error {
 // UnsupportedResponseType constructs an error that indicates that the
 // authorization server does not support obtaining an access token using this
 // method.
-func UnsupportedResponseType(state, description string) *Error {
+func UnsupportedResponseType(description string) *Error {
 	return &Error{
 		Status:      http.StatusBadRequest,
 		Name:        "unsupported_response_type",
-		State:       state,
 		Description: description,
 	}
 }
 
 // AccessDenied constructs an error that indicates that the resource owner or
 // authorization server denied the request.
-func AccessDenied(state, description string) *Error {
+func AccessDenied(description string) *Error {
 	return &Error{
 		Status:      http.StatusForbidden,
 		Name:        "access_denied",
-		State:       state,
 		Description: description,
 	}
 }
@@ -165,11 +147,10 @@ func AccessDenied(state, description string) *Error {
 // ServerError constructs an error that indicates that the authorization server
 // encountered an unexpected condition that prevented it from fulfilling the
 // request.
-func ServerError(state, description string) *Error {
+func ServerError(description string) *Error {
 	return &Error{
 		Status:      http.StatusInternalServerError,
 		Name:        "server_error",
-		State:       state,
 		Description: description,
 	}
 }
@@ -177,11 +158,10 @@ func ServerError(state, description string) *Error {
 // TemporarilyUnavailable constructs an error that indicates that the
 // authorization server is currently unable to handle the request due to a
 // temporary overloading or maintenance of the server.
-func TemporarilyUnavailable(state, description string) *Error {
+func TemporarilyUnavailable(description string) *Error {
 	return &Error{
 		Status:      http.StatusServiceUnavailable,
 		Name:        "temporarily_unavailable",
-		State:       state,
 		Description: description,
 	}
 }
@@ -192,7 +172,7 @@ func WriteError(w http.ResponseWriter, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
-		anError = ServerError(NoState, NoDescription)
+		anError = ServerError("")
 	}
 
 	// add headers
@@ -207,12 +187,15 @@ func WriteError(w http.ResponseWriter, err error) error {
 // RedirectError will write a redirection based on the specified error to the
 // response writer. The function will fall back and write a server error
 // redirection if the specified error is not known.
-func RedirectError(w http.ResponseWriter, uri string, useFragment bool, err error) error {
+func RedirectError(w http.ResponseWriter, uri, state string, useFragment bool, err error) error {
 	// ensure complex error
 	anError, ok := err.(*Error)
 	if !ok {
-		anError = ServerError(NoState, NoDescription)
+		anError = ServerError("")
 	}
+
+	// set state
+	anError.State = state
 
 	// write redirect
 	return Redirect(w, uri, anError.Map(), useFragment)

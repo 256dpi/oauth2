@@ -15,52 +15,49 @@ func TestErrorBuilders(t *testing.T) {
 		cde string
 		sta int
 	}{
-		{InvalidRequest("foo", "bar"), "invalid_request", http.StatusBadRequest},
-		{InvalidClient("foo", "bar"), "invalid_client", http.StatusUnauthorized},
-		{InvalidGrant("foo", "bar"), "invalid_grant", http.StatusBadRequest},
-		{InvalidScope("foo", "bar"), "invalid_scope", http.StatusBadRequest},
-		{UnauthorizedClient("foo", "bar"), "unauthorized_client", http.StatusBadRequest},
-		{UnsupportedGrantType("foo", "bar"), "unsupported_grant_type", http.StatusBadRequest},
-		{UnsupportedResponseType("foo", "bar"), "unsupported_response_type", http.StatusBadRequest},
-		{AccessDenied("foo", "bar"), "access_denied", http.StatusForbidden},
-		{ServerError("foo", "bar"), "server_error", http.StatusInternalServerError},
-		{TemporarilyUnavailable("foo", "bar"), "temporarily_unavailable", http.StatusServiceUnavailable},
+		{InvalidRequest("foo"), "invalid_request", http.StatusBadRequest},
+		{InvalidClient("foo"), "invalid_client", http.StatusUnauthorized},
+		{InvalidGrant("foo"), "invalid_grant", http.StatusBadRequest},
+		{InvalidScope("foo"), "invalid_scope", http.StatusBadRequest},
+		{UnauthorizedClient("foo"), "unauthorized_client", http.StatusBadRequest},
+		{UnsupportedGrantType("foo"), "unsupported_grant_type", http.StatusBadRequest},
+		{UnsupportedResponseType("foo"), "unsupported_response_type", http.StatusBadRequest},
+		{AccessDenied("foo"), "access_denied", http.StatusForbidden},
+		{ServerError("foo"), "server_error", http.StatusInternalServerError},
+		{TemporarilyUnavailable("foo"), "temporarily_unavailable", http.StatusServiceUnavailable},
 	}
 
 	for _, i := range matrix {
 		assert.Equal(t, i.sta, i.err.Status, i.err.Name)
 		assert.Equal(t, i.cde, i.err.Name, i.err.Name)
-		assert.Equal(t, "foo", i.err.State, i.err.Name)
-		assert.Equal(t, "bar", i.err.Description, i.err.Name)
+		assert.Equal(t, "foo", i.err.Description, i.err.Name)
 	}
 }
 
 func TestError(t *testing.T) {
-	err := InvalidRequest("foo", "bar")
+	err := InvalidRequest("foo")
 	assert.Error(t, err)
-	assert.Equal(t, "invalid_request: bar", err.Error())
-	assert.Equal(t, "invalid_request: bar", err.String())
+	assert.Equal(t, "invalid_request: foo", err.Error())
+	assert.Equal(t, "invalid_request: foo", err.String())
 	assert.Equal(t, map[string]string{
 		"error":             "invalid_request",
-		"state":             "foo",
-		"error_description": "bar",
+		"error_description": "foo",
 	}, err.Map())
 }
 
 func TestErrorMap(t *testing.T) {
-	err := InvalidRequest("foo", "bar")
+	err := InvalidRequest("foo")
 	err.URI = "http://example.com"
 
 	assert.Equal(t, map[string]string{
 		"error":             "invalid_request",
-		"state":             "foo",
-		"error_description": "bar",
+		"error_description": "foo",
 		"error_uri":         "http://example.com",
 	}, err.Map())
 }
 
 func TestWriteError(t *testing.T) {
-	err1 := InvalidRequest("foo", "bar")
+	err1 := InvalidRequest("foo")
 	err1.Headers = map[string]string{
 		"foo": "bar",
 	}
@@ -73,19 +70,18 @@ func TestWriteError(t *testing.T) {
 	assert.Equal(t, "bar", rec.HeaderMap.Get("foo"))
 	assert.JSONEq(t, `{
 		"error": "invalid_request",
-		"state":             "foo",
-		"error_description": "bar"
+		"error_description": "foo"
 	}`, rec.Body.String())
 }
 
 func TestWriteErrorRedirect(t *testing.T) {
-	err1 := InvalidRequest("foo", "bar")
+	err1 := InvalidRequest("foo")
 	rec := httptest.NewRecorder()
 
-	err2 := RedirectError(rec, "http://example.com", false, err1)
+	err2 := RedirectError(rec, "http://example.com", "bar", false, err1)
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusFound, rec.Code)
-	assert.Equal(t, "http://example.com?error=invalid_request&error_description=bar&state=foo", rec.HeaderMap.Get("Location"))
+	assert.Equal(t, "http://example.com?error=invalid_request&error_description=foo&state=bar", rec.HeaderMap.Get("Location"))
 }
 
 func TestWriteErrorFallback(t *testing.T) {
@@ -104,8 +100,8 @@ func TestWriteErrorRedirectFallback(t *testing.T) {
 	err1 := errors.New("foo")
 	rec := httptest.NewRecorder()
 
-	err2 := RedirectError(rec, "http://example.com", false, err1)
+	err2 := RedirectError(rec, "http://example.com", "bar", false, err1)
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusFound, rec.Code)
-	assert.Equal(t, "http://example.com?error=server_error", rec.HeaderMap.Get("Location"))
+	assert.Equal(t, "http://example.com?error=server_error&state=bar", rec.HeaderMap.Get("Location"))
 }
