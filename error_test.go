@@ -75,7 +75,7 @@ func TestWriteError(t *testing.T) {
 }
 
 func TestWriteErrorAsRedirect(t *testing.T) {
-	err1 := InvalidRequest("foo").Redirect("http://example.com", "bar", false)
+	err1 := InvalidRequest("foo").SetRedirect("http://example.com", "bar", false)
 	rec := httptest.NewRecorder()
 
 	err2 := WriteError(rec, err1)

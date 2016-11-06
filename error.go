@@ -20,10 +20,10 @@ type Error struct {
 	UseFragment bool              `json:"-"`
 }
 
-// Redirect marks the error to be redirected by setting the state value as well
-// as the redirect URI and whether the error should be added to the query
+// SetRedirect marks the error to be redirected by setting the state value as
+// well as the redirect URI and whether the error should be added to the query
 // parameter or fragment part of the URI.
-func (e *Error) Redirect(uri, state string, useFragment bool) *Error {
+func (e *Error) SetRedirect(uri, state string, useFragment bool) *Error {
 	e.State = state
 	e.RedirectURI = uri
 	e.UseFragment = useFragment

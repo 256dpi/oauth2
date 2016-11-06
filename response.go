@@ -29,10 +29,10 @@ func NewTokenResponse(tokenType, accessToken string, expiresIn int) *TokenRespon
 	}
 }
 
-// Redirect marks the response to be redirected by setting the redirect URI and
-// whether the response should be added to the query parameter or fragment part
-// of the URI.
-func (r *TokenResponse) Redirect(uri, state string, useFragment bool) *TokenResponse {
+// SetRedirect marks the response to be redirected by setting the redirect URI
+// and whether the response should be added to the query parameter or fragment
+// part of the URI.
+func (r *TokenResponse) SetRedirect(uri, state string, useFragment bool) *TokenResponse {
 	r.RedirectURI = uri
 	r.State = state
 	r.UseFragment = useFragment

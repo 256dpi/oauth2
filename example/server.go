@@ -120,14 +120,14 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 func handleImplicitGrant(w http.ResponseWriter, username, password string, rq *oauth2.AuthorizationRequest) {
 	// validate scope
 	if !allowedScope.Includes(rq.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope("").Redirect(rq.RedirectURI, rq.State, true))
+		oauth2.WriteError(w, oauth2.InvalidScope("").SetRedirect(rq.RedirectURI, rq.State, true))
 		return
 	}
 
 	// validate user credentials
 	owner, found := users[username]
 	if !found || !sameHash(owner.secret, password) {
-		oauth2.WriteError(w, oauth2.AccessDenied("").Redirect(rq.RedirectURI, rq.State, true))
+		oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, true))
 		return
 	}
 
@@ -135,7 +135,7 @@ func handleImplicitGrant(w http.ResponseWriter, username, password string, rq *o
 	r := issueTokens(false, rq.Scope, rq.ClientID, owner.id)
 
 	// redirect token
-	r.Redirect(rq.RedirectURI, rq.State, true)
+	r.SetRedirect(rq.RedirectURI, rq.State, true)
 
 	// write response
 	oauth2.WriteTokenResponse(w, r)
@@ -144,14 +144,14 @@ func handleImplicitGrant(w http.ResponseWriter, username, password string, rq *o
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, password string, rq *oauth2.AuthorizationRequest) {
 	// validate scope
 	if !allowedScope.Includes(rq.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope("").Redirect(rq.RedirectURI, rq.State, false))
+		oauth2.WriteError(w, oauth2.InvalidScope("").SetRedirect(rq.RedirectURI, rq.State, false))
 		return
 	}
 
 	// validate user credentials
 	owner, found := users[username]
 	if !found || !sameHash(owner.secret, password) {
-		oauth2.WriteError(w, oauth2.AccessDenied("").Redirect(rq.RedirectURI, rq.State, false))
+		oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, false))
 		return
 	}
 
