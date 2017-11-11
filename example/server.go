@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gonfire/oauth2"
-	"github.com/gonfire/oauth2/bearer"
-	"github.com/gonfire/oauth2/hmacsha"
-	"github.com/gonfire/oauth2/revocation"
+	"github.com/256dpi/oauth2"
+	"github.com/256dpi/oauth2/bearer"
+	"github.com/256dpi/oauth2/hmacsha"
+	"github.com/256dpi/oauth2/revocation"
 	"golang.org/x/crypto/bcrypt"
 )
 

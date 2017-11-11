@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gonfire/oauth2"
+	"github.com/256dpi/oauth2"
 )
 
 // TokenType is the bearer token type as defined by the OAuth2 Bearer Token spec.

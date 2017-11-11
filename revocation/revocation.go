@@ -5,7 +5,7 @@ package revocation
 import (
 	"net/http"
 
-	"github.com/gonfire/oauth2"
+	"github.com/256dpi/oauth2"
 )
 
 // The known OAuth2 token types.

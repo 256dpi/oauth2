@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gonfire/oauth2"
-	"github.com/gonfire/oauth2/hmacsha"
-	"github.com/gonfire/oauth2/spec"
+	"github.com/256dpi/oauth2"
+	"github.com/256dpi/oauth2/hmacsha"
+	"github.com/256dpi/oauth2/spec"
 	"golang.org/x/crypto/bcrypt"
 )
 
