@@ -45,11 +45,13 @@ func jsonField(r *httptest.ResponseRecorder, field string) interface{} {
 }
 
 func jsonFieldString(r *httptest.ResponseRecorder, field string) string {
-	return jsonField(r, field).(string)
+	str, _ := jsonField(r, field).(string)
+	return str
 }
 
 func jsonFieldFloat(r *httptest.ResponseRecorder, field string) float64 {
-	return jsonField(r, field).(float64)
+	num, _ := jsonField(r, field).(float64)
+	return num
 }
 
 func fragment(r *httptest.ResponseRecorder, key string) string {
