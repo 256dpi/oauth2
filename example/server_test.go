@@ -118,7 +118,12 @@ func TestSpec(t *testing.T) {
 	config.UnknownAuthorizationCode = unknownAuthorizationCode.String()
 	config.ExpiredAuthorizationCode = expiredAuthorizationCode.String()
 
-	config.AuthorizationParams = map[string]string{
+	config.InvalidAuthorizationParams = map[string]string{
+		"username": "user1",
+		"password": "invalid",
+	}
+
+	config.ValidAuthorizationParams = map[string]string{
 		"username": "user1",
 		"password": "foo",
 	}

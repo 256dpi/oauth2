@@ -275,7 +275,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.AuthorizationParams, map[string]string{
+		Form: extend(c.ValidAuthorizationParams, map[string]string{
 			"response_type": "token",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -301,7 +301,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.AuthorizationParams, map[string]string{
+		Form: extend(c.ValidAuthorizationParams, map[string]string{
 			"response_type": "token",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -349,13 +349,39 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// invalid password
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: extend(c.InvalidAuthorizationParams, map[string]string{
+			"response_type": "token",
+			"client_id":     c.PrimaryClientID,
+			"redirect_uri":  c.PrimaryRedirectURI,
+			"scope":         c.ValidScope,
+			"state":         "xyz",
+		}),
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if fragment(r, "error") != "access_denied" {
+				t.Error(`expected error to be "access_denied"`, debug(r))
+			}
+
+			if fragment(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
+		},
+	})
+
 	var accessToken string
 
 	// get access token
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.AuthorizationParams, map[string]string{
+		Form: extend(c.ValidAuthorizationParams, map[string]string{
 			"response_type": "token",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -401,7 +427,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.AuthorizationParams, map[string]string{
+		Form: extend(c.ValidAuthorizationParams, map[string]string{
 			"response_type": "code",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -427,7 +453,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.AuthorizationParams, map[string]string{
+		Form: extend(c.ValidAuthorizationParams, map[string]string{
 			"response_type": "code",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
@@ -475,13 +501,39 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// invalid password
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: extend(c.InvalidAuthorizationParams, map[string]string{
+			"response_type": "code",
+			"client_id":     c.PrimaryClientID,
+			"redirect_uri":  c.PrimaryRedirectURI,
+			"scope":         c.ValidScope,
+			"state":         "xyz",
+		}),
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if query(r, "error") != "access_denied" {
+				t.Error(`expected error to be "access_denied"`, debug(r))
+			}
+
+			if query(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
+		},
+	})
+
 	var authorizationCode string
 
 	// get authorization code
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.AuthorizationParams, map[string]string{
+		Form: extend(c.ValidAuthorizationParams, map[string]string{
 			"response_type": "code",
 			"client_id":     c.PrimaryClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
