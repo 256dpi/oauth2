@@ -99,7 +99,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 				t.Error(`expected error to be "invalid_client"`, debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), "Basic realm=") {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), "Basic realm=") {
 				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
 			}
 		},
@@ -198,7 +198,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 				t.Error(`expected error to be "invalid_client"`, debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), "Basic realm=") {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), "Basic realm=") {
 				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
 			}
 		},
@@ -252,7 +252,7 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 				t.Error("expected status unauthorized", debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer realm=`) {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), `Bearer realm=`) {
 				t.Error(`expected header WWW-Authenticate to include a realm`, debug(r))
 			}
 
@@ -274,7 +274,7 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 				t.Error("expected status bad request", debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_request"`) {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), `Bearer error="invalid_request"`) {
 				t.Error(`expected header WWW-Authenticate to include the error "invalid_request"`, debug(r))
 			}
 
@@ -296,7 +296,7 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 				t.Error("expected status unauthorized", debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
 				t.Error(`expected header WWW-Authenticate to include the error "invalid_token"`, debug(r))
 			}
 
@@ -318,7 +318,7 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 				t.Error("expected status unauthorized", debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
 				t.Error(`expected header WWW-Authenticate to include the error "invalid_token"`, debug(r))
 			}
 
@@ -340,7 +340,7 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 				t.Error("expected status unauthorized", debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), `Bearer error="invalid_token"`) {
 				t.Error(`expected header WWW-Authenticate to include the error "invalid_token"`, debug(r))
 			}
 
@@ -362,7 +362,7 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 				t.Error("expected status forbidden", debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), `Bearer error="insufficient_scope"`) {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), `Bearer error="insufficient_scope"`) {
 				t.Error(`expected header WWW-Authenticate to include the error "insufficient_scope"`, debug(r))
 			}
 

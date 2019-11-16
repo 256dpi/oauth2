@@ -66,7 +66,7 @@ func TestWriteError(t *testing.T) {
 	err2 := WriteError(rec, err1)
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	assert.Equal(t, `Bearer error="invalid_request", error_description="foo"`, rec.HeaderMap.Get("WWW-Authenticate"))
+	assert.Equal(t, `Bearer error="invalid_request", error_description="foo"`, rec.Header().Get("WWW-Authenticate"))
 	assert.Empty(t, rec.Body.String())
 }
 
@@ -78,7 +78,7 @@ func TestWriteErrorForcedRealm(t *testing.T) {
 	err2 := WriteError(rec, err1)
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	assert.Equal(t, `Bearer realm="OAuth2"`, rec.HeaderMap.Get("WWW-Authenticate"))
+	assert.Equal(t, `Bearer realm="OAuth2"`, rec.Header().Get("WWW-Authenticate"))
 	assert.Empty(t, rec.Body.String())
 }
 

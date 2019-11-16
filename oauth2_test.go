@@ -56,7 +56,7 @@ func TestWrite(t *testing.T) {
 		"Pragma": []string{
 			"no-cache",
 		},
-	}, rec.HeaderMap)
+	}, rec.Header())
 }
 
 func TestRedirect(t *testing.T) {
@@ -78,7 +78,7 @@ func TestRedirectQuery(t *testing.T) {
 		"Location": []string{
 			"http://example.com?baz=qux&foo=bar",
 		},
-	}, rec.HeaderMap)
+	}, rec.Header())
 }
 
 func TestRedirectFragment(t *testing.T) {
@@ -94,5 +94,5 @@ func TestRedirectFragment(t *testing.T) {
 		"Location": []string{
 			"http://example.com?foo=bar#baz=qux",
 		},
-	}, rec.HeaderMap)
+	}, rec.Header())
 }

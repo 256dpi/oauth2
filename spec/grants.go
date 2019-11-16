@@ -173,7 +173,7 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 				t.Error(`expected error to be "invalid_client"`, debug(r))
 			}
 
-			if !strings.HasPrefix(r.HeaderMap.Get("WWW-Authenticate"), "Basic realm=") {
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), "Basic realm=") {
 				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
 			}
 		},

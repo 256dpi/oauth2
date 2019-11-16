@@ -55,7 +55,7 @@ func jsonFieldFloat(r *httptest.ResponseRecorder, field string) float64 {
 }
 
 func fragment(r *httptest.ResponseRecorder, key string) string {
-	u, err := url.Parse(r.HeaderMap.Get("Location"))
+	u, err := url.Parse(r.Header().Get("Location"))
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +69,7 @@ func fragment(r *httptest.ResponseRecorder, key string) string {
 }
 
 func query(r *httptest.ResponseRecorder, key string) string {
-	u, err := url.Parse(r.HeaderMap.Get("Location"))
+	u, err := url.Parse(r.Header().Get("Location"))
 	if err != nil {
 		panic(err)
 	}
@@ -78,5 +78,5 @@ func query(r *httptest.ResponseRecorder, key string) string {
 }
 
 func debug(rec *httptest.ResponseRecorder) string {
-	return fmt.Sprintf("\nStatus: %d\nHeader: %v\nBody:   %v", rec.Code, rec.HeaderMap, rec.Body.String())
+	return fmt.Sprintf("\nStatus: %d\nHeader: %v\nBody:   %v", rec.Code, rec.Header(), rec.Body.String())
 }
