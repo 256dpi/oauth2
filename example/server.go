@@ -8,11 +8,12 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/256dpi/oauth2"
 	"github.com/256dpi/oauth2/bearer"
 	"github.com/256dpi/oauth2/hmacsha"
 	"github.com/256dpi/oauth2/revocation"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var secret = []byte("abcd1234abcd1234")
@@ -80,20 +81,20 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// make sure the response type is known
 	if !oauth2.KnownResponseType(req.ResponseType) {
-		_ = oauth2.WriteError(w, oauth2.InvalidRequest("Unknown response type"))
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest("unknown response type"))
 		return
 	}
 
 	// get client
 	client, found := clients[req.ClientID]
 	if !found {
-		_ = oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
 
 	// validate redirect uri
 	if client.redirectURI != req.RedirectURI {
-		_ = oauth2.WriteError(w, oauth2.InvalidRequest("Invalid redirect URI"))
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest("invalid redirect URI"))
 		return
 	}
 
@@ -185,20 +186,20 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// make sure the grant type is known
 	if !oauth2.KnownGrantType(req.GrantType) {
-		_ = oauth2.WriteError(w, oauth2.InvalidRequest("Unknown grant type"))
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest("unknown grant type"))
 		return
 	}
 
 	// find client
 	client, found := clients[req.ClientID]
 	if !found {
-		_ = oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
 
 	// authenticate client
 	if client.confidential && !sameHash(client.secret, req.ClientSecret) {
-		_ = oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
 
@@ -261,25 +262,25 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.TokenRequest
 	// get stored authorization code by signature
 	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
-		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Unknown authorization code"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("unknown authorization code"))
 		return
 	}
 
 	// validate expiration
 	if storedAuthorizationCode.expiresAt.Before(time.Now()) {
-		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Expired authorization code"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("expired authorization code"))
 		return
 	}
 
 	// validate ownership
 	if storedAuthorizationCode.clientID != rq.ClientID {
-		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Invalid authorization code ownership"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("invalid authorization code ownership"))
 		return
 	}
 
 	// validate redirect uri
 	if storedAuthorizationCode.redirectURI != rq.RedirectURI {
-		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Changed redirect uri"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("changed redirect uri"))
 		return
 	}
 
@@ -304,19 +305,19 @@ func handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// get stored refresh token by signature
 	storedRefreshToken, found := refreshTokens[refreshToken.SignatureString()]
 	if !found {
-		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Unknown refresh token"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("unknown refresh token"))
 		return
 	}
 
 	// validate expiration
 	if storedRefreshToken.expiresAt.Before(time.Now()) {
-		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Expired refresh token"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("expired refresh token"))
 		return
 	}
 
 	// validate ownership
 	if storedRefreshToken.clientID != rq.ClientID {
-		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Invalid refresh token ownership"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("invalid refresh token ownership"))
 		return
 	}
 
@@ -327,7 +328,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 
 	// validate scope - a missing scope is always included
 	if !storedRefreshToken.scope.Includes(rq.Scope) {
-		_ = oauth2.WriteError(w, oauth2.InvalidScope("Scope exceeds the originally granted scope"))
+		_ = oauth2.WriteError(w, oauth2.InvalidScope("scope exceeds the originally granted scope"))
 		return
 	}
 
@@ -396,7 +397,7 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	// get client
 	client, found := clients[req.ClientID]
 	if !found {
-		_ = oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
 
@@ -442,20 +443,20 @@ func protectedResource(w http.ResponseWriter, r *http.Request) {
 	// parse token
 	token, err := hmacsha.Parse(secret, tk)
 	if err != nil {
-		_ = bearer.WriteError(w, bearer.InvalidToken("Malformed token"))
+		_ = bearer.WriteError(w, bearer.InvalidToken("malformed token"))
 		return
 	}
 
 	// get token
 	accessToken, found := accessTokens[token.SignatureString()]
 	if !found {
-		_ = bearer.WriteError(w, bearer.InvalidToken("Unknown token"))
+		_ = bearer.WriteError(w, bearer.InvalidToken("unknown token"))
 		return
 	}
 
 	// validate expiration
 	if accessToken.expiresAt.Before(time.Now()) {
-		_ = bearer.WriteError(w, bearer.InvalidToken("Expired token"))
+		_ = bearer.WriteError(w, bearer.InvalidToken("expired token"))
 		return
 	}
 

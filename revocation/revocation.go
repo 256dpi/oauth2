@@ -41,19 +41,19 @@ type Request struct {
 func ParseRequest(r *http.Request) (*Request, error) {
 	// check method
 	if r.Method != "POST" {
-		return nil, oauth2.InvalidRequest("Invalid HTTP method")
+		return nil, oauth2.InvalidRequest("invalid HTTP method")
 	}
 
 	// parse query params and body params to form
 	err := r.ParseForm()
 	if err != nil {
-		return nil, oauth2.InvalidRequest("Malformed query parameters or body form")
+		return nil, oauth2.InvalidRequest("malformed query parameters or body form")
 	}
 
 	// get token
 	token := r.PostForm.Get("token")
 	if token == "" {
-		return nil, oauth2.InvalidRequest("Missing token")
+		return nil, oauth2.InvalidRequest("missing token")
 	}
 
 	// get token type hint
@@ -62,7 +62,7 @@ func ParseRequest(r *http.Request) (*Request, error) {
 	// get client id and secret
 	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
-		return nil, oauth2.InvalidRequest("Missing or invalid HTTP authorization header")
+		return nil, oauth2.InvalidRequest("missing or invalid HTTP authorization header")
 	}
 
 	return &Request{

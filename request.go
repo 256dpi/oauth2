@@ -29,19 +29,19 @@ type TokenRequest struct {
 func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 	// check method
 	if r.Method != "POST" {
-		return nil, InvalidRequest("Invalid HTTP method")
+		return nil, InvalidRequest("invalid HTTP method")
 	}
 
 	// parse query params and body params to form
 	err := r.ParseForm()
 	if err != nil {
-		return nil, InvalidRequest("Malformed query parameters or body form")
+		return nil, InvalidRequest("malformed query parameters or body form")
 	}
 
 	// get grant type
 	grantType := r.PostForm.Get("grant_type")
 	if grantType == "" {
-		return nil, InvalidRequest("Missing grant type")
+		return nil, InvalidRequest("missing grant type")
 	}
 
 	// get scope
@@ -50,7 +50,7 @@ func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 	// get client id and secret
 	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
-		return nil, InvalidRequest("Missing or invalid HTTP authorization header")
+		return nil, InvalidRequest("missing or invalid HTTP authorization header")
 	}
 
 	// get username and password
@@ -63,14 +63,14 @@ func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 	// get redirect uri
 	redirectURIString, err := url.QueryUnescape(r.Form.Get("redirect_uri"))
 	if err != nil {
-		return nil, InvalidRequest("Invalid redirect URI")
+		return nil, InvalidRequest("invalid redirect URI")
 	}
 
 	// validate redirect uri if present
 	if redirectURIString != "" {
 		redirectURI, err := url.ParseRequestURI(redirectURIString)
 		if err != nil || redirectURI.Fragment != "" {
-			return nil, InvalidRequest("Invalid redirect URI")
+			return nil, InvalidRequest("invalid redirect URI")
 		}
 	}
 
@@ -109,13 +109,13 @@ type AuthorizationRequest struct {
 func ParseAuthorizationRequest(r *http.Request) (*AuthorizationRequest, error) {
 	// check method
 	if r.Method != "GET" && r.Method != "POST" {
-		return nil, InvalidRequest("Invalid HTTP method")
+		return nil, InvalidRequest("invalid HTTP method")
 	}
 
 	// parse query params and body params to form
 	err := r.ParseForm()
 	if err != nil {
-		return nil, InvalidRequest("Malformed query parameters or form data")
+		return nil, InvalidRequest("malformed query parameters or form data")
 	}
 
 	// get state
@@ -124,7 +124,7 @@ func ParseAuthorizationRequest(r *http.Request) (*AuthorizationRequest, error) {
 	// get response type
 	responseType := r.Form.Get("response_type")
 	if responseType == "" {
-		return nil, InvalidRequest("Missing response type")
+		return nil, InvalidRequest("missing response type")
 	}
 
 	// get scope
@@ -133,19 +133,19 @@ func ParseAuthorizationRequest(r *http.Request) (*AuthorizationRequest, error) {
 	// get client id
 	clientID := r.Form.Get("client_id")
 	if clientID == "" {
-		return nil, InvalidRequest("Missing client ID")
+		return nil, InvalidRequest("missing client ID")
 	}
 
 	// get redirect uri
 	redirectURIString, err := url.QueryUnescape(r.Form.Get("redirect_uri"))
 	if err != nil || redirectURIString == "" {
-		return nil, InvalidRequest("Missing redirect URI")
+		return nil, InvalidRequest("missing redirect URI")
 	}
 
 	// parse redirect uri
 	redirectURI, err := url.ParseRequestURI(redirectURIString)
 	if err != nil || redirectURI.Fragment != "" {
-		return nil, InvalidRequest("Invalid redirect URI")
+		return nil, InvalidRequest("invalid redirect URI")
 	}
 
 	return &AuthorizationRequest{

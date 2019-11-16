@@ -92,13 +92,13 @@ func Parse(secret []byte, str string) (*Token, error) {
 	// decode key
 	key, err := b64.DecodeString(s[0])
 	if err != nil {
-		return nil, errors.New("Token key is not base64 encoded")
+		return nil, errors.New("token key is not base64 encoded")
 	}
 
 	// decode signature
 	signature, err := b64.DecodeString(s[1])
 	if err != nil {
-		return nil, errors.New("Token signature is not base64 encoded")
+		return nil, errors.New("token signature is not base64 encoded")
 	}
 
 	// construct token
@@ -109,7 +109,7 @@ func Parse(secret []byte, str string) (*Token, error) {
 
 	// validate signatures
 	if !token.Valid(secret) {
-		return nil, errors.New("Invalid token supplied")
+		return nil, errors.New("invalid token supplied")
 	}
 
 	return token, nil

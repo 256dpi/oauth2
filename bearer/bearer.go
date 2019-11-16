@@ -35,7 +35,7 @@ func ParseToken(r *http.Request) (string, error) {
 	// split header
 	s := strings.SplitN(h, " ", 2)
 	if len(s) != 2 || !strings.EqualFold(s[0], TokenType) {
-		return "", InvalidRequest("Malformed authorization header")
+		return "", InvalidRequest("malformed authorization header")
 	}
 
 	return s[1], nil
