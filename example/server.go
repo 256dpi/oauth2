@@ -74,32 +74,32 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse authorization request
 	req, err := oauth2.ParseAuthorizationRequest(r)
 	if err != nil {
-		oauth2.WriteError(w, err)
+		_ = oauth2.WriteError(w, err)
 		return
 	}
 
 	// make sure the response type is known
 	if !oauth2.KnownResponseType(req.ResponseType) {
-		oauth2.WriteError(w, oauth2.InvalidRequest("Unknown response type"))
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest("Unknown response type"))
 		return
 	}
 
 	// get client
 	client, found := clients[req.ClientID]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
 		return
 	}
 
 	// validate redirect uri
 	if client.redirectURI != req.RedirectURI {
-		oauth2.WriteError(w, oauth2.InvalidRequest("Invalid redirect URI"))
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest("Invalid redirect URI"))
 		return
 	}
 
 	// show notice for a GET request
 	if r.Method == "GET" {
-		w.Write([]byte("This authentication server does not provide an authorization form.\n" +
+		_, _ = w.Write([]byte("This authentication server does not provide an authorization form.\n" +
 			"Please submit the resource owners username and password in a POST request."))
 		return
 	}
@@ -120,14 +120,14 @@ func authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 func handleImplicitGrant(w http.ResponseWriter, username, password string, rq *oauth2.AuthorizationRequest) {
 	// validate scope
 	if !allowedScope.Includes(rq.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope("").SetRedirect(rq.RedirectURI, rq.State, true))
+		_ = oauth2.WriteError(w, oauth2.InvalidScope("").SetRedirect(rq.RedirectURI, rq.State, true))
 		return
 	}
 
 	// validate user credentials
 	owner, found := users[username]
 	if !found || !sameHash(owner.secret, password) {
-		oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, true))
+		_ = oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, true))
 		return
 	}
 
@@ -138,20 +138,20 @@ func handleImplicitGrant(w http.ResponseWriter, username, password string, rq *o
 	r.SetRedirect(rq.RedirectURI, rq.State, true)
 
 	// write response
-	oauth2.WriteTokenResponse(w, r)
+	_ = oauth2.WriteTokenResponse(w, r)
 }
 
 func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, password string, rq *oauth2.AuthorizationRequest) {
 	// validate scope
 	if !allowedScope.Includes(rq.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope("").SetRedirect(rq.RedirectURI, rq.State, false))
+		_ = oauth2.WriteError(w, oauth2.InvalidScope("").SetRedirect(rq.RedirectURI, rq.State, false))
 		return
 	}
 
 	// validate user credentials
 	owner, found := users[username]
 	if !found || !sameHash(owner.secret, password) {
-		oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, false))
+		_ = oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, false))
 		return
 	}
 
@@ -172,33 +172,33 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, 
 	}
 
 	// write response
-	oauth2.WriteCodeResponse(w, r)
+	_ = oauth2.WriteCodeResponse(w, r)
 }
 
 func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse token request
 	req, err := oauth2.ParseTokenRequest(r)
 	if err != nil {
-		oauth2.WriteError(w, err)
+		_ = oauth2.WriteError(w, err)
 		return
 	}
 
 	// make sure the grant type is known
 	if !oauth2.KnownGrantType(req.GrantType) {
-		oauth2.WriteError(w, oauth2.InvalidRequest("Unknown grant type"))
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest("Unknown grant type"))
 		return
 	}
 
 	// find client
 	client, found := clients[req.ClientID]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
 		return
 	}
 
 	// authenticate client
 	if client.confidential && !sameHash(client.secret, req.ClientSecret) {
-		oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
 		return
 	}
 
@@ -219,13 +219,13 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, rq *oaut
 	// authenticate resource owner
 	owner, found := users[rq.Username]
 	if !found || !sameHash(owner.secret, rq.Password) {
-		oauth2.WriteError(w, oauth2.AccessDenied(""))
+		_ = oauth2.WriteError(w, oauth2.AccessDenied(""))
 		return
 	}
 
 	// check scope
 	if !allowedScope.Includes(rq.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(""))
+		_ = oauth2.WriteError(w, oauth2.InvalidScope(""))
 		return
 	}
 
@@ -233,13 +233,13 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, rq *oaut
 	r := issueTokens(true, rq.Scope, rq.ClientID, rq.Username)
 
 	// write response
-	oauth2.WriteTokenResponse(w, r)
+	_ = oauth2.WriteTokenResponse(w, r)
 }
 
 func handleClientCredentialsGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// check scope
 	if !allowedScope.Includes(rq.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope(""))
+		_ = oauth2.WriteError(w, oauth2.InvalidScope(""))
 		return
 	}
 
@@ -247,39 +247,39 @@ func handleClientCredentialsGrant(w http.ResponseWriter, rq *oauth2.TokenRequest
 	r := issueTokens(true, rq.Scope, rq.ClientID, "")
 
 	// write response
-	oauth2.WriteTokenResponse(w, r)
+	_ = oauth2.WriteTokenResponse(w, r)
 }
 
 func handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// parse authorization code
 	authorizationCode, err := hmacsha.Parse(secret, rq.Code)
 	if err != nil {
-		oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
 	}
 
 	// get stored authorization code by signature
 	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidGrant("Unknown authorization code"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Unknown authorization code"))
 		return
 	}
 
 	// validate expiration
 	if storedAuthorizationCode.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidGrant("Expired authorization code"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Expired authorization code"))
 		return
 	}
 
 	// validate ownership
 	if storedAuthorizationCode.clientID != rq.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidGrant("Invalid authorization code ownership"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Invalid authorization code ownership"))
 		return
 	}
 
 	// validate redirect uri
 	if storedAuthorizationCode.redirectURI != rq.RedirectURI {
-		oauth2.WriteError(w, oauth2.InvalidGrant("Changed redirect uri"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Changed redirect uri"))
 		return
 	}
 
@@ -290,33 +290,33 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.TokenRequest
 	delete(authorizationCodes, authorizationCode.SignatureString())
 
 	// write response
-	oauth2.WriteTokenResponse(w, r)
+	_ = oauth2.WriteTokenResponse(w, r)
 }
 
 func handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// parse refresh token
 	refreshToken, err := hmacsha.Parse(secret, rq.RefreshToken)
 	if err != nil {
-		oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
 	}
 
 	// get stored refresh token by signature
 	storedRefreshToken, found := refreshTokens[refreshToken.SignatureString()]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidGrant("Unknown refresh token"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Unknown refresh token"))
 		return
 	}
 
 	// validate expiration
 	if storedRefreshToken.expiresAt.Before(time.Now()) {
-		oauth2.WriteError(w, oauth2.InvalidGrant("Expired refresh token"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Expired refresh token"))
 		return
 	}
 
 	// validate ownership
 	if storedRefreshToken.clientID != rq.ClientID {
-		oauth2.WriteError(w, oauth2.InvalidGrant("Invalid refresh token ownership"))
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("Invalid refresh token ownership"))
 		return
 	}
 
@@ -327,7 +327,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 
 	// validate scope - a missing scope is always included
 	if !storedRefreshToken.scope.Includes(rq.Scope) {
-		oauth2.WriteError(w, oauth2.InvalidScope("Scope exceeds the originally granted scope"))
+		_ = oauth2.WriteError(w, oauth2.InvalidScope("Scope exceeds the originally granted scope"))
 		return
 	}
 
@@ -338,7 +338,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	delete(refreshTokens, refreshToken.SignatureString())
 
 	// write response
-	oauth2.WriteTokenResponse(w, r)
+	_ = oauth2.WriteTokenResponse(w, r)
 }
 
 func issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientID, username string) *oauth2.TokenResponse {
@@ -389,14 +389,14 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse authorization request
 	req, err := revocation.ParseRequest(r)
 	if err != nil {
-		oauth2.WriteError(w, err)
+		_ = oauth2.WriteError(w, err)
 		return
 	}
 
 	// get client
 	client, found := clients[req.ClientID]
 	if !found {
-		oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("Unknown client"))
 		return
 	}
 
@@ -435,35 +435,36 @@ func protectedResource(w http.ResponseWriter, r *http.Request) {
 	// parse bearer token
 	tk, err := bearer.ParseToken(r)
 	if err != nil {
-		bearer.WriteError(w, err)
+		_ = bearer.WriteError(w, err)
 		return
 	}
 
 	// parse token
 	token, err := hmacsha.Parse(secret, tk)
 	if err != nil {
-		bearer.WriteError(w, bearer.InvalidToken("Malformed token"))
+		_ = bearer.WriteError(w, bearer.InvalidToken("Malformed token"))
 		return
 	}
 
 	// get token
 	accessToken, found := accessTokens[token.SignatureString()]
 	if !found {
-		bearer.WriteError(w, bearer.InvalidToken("Unknown token"))
+		_ = bearer.WriteError(w, bearer.InvalidToken("Unknown token"))
 		return
 	}
 
 	// validate expiration
 	if accessToken.expiresAt.Before(time.Now()) {
-		bearer.WriteError(w, bearer.InvalidToken("Expired token"))
+		_ = bearer.WriteError(w, bearer.InvalidToken("Expired token"))
 		return
 	}
 
 	// validate scope
 	if !accessToken.scope.Includes(requiredScope) {
-		bearer.WriteError(w, bearer.InsufficientScope(requiredScope.String()))
+		_ = bearer.WriteError(w, bearer.InsufficientScope(requiredScope.String()))
 		return
 	}
 
-	w.Write([]byte("OK"))
+	// write response
+	_, _ = w.Write([]byte("OK"))
 }
