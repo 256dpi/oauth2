@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testSecret = []byte("abcd1234abcd1234")
+var testSecret = []byte("secret")
 
 func TestToken(t *testing.T) {
 	token1, err := Generate(testSecret, 16)

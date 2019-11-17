@@ -16,7 +16,7 @@ import (
 	"github.com/256dpi/oauth2/revocation"
 )
 
-var secret = []byte("abcd1234abcd1234")
+var secret = []byte("secret")
 
 var tokenLifespan = time.Hour
 var refreshTokenLifeSpan = 7 * 24 * time.Hour
