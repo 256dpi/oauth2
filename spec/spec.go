@@ -86,13 +86,15 @@ type Config struct {
 	UnknownAuthorizationCode string
 	ExpiredAuthorizationCode string
 
-	// The params needed to authorize the resource owner during the implicit
-	// grant or authorization code grant test.
+	// The params and headers needed to authorize the resource owner during the
+	// implicit grant or authorization code grant test.
 	//
 	// Note: Only needed if the implicit grant or authorization code grant
 	// is supported.
-	InvalidAuthorizationParams map[string]string
-	ValidAuthorizationParams   map[string]string
+	InvalidAuthorizationParams  map[string]string
+	InvalidAuthorizationHeaders map[string]string
+	ValidAuthorizationParams    map[string]string
+	ValidAuthorizationHeaders   map[string]string
 }
 
 // Default returns a common used configuration that can taken as a basis.
@@ -165,8 +167,8 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.ImplicitGrantSupport {
-		assert(t, c.InvalidAuthorizationParams != nil, "setting InvalidAuthorizationParams is required")
-		assert(t, c.ValidAuthorizationParams != nil, "setting ValidAuthorizationParams is required")
+		assert(t, c.InvalidAuthorizationParams != nil || c.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
+		assert(t, c.ValidAuthorizationParams != nil || c.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
 
 		t.Run("ImplicitGrantTest", func(t *testing.T) {
 			ImplicitGrantTest(t, c)
@@ -174,7 +176,8 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.AuthorizationCodeGrantSupport {
-		assert(t, c.ValidAuthorizationParams != nil, "setting ValidAuthorizationParams is required")
+		assert(t, c.InvalidAuthorizationParams != nil || c.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
+		assert(t, c.ValidAuthorizationParams != nil || c.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
 		assert(t, c.InvalidAuthorizationCode != "", "setting InvalidAuthorizationCode is required")
 		assert(t, c.UnknownAuthorizationCode != "", "setting UnknownAuthorizationCode is required")
 		assert(t, c.ExpiredAuthorizationCode != "", "setting ExpiredAuthorizationCode is required")

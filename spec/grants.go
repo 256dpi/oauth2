@@ -282,6 +282,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"scope":         c.InvalidScope,
 			"state":         "xyz",
 		}),
+		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusFound {
 				t.Error("expected status found", debug(r))
@@ -308,6 +309,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"scope":         c.ExceedingScope,
 			"state":         "xyz",
 		}),
+		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusFound {
 				t.Error("expected status found", debug(r))
@@ -360,6 +362,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		}),
+		Header: extend(c.InvalidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusFound {
 				t.Error("expected status found", debug(r))
@@ -388,6 +391,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		}),
+		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusFound {
 				t.Error("expected status found", debug(r))
@@ -434,6 +438,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"scope":         c.InvalidScope,
 			"state":         "xyz",
 		}),
+		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusFound {
 				t.Error("expected status found", debug(r))
@@ -460,6 +465,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"scope":         c.ExceedingScope,
 			"state":         "xyz",
 		}),
+		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusFound {
 				t.Error("expected status found", debug(r))
@@ -512,6 +518,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		}),
+		Header: extend(c.InvalidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusFound {
 				t.Error("expected status found", debug(r))
@@ -540,6 +547,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"scope":         c.ValidScope,
 			"state":         "xyz",
 		}),
+		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusFound {
 				t.Error("expected status found", debug(r))
