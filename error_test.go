@@ -80,7 +80,7 @@ func TestWriteErrorAsRedirect(t *testing.T) {
 
 	err2 := WriteError(rec, err1)
 	assert.NoError(t, err2)
-	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, http.StatusSeeOther, rec.Code)
 	assert.Equal(t, "http://example.com?error=invalid_request&error_description=foo&state=bar", rec.Header().Get("Location"))
 }
 

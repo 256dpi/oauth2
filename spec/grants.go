@@ -331,7 +331,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -358,7 +358,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -384,7 +384,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -411,7 +411,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.InvalidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -440,7 +440,7 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -487,7 +487,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -514,7 +514,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -540,7 +540,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -567,7 +567,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.InvalidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -596,7 +596,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 
@@ -813,7 +813,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusFound {
+			if r.Code != http.StatusSeeOther {
 				t.Error("expected status found", debug(r))
 			}
 

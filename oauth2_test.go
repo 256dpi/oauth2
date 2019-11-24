@@ -73,7 +73,7 @@ func TestRedirectQuery(t *testing.T) {
 		"baz": "qux",
 	}, false)
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, http.StatusSeeOther, rec.Code)
 	assert.Equal(t, http.Header{
 		"Location": []string{
 			"http://example.com?baz=qux&foo=bar",
@@ -88,7 +88,7 @@ func TestRedirectFragment(t *testing.T) {
 		"baz": "qux",
 	}, true)
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, http.StatusSeeOther, rec.Code)
 	assert.Equal(t, "", rec.Body.String())
 	assert.Equal(t, http.Header{
 		"Location": []string{

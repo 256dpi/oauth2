@@ -106,7 +106,7 @@ func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string, 
 	w.Header().Add("Location", redirectURI.String())
 
 	// write redirect
-	w.WriteHeader(http.StatusFound)
+	w.WriteHeader(http.StatusSeeOther)
 
 	// finish response
 	_, err = w.Write(nil)
