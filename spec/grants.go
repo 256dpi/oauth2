@@ -10,6 +10,29 @@ import (
 
 // PasswordGrantTest tests the password grant.
 func PasswordGrantTest(t *testing.T, c *Config) {
+	// invalid client secret
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: "invalid",
+		Form: map[string]string{
+			"grant_type": "password",
+			"username":   c.ResourceOwnerUsername,
+			"password":   c.ResourceOwnerPassword,
+			"scope":      c.ValidScope,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+		},
+	})
+
 	// invalid username
 	Do(c.Handler, &Request{
 		Method:   "POST",
@@ -160,6 +183,30 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 		Path:     c.TokenEndpoint,
 		Username: c.ConfidentialClientID,
 		Password: "invalid",
+		Form: map[string]string{
+			"grant_type": "client_credentials",
+			"scope":      c.ValidScope,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), "Basic realm=") {
+				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
+			}
+		},
+	})
+
+	// public client
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.PublicClientID,
 		Form: map[string]string{
 			"grant_type": "client_credentials",
 			"scope":      c.ValidScope,
@@ -565,6 +612,29 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// invalid client secret
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: "invalid",
+		Form: map[string]string{
+			"grant_type":   "authorization_code",
+			"scope":        c.ValidScope,
+			"code":         c.InvalidAuthorizationCode,
+			"redirect_uri": c.PrimaryRedirectURI,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be ""invalid_client""`, debug(r))
+			}
+		},
+	})
+
 	// invalid authorization code
 	Do(c.Handler, &Request{
 		Method:   "POST",
@@ -731,6 +801,27 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 
 // RefreshTokenGrantTest tests the refresh token grant.
 func RefreshTokenGrantTest(t *testing.T, c *Config) {
+	// invalid client secret
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: "invalid",
+		Form: map[string]string{
+			"grant_type":    "refresh_token",
+			"refresh_token": c.ValidRefreshToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+		},
+	})
+
 	// invalid refresh token
 	Do(c.Handler, &Request{
 		Method:   "POST",

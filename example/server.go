@@ -238,6 +238,12 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, rq *oaut
 }
 
 func handleClientCredentialsGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
+	// check client confidentiality
+	if !clients[rq.ClientID].confidential {
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
+		return
+	}
+
 	// check scope
 	if !allowedScope.Includes(rq.Scope) {
 		_ = oauth2.WriteError(w, oauth2.InvalidScope(""))
