@@ -17,7 +17,6 @@ type TokenResponse struct {
 	State        string `json:"state,omitempty"`
 
 	RedirectURI string `json:"-"`
-	UseFragment bool   `json:"-"`
 }
 
 // NewTokenResponse constructs a TokenResponse.
@@ -30,12 +29,10 @@ func NewTokenResponse(tokenType, accessToken string, expiresIn int) *TokenRespon
 }
 
 // SetRedirect marks the response to be redirected by setting the redirect URI
-// and whether the response should be added to the query parameter or fragment
-// part of the URI.
-func (r *TokenResponse) SetRedirect(uri, state string, useFragment bool) *TokenResponse {
+// and state.
+func (r *TokenResponse) SetRedirect(uri, state string) *TokenResponse {
 	r.RedirectURI = uri
 	r.State = state
-	r.UseFragment = useFragment
 
 	return r
 }
@@ -47,7 +44,7 @@ func (r *TokenResponse) Map() map[string]string {
 	m := make(map[string]string)
 
 	// add token type
-	m["token_type"] = string(r.TokenType)
+	m["token_type"] = r.TokenType
 
 	// add access token
 	m["access_token"] = r.AccessToken
@@ -74,12 +71,12 @@ func (r *TokenResponse) Map() map[string]string {
 }
 
 // WriteTokenResponse will write the specified response to the response writer.
-// If the RedirectURI field is present on the response a redirection will be
-// written instead.
+// If the RedirectURI field is present on the response a redirection that
+// transmits the token in the fragment will be written instead.
 func WriteTokenResponse(w http.ResponseWriter, r *TokenResponse) error {
 	// write redirect if requested
 	if r.RedirectURI != "" {
-		return WriteRedirect(w, r.RedirectURI, r.Map(), r.UseFragment)
+		return WriteRedirect(w, r.RedirectURI, r.Map(), true)
 	}
 
 	return Write(w, r, http.StatusOK)
@@ -92,7 +89,6 @@ type CodeResponse struct {
 	State string `json:"state,omitempty"`
 
 	RedirectURI string `json:"-"`
-	UseFragment bool   `json:"-"`
 }
 
 // NewCodeResponse constructs a CodeResponse.
@@ -124,5 +120,5 @@ func (r *CodeResponse) Map() map[string]string {
 // WriteCodeResponse will write a redirection based on the specified code
 // response to the response writer.
 func WriteCodeResponse(w http.ResponseWriter, r *CodeResponse) error {
-	return WriteRedirect(w, r.RedirectURI, r.Map(), r.UseFragment)
+	return WriteRedirect(w, r.RedirectURI, r.Map(), false)
 }

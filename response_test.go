@@ -53,7 +53,7 @@ func TestWriteTokenResponse(t *testing.T) {
 func TestRedirectTokenResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := NewTokenResponse("foo", "bar", 1)
-	r = r.SetRedirect("http://example.com", "baz", true)
+	r = r.SetRedirect("http://example.com", "baz")
 
 	err := WriteTokenResponse(w, r)
 	assert.NoError(t, err)

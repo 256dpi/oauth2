@@ -136,7 +136,7 @@ func handleImplicitGrant(w http.ResponseWriter, username, password string, rq *o
 	r := issueTokens(false, rq.Scope, rq.ClientID, owner.id)
 
 	// redirect token
-	r.SetRedirect(rq.RedirectURI, rq.State, true)
+	r.SetRedirect(rq.RedirectURI, rq.State)
 
 	// write response
 	_ = oauth2.WriteTokenResponse(w, r)
