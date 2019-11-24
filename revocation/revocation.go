@@ -33,7 +33,8 @@ type Request struct {
 	TokenTypeHint string
 	ClientID      string
 	ClientSecret  string
-	HTTP          *http.Request
+
+	HTTP *http.Request
 }
 
 // ParseRequest parses an incoming request and returns a Request.

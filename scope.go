@@ -26,7 +26,7 @@ func ParseScope(str string) Scope {
 		}
 	}
 
-	return Scope(res)
+	return res
 }
 
 // Contains returns true if the specified string is part of the scope.

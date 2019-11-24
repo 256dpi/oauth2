@@ -86,7 +86,7 @@ func Parse(secret []byte, str string) (*Token, error) {
 	// split dot separated key and signature
 	s := strings.Split(str, ".")
 	if len(s) != 2 {
-		return nil, errors.New("A token must have two segments separated by a dot")
+		return nil, errors.New("a token must have two segments separated by a dot")
 	}
 
 	// decode key
