@@ -36,8 +36,8 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 			"token":           accessToken,
 			"token_type_hint": "access_token",
 		},
-		Username: c.PrimaryClientID,
-		Password: c.PrimaryClientSecret,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusOK {
 				t.Error("expected status ok", debug(r))
@@ -69,8 +69,8 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.PrimaryClientID,
-		Password: c.PrimaryClientSecret,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":    "refresh_token",
 			"refresh_token": refreshToken,
@@ -118,8 +118,8 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 			"token":           newRefreshToken,
 			"token_type_hint": "refresh_token",
 		},
-		Username: c.PrimaryClientID,
-		Password: c.PrimaryClientSecret,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusOK {
 				t.Error("expected status ok", debug(r))
@@ -131,8 +131,8 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
-		Username: c.PrimaryClientID,
-		Password: c.PrimaryClientSecret,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":    "refresh_token",
 			"refresh_token": newRefreshToken,

@@ -50,8 +50,8 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"grant_type": "invalid",
 		},
-		Username: c.PrimaryClientID,
-		Password: c.PrimaryClientSecret,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusBadRequest {
 				t.Error("expected status bad request", debug(r))
@@ -111,7 +111,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "code",
-			"client_id":     c.PrimaryClientID,
+			"client_id":     c.ConfidentialClientID,
 			"redirect_uri":  c.InvalidRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -131,10 +131,10 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "invalid",
-			"client_id":     c.PrimaryClientID,
+			"client_id":     c.ConfidentialClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 		},
-		Username: c.PrimaryClientID,
+		Username: c.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusBadRequest {
 				t.Error("expected status bad request", debug(r))
@@ -152,10 +152,10 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "token",
-			"client_id":     c.PrimaryClientID,
+			"client_id":     c.ConfidentialClientID,
 			"redirect_uri":  c.PrimaryRedirectURI,
 		},
-		Username: c.PrimaryClientID,
+		Username: c.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code == http.StatusNotFound {
 				t.Error("expected different status than not found", debug(r))
@@ -211,8 +211,8 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"token": c.InvalidToken,
 		},
-		Username: c.PrimaryClientID,
-		Password: c.PrimaryClientSecret,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			// Note: The application must not raise an error here.
 
@@ -229,8 +229,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Form: map[string]string{
 			"token": c.InsufficientToken,
 		},
-		Username: c.SecondaryClientID,
-		Password: c.SecondaryClientSecret,
+		Username: c.PublicClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			// Note: The application must not raise an error here.
 

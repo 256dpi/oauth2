@@ -31,13 +31,12 @@ type Config struct {
 	AuthorizationCodeGrantSupport bool
 	RefreshTokenGrantSupport      bool
 
-	// The details of the primary client for grant tests.
-	PrimaryClientID     string
-	PrimaryClientSecret string
+	// The details of a confidential client.
+	ConfidentialClientID     string
+	ConfidentialClientSecret string
 
-	// The details of the secondary client for security tests.
-	SecondaryClientID     string
-	SecondaryClientSecret string
+	// The details of a public client.
+	PublicClientID string
 
 	// The scopes that are considered invalid, valid and exceeding by the
 	// authentication server.
@@ -119,10 +118,9 @@ func Run(t *testing.T, c *Config) {
 	assert(t, c.TokenEndpoint != "", "setting TokenEndpoint is required")
 	assert(t, c.AuthorizeEndpoint != "", "setting AuthorizeEndpoint is required")
 	assert(t, c.ProtectedResource != "", "setting ProtectedResource is required")
-	assert(t, c.PrimaryClientID != "", "setting PrimaryClientID is required")
-	assert(t, c.PrimaryClientSecret != "", "setting PrimaryClientSecret is required")
-	assert(t, c.SecondaryClientID != "", "setting SecondaryClientID is required")
-	assert(t, c.SecondaryClientSecret != "", "setting SecondaryClientSecret is required")
+	assert(t, c.ConfidentialClientID != "", "setting ConfidentialClientID is required")
+	assert(t, c.ConfidentialClientSecret != "", "setting ConfidentialClientSecret is required")
+	assert(t, c.PublicClientID != "", "setting PublicClientID is required")
 	assert(t, c.InvalidScope != "", "setting InvalidScope is required")
 	assert(t, c.ValidScope != "", "setting ValidScope is required")
 	assert(t, c.ExceedingScope != "", "setting ExceedingScope is required")

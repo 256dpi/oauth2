@@ -22,7 +22,7 @@ func TestSpec(t *testing.T) {
 		id:           "client2",
 		secret:       mustHash("foo"),
 		redirectURI:  "http://example.com/callback2",
-		confidential: true,
+		confidential: false,
 	})
 
 	addOwner(users, owner{
@@ -86,10 +86,9 @@ func TestSpec(t *testing.T) {
 	config.AuthorizationCodeGrantSupport = true
 	config.RefreshTokenGrantSupport = true
 
-	config.PrimaryClientID = "client1"
-	config.PrimaryClientSecret = "foo"
-	config.SecondaryClientID = "client2"
-	config.SecondaryClientSecret = "foo"
+	config.ConfidentialClientID = "client1"
+	config.ConfidentialClientSecret = "foo"
+	config.PublicClientID = "client2"
 
 	config.ResourceOwnerUsername = "user1"
 	config.ResourceOwnerPassword = "foo"
