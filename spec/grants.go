@@ -797,6 +797,137 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	if refreshToken != "" {
 		RefreshTokenTest(t, c, refreshToken)
 	}
+
+	/* code replay attack */
+
+	// get authorization code
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.AuthorizeEndpoint,
+		Form: extend(c.ValidAuthorizationParams, map[string]string{
+			"response_type": "code",
+			"client_id":     c.ConfidentialClientID,
+			"redirect_uri":  c.PrimaryRedirectURI,
+			"scope":         c.ValidScope,
+			"state":         "xyz",
+		}),
+		Header: extend(c.ValidAuthorizationHeaders, nil),
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusFound {
+				t.Error("expected status found", debug(r))
+			}
+
+			if query(r, "state") != "xyz" {
+				t.Error(`expected state to be carried over`, debug(r))
+			}
+
+			authorizationCode = query(r, "code")
+
+			if authorizationCode == "" {
+				t.Error(`expected code to be present`, debug(r))
+			}
+		},
+	})
+
+	// get access token
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Form: map[string]string{
+			"grant_type":   "authorization_code",
+			"scope":        c.ValidScope,
+			"code":         authorizationCode,
+			"redirect_uri": c.PrimaryRedirectURI,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
+
+			if jsonFieldString(r, "token_type") != "bearer" {
+				t.Error(`expected token_type to be "bearer"`, debug(r))
+			}
+
+			if jsonFieldString(r, "scope") != c.ValidScope {
+				t.Error(`expected scope to be the valid scope`, debug(r))
+			}
+
+			if jsonFieldFloat(r, "expires_in") != float64(c.ExpectedExpiresIn) {
+				t.Error(`expected expires_in to be the expected expires in`, debug(r))
+			}
+
+			accessToken = jsonFieldString(r, "access_token")
+
+			if accessToken == "" {
+				t.Error(`expected access_token to be present`, debug(r))
+			}
+
+			refreshToken = jsonFieldString(r, "refresh_token")
+		},
+	})
+
+	// get access token
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Form: map[string]string{
+			"grant_type":   "authorization_code",
+			"scope":        c.ValidScope,
+			"code":         authorizationCode,
+			"redirect_uri": c.PrimaryRedirectURI,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status ok", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_grant" {
+				t.Error(`expected error to be "invalid_grant"`, debug(r))
+			}
+		},
+	})
+
+	// check if code replay mitigation is supported
+	if c.CodeReplayMitigation {
+		// check access token
+		Do(c.Handler, &Request{
+			Method: "GET",
+			Path:   c.ProtectedResource,
+			Header: map[string]string{
+				"Authorization": "Bearer " + accessToken,
+			},
+			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+				if r.Code != http.StatusUnauthorized {
+					t.Error("expected status unauthorized", debug(r))
+				}
+			},
+		})
+
+		// check refresh token
+		Do(c.Handler, &Request{
+			Method:   "POST",
+			Path:     c.TokenEndpoint,
+			Username: c.ConfidentialClientID,
+			Password: c.ConfidentialClientSecret,
+			Form: map[string]string{
+				"grant_type":    "refresh_token",
+				"refresh_token": refreshToken,
+			},
+			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+				if r.Code != http.StatusBadRequest {
+					t.Error("expected status bad request", debug(r))
+				}
+
+				if jsonFieldString(r, "error") != "invalid_grant" {
+					t.Error(`expected error to be "invalid_grant"`, debug(r))
+				}
+			},
+		})
+	}
 }
 
 // RefreshTokenGrantTest tests the refresh token grant.

@@ -32,8 +32,8 @@ type owner struct {
 	confidential bool
 }
 
-var clients = map[string]owner{}
-var users = map[string]owner{}
+var clients = map[string]*owner{}
+var users = map[string]*owner{}
 
 type credential struct {
 	clientID    string
@@ -42,18 +42,20 @@ type credential struct {
 	expiresAt   time.Time
 	scope       oauth2.Scope
 	redirectURI string
+	used        bool
+	code        string
 }
 
-var accessTokens = make(map[string]credential)
-var refreshTokens = make(map[string]credential)
-var authorizationCodes = make(map[string]credential)
+var accessTokens = make(map[string]*credential)
+var refreshTokens = make(map[string]*credential)
+var authorizationCodes = make(map[string]*credential)
 
-func addOwner(list map[string]owner, o owner) owner {
+func addOwner(list map[string]*owner, o *owner) *owner {
 	list[o.id] = o
 	return o
 }
 
-func addCredential(list map[string]credential, t credential) credential {
+func addCredential(list map[string]*credential, t *credential) *credential {
 	list[t.signature] = t
 	return t
 }
@@ -133,7 +135,7 @@ func handleImplicitGrant(w http.ResponseWriter, username, password string, rq *o
 	}
 
 	// issue tokens
-	r := issueTokens(false, rq.Scope, rq.ClientID, owner.id)
+	r := issueTokens(false, rq.Scope, rq.ClientID, owner.id, "")
 
 	// redirect token
 	r.SetRedirect(rq.RedirectURI, rq.State)
@@ -163,7 +165,7 @@ func handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, 
 	r := oauth2.NewCodeResponse(authorizationCode.String(), rq.RedirectURI, rq.State)
 
 	// save authorization code
-	authorizationCodes[authorizationCode.SignatureString()] = credential{
+	authorizationCodes[authorizationCode.SignatureString()] = &credential{
 		clientID:    rq.ClientID,
 		username:    owner.id,
 		signature:   authorizationCode.SignatureString(),
@@ -231,7 +233,7 @@ func handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, rq *oaut
 	}
 
 	// issue tokens
-	r := issueTokens(true, rq.Scope, rq.ClientID, rq.Username)
+	r := issueTokens(true, rq.Scope, rq.ClientID, rq.Username, "")
 
 	// write response
 	_ = oauth2.WriteTokenResponse(w, r)
@@ -251,7 +253,7 @@ func handleClientCredentialsGrant(w http.ResponseWriter, rq *oauth2.TokenRequest
 	}
 
 	// save tokens
-	r := issueTokens(true, rq.Scope, rq.ClientID, "")
+	r := issueTokens(true, rq.Scope, rq.ClientID, "", "")
 
 	// write response
 	_ = oauth2.WriteTokenResponse(w, r)
@@ -268,6 +270,26 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.TokenRequest
 	// get stored authorization code by signature
 	storedAuthorizationCode, found := authorizationCodes[authorizationCode.SignatureString()]
 	if !found {
+		_ = oauth2.WriteError(w, oauth2.InvalidGrant("unknown authorization code"))
+		return
+	}
+
+	// check if used
+	if storedAuthorizationCode.used {
+		// revoke all access tokens
+		for key, token := range accessTokens {
+			if token.code == authorizationCode.SignatureString() {
+				delete(accessTokens, key)
+			}
+		}
+
+		// revoke all refresh tokens
+		for key, token := range refreshTokens {
+			if token.code == authorizationCode.SignatureString() {
+				delete(refreshTokens, key)
+			}
+		}
+
 		_ = oauth2.WriteError(w, oauth2.InvalidGrant("unknown authorization code"))
 		return
 	}
@@ -291,10 +313,10 @@ func handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.TokenRequest
 	}
 
 	// issue tokens
-	r := issueTokens(true, storedAuthorizationCode.scope, rq.ClientID, storedAuthorizationCode.username)
+	r := issueTokens(true, storedAuthorizationCode.scope, rq.ClientID, storedAuthorizationCode.username, authorizationCode.SignatureString())
 
-	// delete used authorization code
-	delete(authorizationCodes, authorizationCode.SignatureString())
+	// mark authorization code
+	storedAuthorizationCode.used = true
 
 	// write response
 	_ = oauth2.WriteTokenResponse(w, r)
@@ -339,7 +361,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	}
 
 	// issue tokens
-	r := issueTokens(true, rq.Scope, rq.ClientID, storedRefreshToken.username)
+	r := issueTokens(true, rq.Scope, rq.ClientID, storedRefreshToken.username, "")
 
 	// delete used refresh token
 	delete(refreshTokens, refreshToken.SignatureString())
@@ -348,7 +370,7 @@ func handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	_ = oauth2.WriteTokenResponse(w, r)
 }
 
-func issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientID, username string) *oauth2.TokenResponse {
+func issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientID, username, code string) *oauth2.TokenResponse {
 	// generate new access token
 	accessToken := hmacsha.MustGenerate(secret, 32)
 
@@ -370,22 +392,24 @@ func issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientID, username 
 	}
 
 	// save access token
-	accessTokens[accessToken.SignatureString()] = credential{
+	accessTokens[accessToken.SignatureString()] = &credential{
 		clientID:  clientID,
 		username:  username,
 		signature: accessToken.SignatureString(),
 		expiresAt: time.Now().Add(tokenLifespan),
 		scope:     scope,
+		code:      code,
 	}
 
 	// save refresh token if present
 	if refreshToken != nil {
-		refreshTokens[refreshToken.SignatureString()] = credential{
+		refreshTokens[refreshToken.SignatureString()] = &credential{
 			clientID:  clientID,
 			username:  username,
 			signature: refreshToken.SignatureString(),
 			expiresAt: time.Now().Add(refreshTokenLifeSpan),
 			scope:     scope,
+			code:      code,
 		}
 	}
 
@@ -422,7 +446,7 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func revokeToken(client owner, list map[string]credential, signature string) {
+func revokeToken(client *owner, list map[string]*credential, signature string) {
 	// get token
 	token, ok := list[signature]
 	if !ok {

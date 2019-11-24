@@ -11,21 +11,21 @@ import (
 )
 
 func TestSpec(t *testing.T) {
-	addOwner(clients, owner{
+	addOwner(clients, &owner{
 		id:           "client1",
 		secret:       mustHash("foo"),
 		redirectURI:  "http://example.com/callback1",
 		confidential: true,
 	})
 
-	addOwner(clients, owner{
+	addOwner(clients, &owner{
 		id:           "client2",
 		secret:       mustHash("foo"),
 		redirectURI:  "http://example.com/callback2",
 		confidential: false,
 	})
 
-	addOwner(users, owner{
+	addOwner(users, &owner{
 		id:     "user1",
 		secret: mustHash("foo"),
 	})
@@ -34,14 +34,14 @@ func TestSpec(t *testing.T) {
 	expiredToken := hmacsha.MustGenerate(secret, 16)
 	insufficientToken := hmacsha.MustGenerate(secret, 16)
 
-	addCredential(accessTokens, credential{
+	addCredential(accessTokens, &credential{
 		clientID:  "client1",
 		signature: expiredToken.SignatureString(),
 		scope:     allowedScope,
 		expiresAt: time.Now().Add(-time.Hour),
 	})
 
-	addCredential(accessTokens, credential{
+	addCredential(accessTokens, &credential{
 		clientID:  "client1",
 		signature: insufficientToken.SignatureString(),
 		scope:     oauth2.Scope{},
@@ -52,14 +52,14 @@ func TestSpec(t *testing.T) {
 	validRefreshToken := hmacsha.MustGenerate(secret, 16)
 	expiredRefreshToken := hmacsha.MustGenerate(secret, 16)
 
-	addCredential(refreshTokens, credential{
+	addCredential(refreshTokens, &credential{
 		clientID:  "client1",
 		signature: validRefreshToken.SignatureString(),
 		scope:     allowedScope,
 		expiresAt: time.Now().Add(time.Hour),
 	})
 
-	addCredential(refreshTokens, credential{
+	addCredential(refreshTokens, &credential{
 		clientID:  "client1",
 		signature: expiredRefreshToken.SignatureString(),
 		scope:     allowedScope,
@@ -69,7 +69,7 @@ func TestSpec(t *testing.T) {
 	unknownAuthorizationCode := hmacsha.MustGenerate(secret, 16)
 	expiredAuthorizationCode := hmacsha.MustGenerate(secret, 16)
 
-	addCredential(authorizationCodes, credential{
+	addCredential(authorizationCodes, &credential{
 		clientID:  "client1",
 		signature: expiredAuthorizationCode.SignatureString(),
 		scope:     allowedScope,
@@ -126,6 +126,8 @@ func TestSpec(t *testing.T) {
 		"username": "user1",
 		"password": "foo",
 	}
+
+	config.CodeReplayMitigation = true
 
 	spec.Run(t, config)
 }

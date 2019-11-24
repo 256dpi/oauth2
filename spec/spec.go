@@ -94,6 +94,10 @@ type Config struct {
 	InvalidAuthorizationHeaders map[string]string
 	ValidAuthorizationParams    map[string]string
 	ValidAuthorizationHeaders   map[string]string
+
+	// If enabled the implementation is checked for properly revoking tokens
+	// if a code replay attack is carried out.
+	CodeReplayMitigation bool
 }
 
 // Default returns a common used configuration that can taken as a basis.
