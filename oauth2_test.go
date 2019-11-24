@@ -84,6 +84,9 @@ func TestRedirectQuery(t *testing.T) {
 		"Pragma": []string{
 			"no-cache",
 		},
+		"Referrer-Policy": []string{
+			"origin",
+		},
 	}, rec.Header())
 }
 
@@ -105,6 +108,9 @@ func TestRedirectFragment(t *testing.T) {
 		},
 		"Pragma": []string{
 			"no-cache",
+		},
+		"Referrer-Policy": []string{
+			"origin",
 		},
 	}, rec.Header())
 }

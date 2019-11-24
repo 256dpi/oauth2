@@ -109,6 +109,9 @@ func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string, 
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Pragma", "no-cache")
 
+	// prevent referrer leakage
+	w.Header().Set("Referrer-Policy", "origin")
+
 	// write redirect
 	w.WriteHeader(http.StatusSeeOther)
 
