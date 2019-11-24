@@ -78,6 +78,12 @@ func TestRedirectQuery(t *testing.T) {
 		"Location": []string{
 			"http://example.com?baz=qux&foo=bar",
 		},
+		"Cache-Control": []string{
+			"no-store",
+		},
+		"Pragma": []string{
+			"no-cache",
+		},
 	}, rec.Header())
 }
 
@@ -93,6 +99,12 @@ func TestRedirectFragment(t *testing.T) {
 	assert.Equal(t, http.Header{
 		"Location": []string{
 			"http://example.com?foo=bar#baz=qux",
+		},
+		"Cache-Control": []string{
+			"no-store",
+		},
+		"Pragma": []string{
+			"no-cache",
 		},
 	}, rec.Header())
 }

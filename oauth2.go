@@ -105,6 +105,10 @@ func WriteRedirect(w http.ResponseWriter, uri string, params map[string]string, 
 	// set location
 	w.Header().Add("Location", redirectURI.String())
 
+	// prevent caching
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Pragma", "no-cache")
+
 	// write redirect
 	w.WriteHeader(http.StatusSeeOther)
 
