@@ -53,13 +53,13 @@ func TestWriteTokenResponse(t *testing.T) {
 func TestRedirectTokenResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := NewTokenResponse("foo", "bar", 1)
-	r = r.SetRedirect("http://example.com", "baz")
+	r = r.SetRedirect("http://example.com?foo=bar", "baz")
 
 	err := WriteTokenResponse(w, r)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusSeeOther, w.Code)
 	assert.Equal(t,
-		"http://example.com#access_token=bar&expires_in=1&state=baz&token_type=foo",
+		"http://example.com?foo=bar#access_token=bar&expires_in=1&state=baz&token_type=foo",
 		w.Header().Get("Location"),
 	)
 }
@@ -75,10 +75,10 @@ func TestNewCodeResponse(t *testing.T) {
 
 func TestWriteCodeResponse(t *testing.T) {
 	w := httptest.NewRecorder()
-	r := NewCodeResponse("foo", "http://example.com", "bar")
+	r := NewCodeResponse("foo", "http://example.com?foo=bar", "bar")
 
 	err := WriteCodeResponse(w, r)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusSeeOther, w.Code)
-	assert.Equal(t, "http://example.com?code=foo&state=bar", w.Header().Get("Location"))
+	assert.Equal(t, "http://example.com?code=foo&foo=bar&state=bar", w.Header().Get("Location"))
 }
