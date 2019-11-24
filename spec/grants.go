@@ -630,7 +630,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			}
 
 			if jsonFieldString(r, "error") != "invalid_client" {
-				t.Error(`expected error to be ""invalid_client""`, debug(r))
+				t.Error(`expected error to be "invalid_client"`, debug(r))
 			}
 		},
 	})
