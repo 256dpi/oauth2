@@ -21,6 +21,8 @@ type Response struct {
 	Audience   string `json:"aud,omitempty"`
 	Issuer     string `json:"iss,omitempty"`
 	Identifier string `json:"jti,omitempty"`
+
+	Extra map[string]interface{} `json:"extra,omitempty"`
 }
 
 // NewResponse constructs a Response.
