@@ -320,8 +320,28 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// unknown token
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Form: map[string]string{
+			"token": c.UnknownToken,
+		},
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			// Note: The application must not raise an error here.
+
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
+		},
+	})
+
 	// test existence and revocation
 	AccessTokenTest(t, c, c.ValidToken)
+
+	// revocation of refresh tokens is tested by RefreshTokenGrantTest
 }
 
 // ProtectedResourceTest validates authorization of the protected resource.
