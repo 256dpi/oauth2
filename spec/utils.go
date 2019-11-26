@@ -6,12 +6,11 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
-	"testing"
 )
 
-func assert(t *testing.T, ok bool, msg string) {
+func assert(ok bool, msg string) {
 	if !ok {
-		t.Error(msg)
+		panic(msg)
 	}
 }
 

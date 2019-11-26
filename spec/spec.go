@@ -123,20 +123,20 @@ func Default(handler http.Handler) *Config {
 // Run will run all tests using the specified config.
 func Run(t *testing.T, c *Config) {
 	// validate config
-	assert(t, c.Handler != nil, "setting Handler is required")
-	assert(t, c.TokenEndpoint != "", "setting TokenEndpoint is required")
-	assert(t, c.AuthorizeEndpoint != "", "setting AuthorizeEndpoint is required")
-	assert(t, c.ProtectedResource != "", "setting ProtectedResource is required")
-	assert(t, c.ConfidentialClientID != "", "setting ConfidentialClientID is required")
-	assert(t, c.ConfidentialClientSecret != "", "setting ConfidentialClientSecret is required")
-	assert(t, c.PublicClientID != "", "setting PublicClientID is required")
-	assert(t, c.InvalidScope != "", "setting InvalidScope is required")
-	assert(t, c.ValidScope != "", "setting ValidScope is required")
-	assert(t, c.ExceedingScope != "", "setting ExceedingScope is required")
-	assert(t, c.InvalidToken != "", "setting InvalidToken is required")
-	assert(t, c.ValidToken != "", "setting ValidToken is required")
-	assert(t, c.UnknownToken != "", "setting UnknownToken is required")
-	assert(t, c.ExpiredToken != "", "setting ExpiredToken is required")
+	assert(c.Handler != nil, "setting Handler is required")
+	assert(c.TokenEndpoint != "", "setting TokenEndpoint is required")
+	assert(c.AuthorizeEndpoint != "", "setting AuthorizeEndpoint is required")
+	assert(c.ProtectedResource != "", "setting ProtectedResource is required")
+	assert(c.ConfidentialClientID != "", "setting ConfidentialClientID is required")
+	assert(c.ConfidentialClientSecret != "", "setting ConfidentialClientSecret is required")
+	assert(c.PublicClientID != "", "setting PublicClientID is required")
+	assert(c.InvalidScope != "", "setting InvalidScope is required")
+	assert(c.ValidScope != "", "setting ValidScope is required")
+	assert(c.ExceedingScope != "", "setting ExceedingScope is required")
+	assert(c.InvalidToken != "", "setting InvalidToken is required")
+	assert(c.ValidToken != "", "setting ValidToken is required")
+	assert(c.UnknownToken != "", "setting UnknownToken is required")
+	assert(c.ExpiredToken != "", "setting ExpiredToken is required")
 
 	t.Run("ProtectedResourceTest", func(t *testing.T) {
 		ProtectedResourceTest(t, c)
@@ -150,9 +150,9 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.ImplicitGrantSupport || c.AuthorizationCodeGrantSupport {
-		assert(t, c.InvalidRedirectURI != "", "setting InvalidRedirectURI is required")
-		assert(t, c.PrimaryRedirectURI != "", "setting PrimaryRedirectURI is required")
-		assert(t, c.SecondaryRedirectURI != "", "setting SecondaryRedirectURI is required")
+		assert(c.InvalidRedirectURI != "", "setting InvalidRedirectURI is required")
+		assert(c.PrimaryRedirectURI != "", "setting PrimaryRedirectURI is required")
+		assert(c.SecondaryRedirectURI != "", "setting SecondaryRedirectURI is required")
 
 		t.Run("AuthorizationEndpointTest", func(t *testing.T) {
 			AuthorizationEndpointTest(t, c)
@@ -160,8 +160,8 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.PasswordGrantSupport {
-		assert(t, c.ResourceOwnerUsername != "", "setting ResourceOwnerUsername is required")
-		assert(t, c.ResourceOwnerPassword != "", "setting ResourceOwnerPassword is required")
+		assert(c.ResourceOwnerUsername != "", "setting ResourceOwnerUsername is required")
+		assert(c.ResourceOwnerPassword != "", "setting ResourceOwnerPassword is required")
 
 		t.Run("PasswordGrantTest", func(t *testing.T) {
 			PasswordGrantTest(t, c)
@@ -175,8 +175,8 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.ImplicitGrantSupport {
-		assert(t, c.InvalidAuthorizationParams != nil || c.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
-		assert(t, c.ValidAuthorizationParams != nil || c.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
+		assert(c.InvalidAuthorizationParams != nil || c.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
+		assert(c.ValidAuthorizationParams != nil || c.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
 
 		t.Run("ImplicitGrantTest", func(t *testing.T) {
 			ImplicitGrantTest(t, c)
@@ -184,11 +184,11 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.AuthorizationCodeGrantSupport {
-		assert(t, c.InvalidAuthorizationParams != nil || c.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
-		assert(t, c.ValidAuthorizationParams != nil || c.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
-		assert(t, c.InvalidAuthorizationCode != "", "setting InvalidAuthorizationCode is required")
-		assert(t, c.UnknownAuthorizationCode != "", "setting UnknownAuthorizationCode is required")
-		assert(t, c.ExpiredAuthorizationCode != "", "setting ExpiredAuthorizationCode is required")
+		assert(c.InvalidAuthorizationParams != nil || c.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
+		assert(c.ValidAuthorizationParams != nil || c.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
+		assert(c.InvalidAuthorizationCode != "", "setting InvalidAuthorizationCode is required")
+		assert(c.UnknownAuthorizationCode != "", "setting UnknownAuthorizationCode is required")
+		assert(c.ExpiredAuthorizationCode != "", "setting ExpiredAuthorizationCode is required")
 
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
 			AuthorizationCodeGrantTest(t, c)
@@ -196,10 +196,10 @@ func Run(t *testing.T, c *Config) {
 	}
 
 	if c.RefreshTokenGrantSupport {
-		assert(t, c.InvalidRefreshToken != "", "setting InvalidRefreshToken is required")
-		assert(t, c.UnknownRefreshToken != "", "setting UnknownRefreshToken is required")
-		assert(t, c.ValidRefreshToken != "", "setting ValidRefreshToken is required")
-		assert(t, c.ExpiredRefreshToken != "", "setting ExpiredRefreshToken is required")
+		assert(c.InvalidRefreshToken != "", "setting InvalidRefreshToken is required")
+		assert(c.UnknownRefreshToken != "", "setting UnknownRefreshToken is required")
+		assert(c.ValidRefreshToken != "", "setting ValidRefreshToken is required")
+		assert(c.ExpiredRefreshToken != "", "setting ExpiredRefreshToken is required")
 
 		t.Run("RefreshTokenGrantTest", func(t *testing.T) {
 			RefreshTokenGrantTest(t, c)
