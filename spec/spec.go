@@ -48,9 +48,9 @@ type Config struct {
 	ExpectedExpiresIn int
 
 	// The tokens for the protected resource tests.
-	ValidToken        string
 	InvalidToken      string
 	UnknownToken      string
+	ValidToken        string
 	ExpiredToken      string
 	InsufficientToken string
 

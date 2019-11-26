@@ -107,9 +107,9 @@ func TestSpec(t *testing.T) {
 
 	config.ExpectedExpiresIn = int(tokenLifespan / time.Second)
 
-	config.ValidToken = validToken.String()
 	config.InvalidToken = "invalid"
 	config.UnknownToken = unknownToken.String()
+	config.ValidToken = validToken.String()
 	config.ExpiredToken = expiredToken.String()
 	config.InsufficientToken = insufficientToken.String()
 

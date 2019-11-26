@@ -239,6 +239,29 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// unauthenticated client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Form: map[string]string{
+			"token": c.ValidRefreshToken,
+		},
+		Username: c.ConfidentialClientID,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), "Basic realm=") {
+				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
+			}
+		},
+	})
+
 	// invalid token
 	Do(c.Handler, &Request{
 		Method: "POST",

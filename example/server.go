@@ -431,6 +431,12 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// authenticate client
+	if client.confidential && !sameHash(client.secret, req.ClientSecret) {
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
+		return
+	}
+
 	// parse token
 	token, err := hmacsha.Parse(secret, req.Token)
 	if err != nil {
