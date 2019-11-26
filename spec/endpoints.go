@@ -344,6 +344,217 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	// revocation of refresh tokens is tested by RefreshTokenGrantTest
 }
 
+// IntrospectionEndpointTest executes general token introspection tests.
+func IntrospectionEndpointTest(t *testing.T, c *Config) {
+	// wrong method
+	Do(c.Handler, &Request{
+		Method: "GET",
+		Path:   c.IntrospectionEndpoint,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
+		},
+	})
+
+	// empty request
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.IntrospectionEndpoint,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
+		},
+	})
+
+	// missing client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.IntrospectionEndpoint,
+		Form: map[string]string{
+			"token": c.ValidToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
+		},
+	})
+
+	// missing token
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.IntrospectionEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
+		},
+	})
+
+	// invalid token type hint
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.IntrospectionEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Form: map[string]string{
+			"token":           c.ValidToken,
+			"token_type_hint": "invalid",
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "unsupported_token_type" {
+				t.Error(`expected error to be "unsupported_token_type"`, debug(r))
+			}
+		},
+	})
+
+	// unknown client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.IntrospectionEndpoint,
+		Form: map[string]string{
+			"token": c.ValidToken,
+		},
+		Username: "unknown",
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), "Basic realm=") {
+				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
+			}
+		},
+	})
+
+	// unauthenticated client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.IntrospectionEndpoint,
+		Form: map[string]string{
+			"token": c.ValidToken,
+		},
+		Username: c.ConfidentialClientID,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+
+			if !strings.HasPrefix(r.Header().Get("WWW-Authenticate"), "Basic realm=") {
+				t.Error(`expected header WWW-Authenticate to include a realm"`, debug(r))
+			}
+		},
+	})
+
+	// wrong client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.IntrospectionEndpoint,
+		Form: map[string]string{
+			"token": c.ValidToken,
+		},
+		Username: c.PublicClientID,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusUnauthorized {
+				t.Error("expected status unauthorized", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_client" {
+				t.Error(`expected error to be "invalid_client"`, debug(r))
+			}
+		},
+	})
+
+	// invalid token
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.IntrospectionEndpoint,
+		Form: map[string]string{
+			"token": c.InvalidToken,
+		},
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			// Note: The application must not raise an error here.
+
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
+		},
+	})
+
+	// unknown token
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.IntrospectionEndpoint,
+		Form: map[string]string{
+			"token": c.UnknownToken,
+		},
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			// Note: The application must not raise an error here.
+
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
+		},
+	})
+
+	// valid access token
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.IntrospectionEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Form: map[string]string{
+			"token":           c.ValidToken,
+			"token_type_hint": "access_token",
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusOK {
+				t.Error("expected status ok", debug(r))
+			}
+
+			if jsonFieldBool(r, "active") != true {
+				t.Error(`expected error to be true`, debug(r))
+			}
+		},
+	})
+}
+
 // ProtectedResourceTest validates authorization of the protected resource.
 func ProtectedResourceTest(t *testing.T, c *Config) {
 	// missing token

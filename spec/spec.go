@@ -205,6 +205,12 @@ func Run(t *testing.T, c *Config) {
 		})
 	}
 
+	if c.IntrospectionEndpoint != "" {
+		t.Run("IntrospectionEndpointTest", func(t *testing.T) {
+			IntrospectionEndpointTest(t, c)
+		})
+	}
+
 	if c.RevocationEndpoint != "" {
 		t.Run("RevocationEndpointTest", func(t *testing.T) {
 			RevocationEndpointTest(t, c)

@@ -457,6 +457,7 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		// check owner
 		if accessToken.clientID != req.ClientID {
 			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
+			return
 		}
 
 		// revoke token
@@ -468,6 +469,7 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		// check owner
 		if refreshToken.clientID != req.ClientID {
 			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
+			return
 		}
 
 		// revoke token
@@ -512,8 +514,6 @@ func introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	println(token)
-
 	// prepare response
 	res := &introspection.Response{}
 
@@ -522,6 +522,7 @@ func introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 		// check owner
 		if accessToken.clientID != req.ClientID {
 			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
+			return
 		}
 
 		// set response
@@ -538,6 +539,7 @@ func introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 		// check owner
 		if refreshToken.clientID != req.ClientID {
 			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
+			return
 		}
 
 		// set response
