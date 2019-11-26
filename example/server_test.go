@@ -31,8 +31,16 @@ func TestSpec(t *testing.T) {
 	})
 
 	unknownToken := hmacsha.MustGenerate(secret, 16)
+	validToken := hmacsha.MustGenerate(secret, 16)
 	expiredToken := hmacsha.MustGenerate(secret, 16)
 	insufficientToken := hmacsha.MustGenerate(secret, 16)
+
+	addCredential(accessTokens, &credential{
+		clientID:  "client1",
+		signature: validToken.SignatureString(),
+		scope:     allowedScope,
+		expiresAt: time.Now().Add(time.Hour),
+	})
 
 	addCredential(accessTokens, &credential{
 		clientID:  "client1",
@@ -99,6 +107,7 @@ func TestSpec(t *testing.T) {
 
 	config.ExpectedExpiresIn = int(tokenLifespan / time.Second)
 
+	config.ValidToken = validToken.String()
 	config.InvalidToken = "invalid"
 	config.UnknownToken = unknownToken.String()
 	config.ExpiredToken = expiredToken.String()

@@ -166,7 +166,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 
 // RevocationEndpointTest executes general token revocation tests.
 func RevocationEndpointTest(t *testing.T, c *Config) {
-	// invalid request
+	// empty request
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.RevocationEndpoint,
@@ -181,14 +181,49 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		},
 	})
 
-	// invalid client
+	// missing client
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.RevocationEndpoint,
 		Form: map[string]string{
 			"token": c.ValidRefreshToken,
 		},
-		Username: "invalid",
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
+		},
+	})
+
+	// missing token
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "invalid_request" {
+				t.Error(`expected error to be "invalid_request"`, debug(r))
+			}
+		},
+	})
+
+	// unknown client
+	Do(c.Handler, &Request{
+		Method: "POST",
+		Path:   c.RevocationEndpoint,
+		Form: map[string]string{
+			"token": c.ValidRefreshToken,
+		},
+		Username: "unknown",
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusUnauthorized {
 				t.Error("expected status unauthorized", debug(r))
@@ -227,7 +262,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.InsufficientToken,
+			"token": c.ValidToken,
 		},
 		Username: c.PublicClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -238,6 +273,9 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 			}
 		},
 	})
+
+	// test existence and revocation
+	AccessTokenTest(t, c, c.ValidToken)
 }
 
 // ProtectedResourceTest validates authorization of the protected resource.
