@@ -134,6 +134,7 @@ func Run(t *testing.T, c *Config) {
 	assert(t, c.ValidScope != "", "setting ValidScope is required")
 	assert(t, c.ExceedingScope != "", "setting ExceedingScope is required")
 	assert(t, c.InvalidToken != "", "setting InvalidToken is required")
+	assert(t, c.ValidToken != "", "setting ValidToken is required")
 	assert(t, c.UnknownToken != "", "setting UnknownToken is required")
 	assert(t, c.ExpiredToken != "", "setting ExpiredToken is required")
 
