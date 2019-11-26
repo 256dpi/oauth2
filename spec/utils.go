@@ -38,10 +38,15 @@ func jsonField(r *httptest.ResponseRecorder, field string) interface{} {
 
 	err := dec.Decode(&dst)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	return dst[field]
+}
+
+func jsonFieldBool(r *httptest.ResponseRecorder, field string) bool {
+	str, _ := jsonField(r, field).(bool)
+	return str
 }
 
 func jsonFieldString(r *httptest.ResponseRecorder, field string) string {

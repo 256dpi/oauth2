@@ -13,6 +13,7 @@ import (
 	"github.com/256dpi/oauth2"
 	"github.com/256dpi/oauth2/bearer"
 	"github.com/256dpi/oauth2/hmacsha"
+	"github.com/256dpi/oauth2/introspection"
 	"github.com/256dpi/oauth2/revocation"
 )
 
@@ -69,6 +70,7 @@ func newHandler() http.Handler {
 	mux.HandleFunc("/oauth2/token", tokenEndpoint)
 	mux.HandleFunc("/oauth2/authorize", authorizationEndpoint)
 	mux.HandleFunc("/oauth2/revoke", revocationEndpoint)
+	mux.HandleFunc("/oauth2/introspect", introspectionEndpoint)
 	mux.HandleFunc("/api/protected", protectedResource)
 	return mux
 }
@@ -474,6 +476,81 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	// write header
 	w.WriteHeader(http.StatusOK)
+}
+
+func introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
+	// parse authorization request
+	req, err := introspection.ParseRequest(r)
+	if err != nil {
+		_ = oauth2.WriteError(w, err)
+		return
+	}
+
+	// check token type hint
+	if req.TokenTypeHint != "" && !introspection.KnownTokenType(req.TokenTypeHint) {
+		_ = oauth2.WriteError(w, introspection.UnsupportedTokenType(""))
+		return
+	}
+
+	// get client
+	client, found := clients[req.ClientID]
+	if !found {
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
+		return
+	}
+
+	// authenticate client
+	if client.confidential && !sameHash(client.secret, req.ClientSecret) {
+		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
+		return
+	}
+
+	// parse token
+	token, err := hmacsha.Parse(secret, req.Token)
+	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	println(token)
+
+	// prepare response
+	res := &introspection.Response{}
+
+	// check access token
+	if accessToken, found := accessTokens[token.SignatureString()]; found {
+		// check owner
+		if accessToken.clientID != req.ClientID {
+			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
+		}
+
+		// set response
+		res.Active = true
+		res.Scope = accessToken.scope.String()
+		res.ClientID = accessToken.clientID
+		res.Username = accessToken.username
+		res.TokenType = introspection.AccessToken
+		res.ExpiresAt = accessToken.expiresAt.Unix()
+	}
+
+	// check refresh token
+	if refreshToken, found := refreshTokens[token.SignatureString()]; found {
+		// check owner
+		if refreshToken.clientID != req.ClientID {
+			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
+		}
+
+		// set response
+		res.Active = true
+		res.Scope = refreshToken.scope.String()
+		res.ClientID = refreshToken.clientID
+		res.Username = refreshToken.username
+		res.TokenType = introspection.RefreshToken
+		res.ExpiresAt = refreshToken.expiresAt.Unix()
+	}
+
+	// write response
+	_ = introspection.WriteResponse(w, res)
 }
 
 func revokeToken(client *owner, list map[string]*credential, signature string) {

@@ -23,6 +23,29 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 		},
 	})
 
+	// check introspection if available
+	if c.IntrospectionEndpoint != "" {
+		Do(c.Handler, &Request{
+			Method:   "POST",
+			Path:     c.IntrospectionEndpoint,
+			Username: c.ConfidentialClientID,
+			Password: c.ConfidentialClientSecret,
+			Form: map[string]string{
+				"token":           accessToken,
+				"token_type_hint": "access_token",
+			},
+			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+				if r.Code != http.StatusOK {
+					t.Error("expected status ok", debug(r))
+				}
+
+				if jsonFieldBool(r, "active") != true {
+					t.Error(`expected error to be true`, debug(r))
+				}
+			},
+		})
+	}
+
 	// check if revocation is available
 	if c.RevocationEndpoint == "" {
 		return
@@ -58,11 +81,57 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 			}
 		},
 	})
+
+	// check introspection if available
+	if c.IntrospectionEndpoint != "" {
+		Do(c.Handler, &Request{
+			Method:   "POST",
+			Path:     c.IntrospectionEndpoint,
+			Username: c.ConfidentialClientID,
+			Password: c.ConfidentialClientSecret,
+			Form: map[string]string{
+				"token":           accessToken,
+				"token_type_hint": "access_token",
+			},
+			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+				if r.Code != http.StatusOK {
+					t.Error("expected status ok", debug(r))
+				}
+
+				if jsonFieldBool(r, "active") != false {
+					t.Error(`expected error to be false`, debug(r))
+				}
+			},
+		})
+	}
 }
 
 // RefreshTokenTest validates the specified refreshToken by requesting a new
 // access token and validating it as well.
 func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
+	// check introspection if available
+	if c.IntrospectionEndpoint != "" {
+		Do(c.Handler, &Request{
+			Method:   "POST",
+			Path:     c.IntrospectionEndpoint,
+			Username: c.ConfidentialClientID,
+			Password: c.ConfidentialClientSecret,
+			Form: map[string]string{
+				"token":           refreshToken,
+				"token_type_hint": "refresh_token",
+			},
+			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+				if r.Code != http.StatusOK {
+					t.Error("expected status ok", debug(r))
+				}
+
+				if jsonFieldBool(r, "active") != true {
+					t.Error(`expected error to be true`, debug(r))
+				}
+			},
+		})
+	}
+
 	var accessToken, newRefreshToken string
 
 	// test refresh token grant
@@ -147,4 +216,27 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 			}
 		},
 	})
+
+	// check introspection if available
+	if c.IntrospectionEndpoint != "" {
+		Do(c.Handler, &Request{
+			Method:   "POST",
+			Path:     c.IntrospectionEndpoint,
+			Username: c.ConfidentialClientID,
+			Password: c.ConfidentialClientSecret,
+			Form: map[string]string{
+				"token":           newRefreshToken,
+				"token_type_hint": "refresh_token",
+			},
+			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+				if r.Code != http.StatusOK {
+					t.Error("expected status ok", debug(r))
+				}
+
+				if jsonFieldBool(r, "active") != false {
+					t.Error(`expected error to be false`, debug(r))
+				}
+			},
+		})
+	}
 }

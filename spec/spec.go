@@ -21,6 +21,9 @@ type Config struct {
 	// The revocation endpoint (e.g. /oauth2/revoke).
 	RevocationEndpoint string
 
+	// The introspection endpoint (e.g. /oauth2/introspect).
+	IntrospectionEndpoint string
+
 	// The protected resource (e.g. /api/protected).
 	ProtectedResource string
 
@@ -104,15 +107,16 @@ type Config struct {
 // Default returns a common used configuration that can taken as a basis.
 func Default(handler http.Handler) *Config {
 	return &Config{
-		Handler:             handler,
-		TokenEndpoint:       "/oauth2/token",
-		AuthorizeEndpoint:   "/oauth2/authorize",
-		RevocationEndpoint:  "/oauth2/revoke",
-		ProtectedResource:   "/api/protected",
-		ExpectedExpiresIn:   3600,
-		InvalidToken:        "invalid",
-		InvalidRedirectURI:  "http://invalid.com",
-		InvalidRefreshToken: "invalid",
+		Handler:               handler,
+		TokenEndpoint:         "/oauth2/token",
+		AuthorizeEndpoint:     "/oauth2/authorize",
+		RevocationEndpoint:    "/oauth2/revoke",
+		IntrospectionEndpoint: "/oauth2/introspect",
+		ProtectedResource:     "/api/protected",
+		ExpectedExpiresIn:     3600,
+		InvalidToken:          "invalid",
+		InvalidRedirectURI:    "http://invalid.com",
+		InvalidRefreshToken:   "invalid",
 	}
 }
 
