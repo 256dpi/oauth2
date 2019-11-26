@@ -186,7 +186,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.ValidRefreshToken,
+			"token": c.ValidToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			if r.Code != http.StatusBadRequest {
@@ -201,8 +201,8 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 
 	// missing token
 	Do(c.Handler, &Request{
-		Method: "POST",
-		Path:   c.RevocationEndpoint,
+		Method:   "POST",
+		Path:     c.RevocationEndpoint,
 		Username: c.ConfidentialClientID,
 		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -216,12 +216,33 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		},
 	})
 
+	// invalid token type hint
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.RevocationEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Form: map[string]string{
+			"token":           c.ValidToken,
+			"token_type_hint": "invalid",
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			if r.Code != http.StatusBadRequest {
+				t.Error("expected status bad request", debug(r))
+			}
+
+			if jsonFieldString(r, "error") != "unsupported_token_type" {
+				t.Error(`expected error to be "unsupported_token_type"`, debug(r))
+			}
+		},
+	})
+
 	// unknown client
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.ValidRefreshToken,
+			"token": c.ValidToken,
 		},
 		Username: "unknown",
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -244,7 +265,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Method: "POST",
 		Path:   c.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.ValidRefreshToken,
+			"token": c.ValidToken,
 		},
 		Username: c.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {

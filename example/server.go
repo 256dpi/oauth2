@@ -424,6 +424,12 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check token type hint
+	if req.TokenTypeHint != "" && !revocation.KnownTokenType(req.TokenTypeHint) {
+		_ = oauth2.WriteError(w, revocation.UnsupportedTokenType(""))
+		return
+	}
+
 	// get client
 	client, found := clients[req.ClientID]
 	if !found {
