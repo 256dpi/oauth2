@@ -450,9 +450,27 @@ func revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// revoke tokens
-	revokeToken(client, accessTokens, token.SignatureString())
-	revokeToken(client, refreshTokens, token.SignatureString())
+	// check access token
+	if accessToken, found := accessTokens[token.SignatureString()]; found {
+		// check owner
+		if accessToken.clientID != req.ClientID {
+			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
+		}
+
+		// revoke token
+		revokeToken(client, accessTokens, token.SignatureString())
+	}
+
+	// check refresh token
+	if refreshToken, found := refreshTokens[token.SignatureString()]; found {
+		// check owner
+		if refreshToken.clientID != req.ClientID {
+			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
+		}
+
+		// revoke token
+		revokeToken(client, refreshTokens, token.SignatureString())
+	}
 
 	// write header
 	w.WriteHeader(http.StatusOK)
