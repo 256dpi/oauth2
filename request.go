@@ -61,7 +61,7 @@ func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 	refreshToken := r.PostForm.Get("refresh_token")
 
 	// get redirect uri
-	redirectURIString, err := url.QueryUnescape(r.Form.Get("redirect_uri"))
+	redirectURIString, err := url.QueryUnescape(r.PostForm.Get("redirect_uri"))
 	if err != nil {
 		return nil, InvalidRequest("invalid redirect URI")
 	}
