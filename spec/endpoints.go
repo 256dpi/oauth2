@@ -232,7 +232,8 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Username: c.ConfidentialClientID,
 		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusOK, r.Code, debug(r))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
