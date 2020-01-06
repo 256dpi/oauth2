@@ -628,11 +628,14 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientID, username, code string) *oauth2.TokenResponse {
-	// generate new access token
+	// generate access token
 	accessToken := s.config.MustGenerate()
 
-	// generate new refresh token
-	refreshToken := s.config.MustGenerate()
+	// generate refresh token if requested
+	var refreshToken *hmacsha.Token
+	if issueRefreshToken {
+		refreshToken = s.config.MustGenerate()
+	}
 
 	// prepare response
 	r := bearer.NewTokenResponse(accessToken.String(), int(s.config.AccessTokenLifespan/time.Second))
@@ -640,12 +643,9 @@ func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientI
 	// set granted scope
 	r.Scope = scope
 
-	// set refresh token
-	r.RefreshToken = refreshToken.String()
-
-	// disable refresh token if not requested
-	if !issueRefreshToken {
-		refreshToken = nil
+	// set refresh token if available
+	if issueRefreshToken {
+		r.RefreshToken = refreshToken.String()
 	}
 
 	// save access token
@@ -658,8 +658,8 @@ func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientI
 		Code:      code,
 	}
 
-	// save refresh token if present
-	if refreshToken != nil {
+	// save refresh token if available
+	if issueRefreshToken {
 		s.refreshTokens[refreshToken.SignatureString()] = &Credential{
 			ClientID:  clientID,
 			Username:  username,
