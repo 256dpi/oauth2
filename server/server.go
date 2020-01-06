@@ -9,29 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/256dpi/oauth2"
 	"github.com/256dpi/oauth2/bearer"
 	"github.com/256dpi/oauth2/hmacsha"
 	"github.com/256dpi/oauth2/introspection"
 	"github.com/256dpi/oauth2/revocation"
 )
-
-// MustHash will hash the specified clear text.
-func MustHash(clear string) []byte {
-	hash, err := bcrypt.GenerateFromPassword([]byte(clear), bcrypt.MinCost)
-	if err != nil {
-		panic(err)
-	}
-
-	return hash
-}
-
-// SameHash verifies if the provided clear text and hash are equal.
-func SameHash(hash []byte, clear string) bool {
-	return bcrypt.CompareHashAndPassword(hash, []byte(clear)) == nil
-}
 
 // Config is used to configure a server.
 type Config struct {
@@ -43,7 +26,7 @@ type Config struct {
 	AuthorizationCodeLifespan time.Duration
 }
 
-// Default will return a default configuration based on the provided parameters.
+// Default will return a default configuration.
 func Default(secret []byte, allowed oauth2.Scope) Config {
 	return Config{
 		Secret:                    secret,
@@ -160,7 +143,7 @@ func (s *Server) AddAuthorizationCode(code *Credential) {
 }
 
 // Authorize will authorize the request and require a valid access token. An
-// error will already be written to the client if false is returned.
+// error has already be written to the client if false is returned.
 func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required oauth2.Scope) bool {
 	// acquire mutex
 	s.mutex.Lock()
