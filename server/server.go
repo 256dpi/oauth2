@@ -17,6 +17,21 @@ import (
 	"github.com/256dpi/oauth2/revocation"
 )
 
+// MustHash will hash the specified clear text.
+func MustHash(clear string) []byte {
+	hash, err := bcrypt.GenerateFromPassword([]byte(clear), bcrypt.MinCost)
+	if err != nil {
+		panic(err)
+	}
+
+	return hash
+}
+
+// SameHash verifies if the provided clear text and hash are equal.
+func SameHash(hash []byte, clear string) bool {
+	return bcrypt.CompareHashAndPassword(hash, []byte(clear)) == nil
+}
+
 // Config is used to configure a server.
 type Config struct {
 	Secret                    []byte
@@ -42,21 +57,6 @@ func Default(secret []byte, allowed oauth2.Scope) Config {
 // MustGenerate will generate a new token.
 func (c Config) MustGenerate() *hmacsha.Token {
 	return hmacsha.MustGenerate(c.Secret, c.KeyLength)
-}
-
-// MustHash will hash the specified clear text.
-func (c Config) MustHash(clear string) []byte {
-	hash, err := bcrypt.GenerateFromPassword([]byte(clear), bcrypt.MinCost)
-	if err != nil {
-		panic(err)
-	}
-
-	return hash
-}
-
-// SameHash verifies if the provided clear text and hash are equal.
-func (c Config) SameHash(hash []byte, clear string) bool {
-	return bcrypt.CompareHashAndPassword(hash, []byte(clear)) == nil
 }
 
 // Entity represents a client or resource owner.
@@ -249,7 +249,7 @@ func (s *Server) handleImplicitGrant(w http.ResponseWriter, username, password s
 
 	// validate user credentials
 	owner, found := s.users[username]
-	if !found || !s.config.SameHash(owner.Secret, password) {
+	if !found || !SameHash(owner.Secret, password) {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, true))
 		return
 	}
@@ -273,7 +273,7 @@ func (s *Server) handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter
 
 	// validate user credentials
 	owner, found := s.users[username]
-	if !found || !s.config.SameHash(owner.Secret, password) {
+	if !found || !SameHash(owner.Secret, password) {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, false))
 		return
 	}
@@ -320,7 +320,7 @@ func (s *Server) tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate client
-	if client.Confidential && !s.config.SameHash(client.Secret, req.ClientSecret) {
+	if client.Confidential && !SameHash(client.Secret, req.ClientSecret) {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
@@ -341,7 +341,7 @@ func (s *Server) tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// authenticate resource owner
 	owner, found := s.users[rq.Username]
-	if !found || !s.config.SameHash(owner.Secret, rq.Password) {
+	if !found || !SameHash(owner.Secret, rq.Password) {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied(""))
 		return
 	}
@@ -512,7 +512,7 @@ func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate client
-	if client.Confidential && !s.config.SameHash(client.Secret, req.ClientSecret) {
+	if client.Confidential && !SameHash(client.Secret, req.ClientSecret) {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
@@ -574,7 +574,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate client
-	if client.Confidential && !s.config.SameHash(client.Secret, req.ClientSecret) {
+	if client.Confidential && !SameHash(client.Secret, req.ClientSecret) {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
@@ -644,7 +644,7 @@ func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientI
 	r.Scope = scope
 
 	// set refresh token if available
-	if issueRefreshToken {
+	if refreshToken != nil {
 		r.RefreshToken = refreshToken.String()
 	}
 
@@ -659,7 +659,7 @@ func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientI
 	}
 
 	// save refresh token if available
-	if issueRefreshToken {
+	if refreshToken != nil {
 		s.refreshTokens[refreshToken.SignatureString()] = &Credential{
 			ClientID:  clientID,
 			Username:  username,

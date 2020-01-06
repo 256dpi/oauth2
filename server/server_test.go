@@ -19,21 +19,21 @@ func TestSpec(t *testing.T) {
 
 	server.AddClient(&Entity{
 		ID:           "client1",
-		Secret:       serverConfig.MustHash("foo"),
+		Secret:       MustHash("foo"),
 		RedirectURI:  "http://example.com/callback1",
 		Confidential: true,
 	})
 
 	server.AddClient(&Entity{
 		ID:           "client2",
-		Secret:       serverConfig.MustHash("foo"),
+		Secret:       MustHash("foo"),
 		RedirectURI:  "http://example.com/callback2",
 		Confidential: false,
 	})
 
 	server.AddUser(&Entity{
 		ID:     "user1",
-		Secret: serverConfig.MustHash("foo"),
+		Secret: MustHash("foo"),
 	})
 
 	unknownToken := serverConfig.MustGenerate()
