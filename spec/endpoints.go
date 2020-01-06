@@ -16,7 +16,7 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		Path:   c.TokenEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -30,7 +30,7 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -45,7 +45,7 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 }
@@ -58,7 +58,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Path:   c.AuthorizeEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -73,8 +73,8 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
-			assert.NotEmpty(t, auth(r, "realm"))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
+			assert.NotEmpty(t, auth(r, "realm"), debug(r))
 		},
 	})
 
@@ -89,7 +89,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -105,7 +105,7 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 		Username: c.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -133,7 +133,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Path:   c.RevocationEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -146,7 +146,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -158,7 +158,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -174,7 +174,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "unsupported_token_type", jsonFieldString(r, "error"))
+			assert.Equal(t, "unsupported_token_type", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -188,8 +188,8 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Username: "unknown",
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
-			assert.NotEmpty(t, auth(r, "realm"))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
+			assert.NotEmpty(t, auth(r, "realm"), debug(r))
 		},
 	})
 
@@ -203,8 +203,8 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Username: c.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
-			assert.NotEmpty(t, auth(r, "realm"))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
+			assert.NotEmpty(t, auth(r, "realm"), debug(r))
 		},
 	})
 
@@ -218,7 +218,7 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 		Username: c.PublicClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -264,7 +264,7 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		Path:   c.IntrospectionEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -274,7 +274,7 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		Path:   c.IntrospectionEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -287,7 +287,7 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -299,7 +299,7 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -315,7 +315,7 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "unsupported_token_type", jsonFieldString(r, "error"))
+			assert.Equal(t, "unsupported_token_type", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -329,8 +329,8 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		Username: "unknown",
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
-			assert.NotEmpty(t, auth(r, "realm"))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
+			assert.NotEmpty(t, auth(r, "realm"), debug(r))
 		},
 	})
 
@@ -344,8 +344,8 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		Username: c.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
-			assert.NotEmpty(t, auth(r, "realm"))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
+			assert.NotEmpty(t, auth(r, "realm"), debug(r))
 		},
 	})
 
@@ -359,7 +359,7 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		Username: c.PublicClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -403,7 +403,7 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.True(t, jsonFieldBool(r, "active"))
+			assert.True(t, jsonFieldBool(r, "active"), debug(r))
 		},
 	})
 }
@@ -416,8 +416,8 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 		Path:   c.ProtectedResource,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.NotEmpty(t, auth(r, "realm"))
-			assert.Empty(t, r.Body.String())
+			assert.NotEmpty(t, auth(r, "realm"), debug(r))
+			assert.Empty(t, r.Body.String(), debug(r))
 		},
 	})
 
@@ -430,8 +430,8 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
-			assert.Equal(t, "invalid_request", auth(r, "error"))
-			assert.Empty(t, r.Body.String())
+			assert.Equal(t, "invalid_request", auth(r, "error"), debug(r))
+			assert.Empty(t, r.Body.String(), debug(r))
 		},
 	})
 
@@ -444,8 +444,8 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_token", auth(r, "error"))
-			assert.Empty(t, r.Body.String())
+			assert.Equal(t, "invalid_token", auth(r, "error"), debug(r))
+			assert.Empty(t, r.Body.String(), debug(r))
 		},
 	})
 
@@ -458,8 +458,8 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_token", auth(r, "error"))
-			assert.Empty(t, r.Body.String())
+			assert.Equal(t, "invalid_token", auth(r, "error"), debug(r))
+			assert.Empty(t, r.Body.String(), debug(r))
 		},
 	})
 
@@ -472,8 +472,8 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
-			assert.Equal(t, "invalid_token", auth(r, "error"))
-			assert.Empty(t, r.Body.String())
+			assert.Equal(t, "invalid_token", auth(r, "error"), debug(r))
+			assert.Empty(t, r.Body.String(), debug(r))
 		},
 	})
 
@@ -486,8 +486,8 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
-			assert.Equal(t, "insufficient_scope", auth(r, "error"))
-			assert.Empty(t, r.Body.String())
+			assert.Equal(t, "insufficient_scope", auth(r, "error"), debug(r))
+			assert.Empty(t, r.Body.String(), debug(r))
 		},
 	})
 }

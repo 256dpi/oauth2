@@ -24,8 +24,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code)
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -42,8 +42,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusForbidden, r.Code)
-			assert.Equal(t, "access_denied", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
+			assert.Equal(t, "access_denied", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -60,8 +60,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusForbidden, r.Code)
-			assert.Equal(t, "access_denied", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
+			assert.Equal(t, "access_denied", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -78,8 +78,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -96,8 +96,8 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -117,15 +117,15 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"))
-			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"))
-			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"))
+			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"), debug(r))
+			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"), debug(r))
+			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
 
 			accessToken = jsonFieldString(r, "access_token")
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 
 			refreshToken = jsonFieldString(r, "refresh_token")
-			assert.NotEmpty(t, refreshToken)
+			assert.NotEmpty(t, refreshToken, debug(r))
 		},
 	})
 
@@ -151,9 +151,9 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code)
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
-			assert.NotEmpty(t, auth(r, "realm"))
+			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
+			assert.NotEmpty(t, auth(r, "realm"), debug(r))
 		},
 	})
 
@@ -167,9 +167,9 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code)
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
-			assert.NotEmpty(t, auth(r, "realm"))
+			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
+			assert.NotEmpty(t, auth(r, "realm"), debug(r))
 		},
 	})
 
@@ -184,8 +184,8 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 			"scope":      c.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -200,8 +200,8 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 			"scope":      c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -219,15 +219,15 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"))
-			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"))
-			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"))
+			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"), debug(r))
+			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"), debug(r))
+			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
 
 			accessToken = jsonFieldString(r, "access_token")
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 
 			refreshToken = jsonFieldString(r, "refresh_token")
-			assert.NotEmpty(t, refreshToken)
+			assert.NotEmpty(t, refreshToken, debug(r))
 		},
 	})
 
@@ -255,9 +255,9 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "invalid_scope", fragment(r, "error"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", fragment(r, "error"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 		},
 	})
 
@@ -274,9 +274,9 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "invalid_scope", fragment(r, "error"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", fragment(r, "error"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 		},
 	})
 
@@ -292,9 +292,9 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "access_denied", fragment(r, "error"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "access_denied", fragment(r, "error"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 		},
 	})
 
@@ -311,9 +311,9 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.InvalidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "access_denied", fragment(r, "error"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "access_denied", fragment(r, "error"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 		},
 	})
 
@@ -333,14 +333,14 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
-			assert.Equal(t, "bearer", fragment(r, "token_type"))
-			assert.Equal(t, c.ValidScope, fragment(r, "scope"))
-			assert.Equal(t, strconv.Itoa(c.ExpectedExpiresIn), fragment(r, "expires_in"))
-			assert.Equal(t, "xyz", fragment(r, "state"))
-			assert.Empty(t, fragment(r, "refresh_token"))
+			assert.Equal(t, "bearer", fragment(r, "token_type"), debug(r))
+			assert.Equal(t, c.ValidScope, fragment(r, "scope"), debug(r))
+			assert.Equal(t, strconv.Itoa(c.ExpectedExpiresIn), fragment(r, "expires_in"), debug(r))
+			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
+			assert.Empty(t, fragment(r, "refresh_token"), debug(r))
 
 			accessToken = fragment(r, "access_token")
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 		},
 	})
 
@@ -363,9 +363,9 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "invalid_scope", query(r, "error"))
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", query(r, "error"), debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 		},
 	})
 
@@ -382,9 +382,9 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "invalid_scope", query(r, "error"))
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", query(r, "error"), debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 		},
 	})
 
@@ -400,9 +400,9 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "access_denied", query(r, "error"))
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "access_denied", query(r, "error"), debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 		},
 	})
 
@@ -419,9 +419,9 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.InvalidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "access_denied", query(r, "error"))
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "access_denied", query(r, "error"), debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 		},
 	})
 
@@ -440,11 +440,11 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 
 			authorizationCode = query(r, "code")
-			assert.NotEmpty(t, authorizationCode)
+			assert.NotEmpty(t, authorizationCode, debug(r))
 		},
 	})
 
@@ -461,8 +461,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code)
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -479,8 +479,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -497,8 +497,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -515,8 +515,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -532,8 +532,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -550,8 +550,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.SecondaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -571,15 +571,15 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"))
-			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"))
-			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"))
+			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"), debug(r))
+			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"), debug(r))
+			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
 
 			accessToken = jsonFieldString(r, "access_token")
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 
 			refreshToken = jsonFieldString(r, "refresh_token")
-			assert.NotEmpty(t, refreshToken)
+			assert.NotEmpty(t, refreshToken, debug(r))
 		},
 	})
 
@@ -606,11 +606,11 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		}),
 		Header: extend(c.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusSeeOther, r.Code)
-			assert.Equal(t, "xyz", query(r, "state"))
+			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
+			assert.Equal(t, "xyz", query(r, "state"), debug(r))
 
 			authorizationCode = query(r, "code")
-			assert.NotEmpty(t, authorizationCode)
+			assert.NotEmpty(t, authorizationCode, debug(r))
 		},
 	})
 
@@ -628,15 +628,15 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
-			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"))
-			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"))
-			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"))
+			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"), debug(r))
+			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"), debug(r))
+			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
 
 			accessToken = jsonFieldString(r, "access_token")
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, accessToken, debug(r))
 
 			refreshToken = jsonFieldString(r, "refresh_token")
-			assert.NotEmpty(t, refreshToken)
+			assert.NotEmpty(t, refreshToken, debug(r))
 		},
 	})
 
@@ -653,8 +653,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 			"redirect_uri": c.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -668,7 +668,7 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 				"Authorization": "Bearer " + accessToken,
 			},
 			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-				assert.Equal(t, http.StatusUnauthorized, r.Code)
+				assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
 			},
 		})
 
@@ -683,8 +683,8 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 				"refresh_token": refreshToken,
 			},
 			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-				assert.Equal(t, http.StatusBadRequest, r.Code)
-				assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+				assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+				assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 			},
 		})
 	}
@@ -703,8 +703,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.ValidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusUnauthorized, r.Code)
-			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
+			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -719,8 +719,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.InvalidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -735,8 +735,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.UnknownRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -751,8 +751,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.ExpiredRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -766,8 +766,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"refresh_token": c.ValidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
@@ -783,8 +783,8 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 			"scope":         c.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			assert.Equal(t, http.StatusBadRequest, r.Code)
-			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"))
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_scope", jsonFieldString(r, "error"), debug(r))
 		},
 	})
 
