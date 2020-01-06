@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func assert(ok bool, msg string) {
+func must(ok bool, msg string) {
 	if !ok {
 		panic(msg)
 	}
@@ -79,6 +79,22 @@ func query(r *httptest.ResponseRecorder, key string) string {
 	}
 
 	return u.Query().Get(key)
+}
+
+func auth(r *httptest.ResponseRecorder, key string) string {
+	header := r.Header().Get("WWW-Authenticate")
+	parts := strings.SplitN(header, " ", 2)
+	parts = strings.Split(parts[1], ", ")
+
+	for _, part := range parts {
+		values := strings.SplitN(part, "=", 2)
+		if values[0] != key {
+			continue
+		}
+		return strings.Trim(values[1], "\",")
+	}
+
+	return ""
 }
 
 func debug(rec *httptest.ResponseRecorder) string {

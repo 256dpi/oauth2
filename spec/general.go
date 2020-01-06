@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // AccessTokenTest validates the specified access token by requesting the
 // protected resource.
 func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
-	// test authorization
+	// check token functionality
 	Do(c.Handler, &Request{
 		Method: "GET",
 		Path:   c.ProtectedResource,
@@ -17,13 +19,11 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 			"Authorization": "Bearer " + accessToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusOK {
-				t.Error("expected status ok", debug(r))
-			}
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 		},
 	})
 
-	// check introspection if available
+	// check if access token is active
 	if c.IntrospectionEndpoint != "" {
 		Do(c.Handler, &Request{
 			Method:   "POST",
@@ -35,18 +35,14 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 				"token_type_hint": "access_token",
 			},
 			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-				if r.Code != http.StatusOK {
-					t.Error("expected status ok", debug(r))
-				}
-
-				if jsonFieldBool(r, "active") != true {
-					t.Error(`expected error to be true`, debug(r))
-				}
+				assert.Equal(t, http.StatusOK, r.Code, debug(r))
+				assert.True(t, jsonFieldBool(r, "active"), debug(r))
+				assert.Equal(t, "access_token", jsonFieldString(r, "token_type"))
 			},
 		})
 	}
 
-	// check if revocation is available
+	// skip if revocation is not available
 	if c.RevocationEndpoint == "" {
 		return
 	}
@@ -62,13 +58,11 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 		Username: c.ConfidentialClientID,
 		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusOK {
-				t.Error("expected status ok", debug(r))
-			}
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 		},
 	})
 
-	// check token
+	// check token functionality
 	Do(c.Handler, &Request{
 		Method: "GET",
 		Path:   c.ProtectedResource,
@@ -76,13 +70,12 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 			"Authorization": "Bearer " + accessToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusUnauthorized {
-				t.Error("expected status unauthorized", debug(r))
-			}
+			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
+			assert.Equal(t, "invalid_token", auth(r, "error"))
 		},
 	})
 
-	// check introspection if available
+	// check if access token is now inactive
 	if c.IntrospectionEndpoint != "" {
 		Do(c.Handler, &Request{
 			Method:   "POST",
@@ -94,13 +87,8 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 				"token_type_hint": "access_token",
 			},
 			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-				if r.Code != http.StatusOK {
-					t.Error("expected status ok", debug(r))
-				}
-
-				if jsonFieldBool(r, "active") != false {
-					t.Error(`expected error to be false`, debug(r))
-				}
+				assert.Equal(t, http.StatusOK, r.Code, debug(r))
+				assert.False(t, jsonFieldBool(r, "active"), debug(r))
 			},
 		})
 	}
@@ -109,7 +97,7 @@ func AccessTokenTest(t *testing.T, c *Config, accessToken string) {
 // RefreshTokenTest validates the specified refreshToken by requesting a new
 // access token and validating it as well.
 func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
-	// check introspection if available
+	// check if refresh token is active
 	if c.IntrospectionEndpoint != "" {
 		Do(c.Handler, &Request{
 			Method:   "POST",
@@ -121,13 +109,9 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 				"token_type_hint": "refresh_token",
 			},
 			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-				if r.Code != http.StatusOK {
-					t.Error("expected status ok", debug(r))
-				}
-
-				if jsonFieldBool(r, "active") != true {
-					t.Error(`expected error to be true`, debug(r))
-				}
+				assert.Equal(t, http.StatusOK, r.Code, debug(r))
+				assert.True(t, jsonFieldBool(r, "active"), debug(r))
+				assert.Equal(t, "refresh_token", jsonFieldString(r, "token_type"))
 			},
 		})
 	}
@@ -145,41 +129,62 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 			"refresh_token": refreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusOK {
-				t.Error("expected status ok", debug(r))
-			}
-
-			if jsonFieldString(r, "token_type") != "bearer" {
-				t.Error(`expected token_type to be "bearer"`, debug(r))
-			}
-
-			if jsonFieldString(r, "scope") != c.ValidScope {
-				t.Error(`expected scope to be the valid scope`, debug(r))
-			}
-
-			if jsonFieldFloat(r, "expires_in") != float64(c.ExpectedExpiresIn) {
-				t.Error(`expected expires_in to be the expected expires in`, debug(r))
-			}
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
+			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"))
+			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"))
+			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"))
 
 			accessToken = jsonFieldString(r, "access_token")
-
-			if accessToken == "" {
-				t.Error(`expected access_token to be present`, debug(r))
-			}
+			assert.NotEmpty(t, accessToken)
 
 			newRefreshToken = jsonFieldString(r, "refresh_token")
+			assert.NotEmpty(t, accessToken)
 		},
 	})
 
 	// test access token
 	AccessTokenTest(t, c, accessToken)
 
-	// check if revocation is available
+	// check if refresh token is spent
+	Do(c.Handler, &Request{
+		Method:   "POST",
+		Path:     c.TokenEndpoint,
+		Username: c.ConfidentialClientID,
+		Password: c.ConfidentialClientSecret,
+		Form: map[string]string{
+			"grant_type":    "refresh_token",
+			"refresh_token": refreshToken,
+		},
+		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
+		},
+	})
+
+	// check if refresh token is now inactive
+	if c.IntrospectionEndpoint != "" {
+		Do(c.Handler, &Request{
+			Method:   "POST",
+			Path:     c.IntrospectionEndpoint,
+			Username: c.ConfidentialClientID,
+			Password: c.ConfidentialClientSecret,
+			Form: map[string]string{
+				"token":           refreshToken,
+				"token_type_hint": "refresh_token",
+			},
+			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
+				assert.Equal(t, http.StatusOK, r.Code, debug(r))
+				assert.False(t, jsonFieldBool(r, "active"), debug(r))
+			},
+		})
+	}
+
+	// skip if revocation is not available
 	if c.RevocationEndpoint == "" {
 		return
 	}
 
-	// revoke refresh token
+	// revoke new refresh token
 	Do(c.Handler, &Request{
 		Method: "POST",
 		Path:   c.RevocationEndpoint,
@@ -190,13 +195,11 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 		Username: c.ConfidentialClientID,
 		Password: c.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusOK {
-				t.Error("expected status ok", debug(r))
-			}
+			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 		},
 	})
 
-	// check token
+	// check if new refresh token is revoked
 	Do(c.Handler, &Request{
 		Method:   "POST",
 		Path:     c.TokenEndpoint,
@@ -207,17 +210,12 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 			"refresh_token": newRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-			if r.Code != http.StatusBadRequest {
-				t.Error("expected status bad request", debug(r))
-			}
-
-			if jsonFieldString(r, "error") != "invalid_grant" {
-				t.Error(`expected error to be "invalid_grant"`, debug(r))
-			}
+			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
+			assert.Equal(t, "invalid_grant", jsonFieldString(r, "error"))
 		},
 	})
 
-	// check introspection if available
+	// check if new refresh token is now inactive
 	if c.IntrospectionEndpoint != "" {
 		Do(c.Handler, &Request{
 			Method:   "POST",
@@ -229,13 +227,8 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 				"token_type_hint": "refresh_token",
 			},
 			Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
-				if r.Code != http.StatusOK {
-					t.Error("expected status ok", debug(r))
-				}
-
-				if jsonFieldBool(r, "active") != false {
-					t.Error(`expected error to be false`, debug(r))
-				}
+				assert.Equal(t, http.StatusOK, r.Code, debug(r))
+				assert.False(t, jsonFieldBool(r, "active"), debug(r))
 			},
 		})
 	}
