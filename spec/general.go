@@ -138,7 +138,7 @@ func RefreshTokenTest(t *testing.T, c *Config, refreshToken string) {
 			assert.NotEmpty(t, accessToken)
 
 			newRefreshToken = jsonFieldString(r, "refresh_token")
-			assert.NotEmpty(t, accessToken)
+			assert.NotEmpty(t, newRefreshToken)
 		},
 	})
 
