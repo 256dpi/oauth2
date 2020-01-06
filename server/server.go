@@ -104,6 +104,11 @@ func NewServer(config Config) *Server {
 	}
 }
 
+// Config will return the used config.
+func (s *Server) Config() Config {
+	return s.config
+}
+
 // AddClient will add the provided client.
 func (s *Server) AddClient(client *Entity) {
 	// acquire mutex
