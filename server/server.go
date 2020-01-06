@@ -622,7 +622,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse token
 	token, err := hmacsha.Parse(s.config.Secret, req.Token)
 	if err != nil {
-		w.WriteHeader(http.StatusOK)
+		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
 	}
 
