@@ -15,7 +15,7 @@ func TestSpec(t *testing.T) {
 
 	serverConfig := Default([]byte("secret"), allowedScope)
 
-	server := NewServer(serverConfig)
+	server := New(serverConfig)
 
 	server.AddClient(&Entity{
 		ID:           "client1",

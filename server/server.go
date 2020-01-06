@@ -92,8 +92,8 @@ type Server struct {
 	mutex              sync.Mutex
 }
 
-// NewServer creates and returns a new server.
-func NewServer(config Config) *Server {
+// New creates and returns a new server.
+func New(config Config) *Server {
 	return &Server{
 		config:             config,
 		clients:            map[string]*Entity{},
