@@ -6,6 +6,7 @@ package server
 import (
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -88,6 +89,7 @@ type Server struct {
 	accessTokens       map[string]*Credential
 	refreshTokens      map[string]*Credential
 	authorizationCodes map[string]*Credential
+	mutex              sync.Mutex
 }
 
 // NewServer creates and returns a new server.
@@ -104,32 +106,61 @@ func NewServer(config Config) *Server {
 
 // AddClient will add the provided client.
 func (s *Server) AddClient(client *Entity) {
+	// acquire mutex
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	// add client
 	s.clients[client.ID] = client
 }
 
 // AddUser will add the provided user.
 func (s *Server) AddUser(user *Entity) {
+	// acquire mutex
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	// add user
 	s.users[user.ID] = user
 }
 
 // AddAccessToken will add the provided access token.
 func (s *Server) AddAccessToken(token *Credential) {
+	// acquire mutex
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	// add access token
 	s.accessTokens[token.Signature] = token
 }
 
 // AddRefreshToken will add the provided refresh token.
 func (s *Server) AddRefreshToken(token *Credential) {
+	// acquire mutex
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	// add refresh token
 	s.refreshTokens[token.Signature] = token
 }
 
 // AddAuthorizationCode will add the provided authorization code.
 func (s *Server) AddAuthorizationCode(code *Credential) {
+	// acquire mutex
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	// add authorization code
 	s.authorizationCodes[code.Signature] = code
 }
 
 // Authorize will authorize the request and require a valid access token. An
 // error will already be written to the client if false is returned.
 func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required oauth2.Scope) bool {
+	// acquire mutex
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	// parse bearer token
 	tk, err := bearer.ParseToken(r)
 	if err != nil {
@@ -169,6 +200,10 @@ func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required oaut
 // ServeHTTP will handle the provided request based on the last path segment
 // of the request URL.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// acquire mutex
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	// get path
 	path := strings.Trim(r.URL.Path, "/")
 
