@@ -8,21 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestKnownTokenType(t *testing.T) {
-	matrix := []struct {
-		gt string
-		kn bool
-	}{
-		{"foo", false},
-		{RefreshToken, true},
-		{AccessToken, true},
-	}
-
-	for _, i := range matrix {
-		assert.Equal(t, i.kn, KnownTokenType(i.gt))
-	}
-}
-
 func TestParseIntrospectionRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
 		"token": "foo",

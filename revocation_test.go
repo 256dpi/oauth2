@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseRequestMinimal(t *testing.T) {
+func TestParseRevocationRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
 		"token": "foo",
 	})
@@ -20,7 +20,7 @@ func TestParseRequestMinimal(t *testing.T) {
 	assert.Equal(t, "", req.ClientSecret)
 }
 
-func TestParseRequestFull(t *testing.T) {
+func TestParseRevocationRequestFull(t *testing.T) {
 	r := newRequestWithAuth("foo", "bar", map[string]string{
 		"token":           "foo",
 		"token_type_hint": RefreshToken,
@@ -34,7 +34,7 @@ func TestParseRequestFull(t *testing.T) {
 	assert.Equal(t, "bar", req.ClientSecret)
 }
 
-func TestParseRequestErrors(t *testing.T) {
+func TestParseRevocationRequestErrors(t *testing.T) {
 	r1, _ := http.NewRequest("GET", "", nil)
 	r2, _ := http.NewRequest("POST", "", nil)
 
