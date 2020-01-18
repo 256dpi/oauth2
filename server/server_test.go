@@ -17,78 +17,69 @@ func TestSpec(t *testing.T) {
 
 	server := New(serverConfig)
 
-	server.AddClient(&Entity{
-		ID:           "client1",
+	server.Clients["client1"] = &Entity{
 		Secret:       MustHash("foo"),
 		RedirectURI:  "http://example.com/callback1",
 		Confidential: true,
-	})
+	}
 
-	server.AddClient(&Entity{
-		ID:           "client2",
+	server.Clients["client2"] = &Entity{
 		Secret:       MustHash("foo"),
 		RedirectURI:  "http://example.com/callback2",
 		Confidential: false,
-	})
+	}
 
-	server.AddUser(&Entity{
-		ID:     "user1",
+	server.Users["user1"] = &Entity{
 		Secret: MustHash("foo"),
-	})
+	}
 
 	unknownToken := serverConfig.MustGenerate()
 	validToken := serverConfig.MustGenerate()
 	expiredToken := serverConfig.MustGenerate()
 	insufficientToken := serverConfig.MustGenerate()
 
-	server.AddAccessToken(&Credential{
+	server.AccessTokens[validToken.SignatureString()] = &Credential{
 		ClientID:  "client1",
-		Signature: validToken.SignatureString(),
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(time.Hour),
-	})
+	}
 
-	server.AddAccessToken(&Credential{
+	server.AccessTokens[expiredToken.SignatureString()] = &Credential{
 		ClientID:  "client1",
-		Signature: expiredToken.SignatureString(),
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(-time.Hour),
-	})
+	}
 
-	server.AddAccessToken(&Credential{
+	server.AccessTokens[insufficientToken.SignatureString()] = &Credential{
 		ClientID:  "client1",
-		Signature: insufficientToken.SignatureString(),
 		Scope:     oauth2.Scope{},
 		ExpiresAt: time.Now().Add(time.Hour),
-	})
+	}
 
 	unknownRefreshToken := serverConfig.MustGenerate()
 	validRefreshToken := serverConfig.MustGenerate()
 	expiredRefreshToken := serverConfig.MustGenerate()
 
-	server.AddRefreshToken(&Credential{
+	server.RefreshTokens[validRefreshToken.SignatureString()] = &Credential{
 		ClientID:  "client1",
-		Signature: validRefreshToken.SignatureString(),
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(time.Hour),
-	})
+	}
 
-	server.AddRefreshToken(&Credential{
+	server.RefreshTokens[expiredRefreshToken.SignatureString()] = &Credential{
 		ClientID:  "client1",
-		Signature: expiredRefreshToken.SignatureString(),
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(-time.Hour),
-	})
+	}
 
 	unknownAuthorizationCode := serverConfig.MustGenerate()
 	expiredAuthorizationCode := serverConfig.MustGenerate()
 
-	server.AddAuthorizationCode(&Credential{
+	server.AuthorizationCodes[expiredAuthorizationCode.SignatureString()] = &Credential{
 		ClientID:  "client1",
-		Signature: expiredAuthorizationCode.SignatureString(),
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(-time.Hour),
-	})
+	}
 
 	handler := http.NewServeMux()
 	handler.Handle("/oauth2/", server)

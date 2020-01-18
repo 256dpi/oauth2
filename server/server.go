@@ -45,7 +45,6 @@ func (c Config) MustGenerate() *hmacsha.Token {
 
 // Entity represents a client or resource owner.
 type Entity struct {
-	ID           string
 	Secret       []byte
 	RedirectURI  string
 	Confidential bool
@@ -55,7 +54,6 @@ type Entity struct {
 type Credential struct {
 	ClientID    string
 	Username    string
-	Signature   string
 	ExpiresAt   time.Time
 	Scope       oauth2.Scope
 	RedirectURI string
@@ -66,88 +64,33 @@ type Credential struct {
 // Server implements a basic in-memory OAuth2 authentication server intended for
 // testing purposes.
 type Server struct {
-	config             Config
-	clients            map[string]*Entity
-	users              map[string]*Entity
-	accessTokens       map[string]*Credential
-	refreshTokens      map[string]*Credential
-	authorizationCodes map[string]*Credential
-	mutex              sync.Mutex
+	Config             Config
+	Clients            map[string]*Entity
+	Users              map[string]*Entity
+	AccessTokens       map[string]*Credential
+	RefreshTokens      map[string]*Credential
+	AuthorizationCodes map[string]*Credential
+	Mutex              sync.Mutex
 }
 
 // New creates and returns a new server.
 func New(config Config) *Server {
 	return &Server{
-		config:             config,
-		clients:            map[string]*Entity{},
-		users:              map[string]*Entity{},
-		accessTokens:       map[string]*Credential{},
-		refreshTokens:      map[string]*Credential{},
-		authorizationCodes: map[string]*Credential{},
+		Config:             config,
+		Clients:            map[string]*Entity{},
+		Users:              map[string]*Entity{},
+		AccessTokens:       map[string]*Credential{},
+		RefreshTokens:      map[string]*Credential{},
+		AuthorizationCodes: map[string]*Credential{},
 	}
-}
-
-// Config will return the used config.
-func (s *Server) Config() Config {
-	return s.config
-}
-
-// AddClient will add the provided client.
-func (s *Server) AddClient(client *Entity) {
-	// acquire mutex
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	// add client
-	s.clients[client.ID] = client
-}
-
-// AddUser will add the provided user.
-func (s *Server) AddUser(user *Entity) {
-	// acquire mutex
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	// add user
-	s.users[user.ID] = user
-}
-
-// AddAccessToken will add the provided access token.
-func (s *Server) AddAccessToken(token *Credential) {
-	// acquire mutex
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	// add access token
-	s.accessTokens[token.Signature] = token
-}
-
-// AddRefreshToken will add the provided refresh token.
-func (s *Server) AddRefreshToken(token *Credential) {
-	// acquire mutex
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	// add refresh token
-	s.refreshTokens[token.Signature] = token
-}
-
-// AddAuthorizationCode will add the provided authorization code.
-func (s *Server) AddAuthorizationCode(code *Credential) {
-	// acquire mutex
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	// add authorization code
-	s.authorizationCodes[code.Signature] = code
 }
 
 // Authorize will authorize the request and require a valid access token. An
 // error has already be written to the client if false is returned.
 func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required oauth2.Scope) bool {
 	// acquire mutex
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
 
 	// parse bearer token
 	tk, err := bearer.ParseToken(r)
@@ -157,14 +100,14 @@ func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required oaut
 	}
 
 	// parse token
-	token, err := hmacsha.Parse(s.config.Secret, tk)
+	token, err := hmacsha.Parse(s.Config.Secret, tk)
 	if err != nil {
 		_ = bearer.WriteError(w, bearer.InvalidToken("malformed token"))
 		return false
 	}
 
 	// get token
-	accessToken, found := s.accessTokens[token.SignatureString()]
+	accessToken, found := s.AccessTokens[token.SignatureString()]
 	if !found {
 		_ = bearer.WriteError(w, bearer.InvalidToken("unknown token"))
 		return false
@@ -189,8 +132,8 @@ func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required oaut
 // of the request URL.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// acquire mutex
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
 
 	// get path
 	path := strings.Trim(r.URL.Path, "/")
@@ -231,7 +174,7 @@ func (s *Server) authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get client
-	client, found := s.clients[req.ClientID]
+	client, found := s.Clients[req.ClientID]
 	if !found {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
@@ -265,20 +208,20 @@ func (s *Server) authorizationEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleImplicitGrant(w http.ResponseWriter, username, password string, rq *oauth2.AuthorizationRequest) {
 	// validate scope
-	if !s.config.AllowedScope.Includes(rq.Scope) {
+	if !s.Config.AllowedScope.Includes(rq.Scope) {
 		_ = oauth2.WriteError(w, oauth2.InvalidScope("").SetRedirect(rq.RedirectURI, rq.State, true))
 		return
 	}
 
 	// validate user credentials
-	owner, found := s.users[username]
+	owner, found := s.Users[username]
 	if !found || !SameHash(owner.Secret, password) {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, true))
 		return
 	}
 
 	// issue tokens
-	r := s.issueTokens(false, rq.Scope, rq.ClientID, owner.ID, "")
+	r := s.issueTokens(false, rq.Scope, rq.ClientID, username, "")
 
 	// redirect token
 	r.SetRedirect(rq.RedirectURI, rq.State)
@@ -289,30 +232,29 @@ func (s *Server) handleImplicitGrant(w http.ResponseWriter, username, password s
 
 func (s *Server) handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter, username, password string, rq *oauth2.AuthorizationRequest) {
 	// validate scope
-	if !s.config.AllowedScope.Includes(rq.Scope) {
+	if !s.Config.AllowedScope.Includes(rq.Scope) {
 		_ = oauth2.WriteError(w, oauth2.InvalidScope("").SetRedirect(rq.RedirectURI, rq.State, false))
 		return
 	}
 
 	// validate user credentials
-	owner, found := s.users[username]
+	owner, found := s.Users[username]
 	if !found || !SameHash(owner.Secret, password) {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, false))
 		return
 	}
 
 	// generate new authorization code
-	authorizationCode := s.config.MustGenerate()
+	authorizationCode := s.Config.MustGenerate()
 
 	// prepare response
 	r := oauth2.NewCodeResponse(authorizationCode.String(), rq.RedirectURI, rq.State)
 
 	// save authorization code
-	s.authorizationCodes[authorizationCode.SignatureString()] = &Credential{
+	s.AuthorizationCodes[authorizationCode.SignatureString()] = &Credential{
 		ClientID:    rq.ClientID,
-		Username:    owner.ID,
-		Signature:   authorizationCode.SignatureString(),
-		ExpiresAt:   time.Now().Add(s.config.AuthorizationCodeLifespan),
+		Username:    username,
+		ExpiresAt:   time.Now().Add(s.Config.AuthorizationCodeLifespan),
 		Scope:       rq.Scope,
 		RedirectURI: rq.RedirectURI,
 	}
@@ -336,7 +278,7 @@ func (s *Server) tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// find client
-	client, found := s.clients[req.ClientID]
+	client, found := s.Clients[req.ClientID]
 	if !found {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
@@ -363,14 +305,14 @@ func (s *Server) tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// authenticate resource owner
-	owner, found := s.users[rq.Username]
+	owner, found := s.Users[rq.Username]
 	if !found || !SameHash(owner.Secret, rq.Password) {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied(""))
 		return
 	}
 
 	// check scope
-	if !s.config.AllowedScope.Includes(rq.Scope) {
+	if !s.Config.AllowedScope.Includes(rq.Scope) {
 		_ = oauth2.WriteError(w, oauth2.InvalidScope(""))
 		return
 	}
@@ -384,13 +326,13 @@ func (s *Server) handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWrit
 
 func (s *Server) handleClientCredentialsGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// check client confidentiality
-	if !s.clients[rq.ClientID].Confidential {
+	if !s.Clients[rq.ClientID].Confidential {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
 
 	// check scope
-	if !s.config.AllowedScope.Includes(rq.Scope) {
+	if !s.Config.AllowedScope.Includes(rq.Scope) {
 		_ = oauth2.WriteError(w, oauth2.InvalidScope(""))
 		return
 	}
@@ -404,14 +346,14 @@ func (s *Server) handleClientCredentialsGrant(w http.ResponseWriter, rq *oauth2.
 
 func (s *Server) handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// parse authorization code
-	authorizationCode, err := hmacsha.Parse(s.config.Secret, rq.Code)
+	authorizationCode, err := hmacsha.Parse(s.Config.Secret, rq.Code)
 	if err != nil {
 		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
 	}
 
 	// get stored authorization code by signature
-	storedAuthorizationCode, found := s.authorizationCodes[authorizationCode.SignatureString()]
+	storedAuthorizationCode, found := s.AuthorizationCodes[authorizationCode.SignatureString()]
 	if !found {
 		_ = oauth2.WriteError(w, oauth2.InvalidGrant("unknown authorization code"))
 		return
@@ -420,16 +362,16 @@ func (s *Server) handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.
 	// check if used
 	if storedAuthorizationCode.Used {
 		// revoke all access tokens
-		for key, token := range s.accessTokens {
+		for key, token := range s.AccessTokens {
 			if token.Code == authorizationCode.SignatureString() {
-				delete(s.accessTokens, key)
+				delete(s.AccessTokens, key)
 			}
 		}
 
 		// revoke all refresh tokens
-		for key, token := range s.refreshTokens {
+		for key, token := range s.RefreshTokens {
 			if token.Code == authorizationCode.SignatureString() {
-				delete(s.refreshTokens, key)
+				delete(s.RefreshTokens, key)
 			}
 		}
 
@@ -467,14 +409,14 @@ func (s *Server) handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.
 
 func (s *Server) handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// parse refresh token
-	refreshToken, err := hmacsha.Parse(s.config.Secret, rq.RefreshToken)
+	refreshToken, err := hmacsha.Parse(s.Config.Secret, rq.RefreshToken)
 	if err != nil {
 		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
 	}
 
 	// get stored refresh token by signature
-	storedRefreshToken, found := s.refreshTokens[refreshToken.SignatureString()]
+	storedRefreshToken, found := s.RefreshTokens[refreshToken.SignatureString()]
 	if !found {
 		_ = oauth2.WriteError(w, oauth2.InvalidGrant("unknown refresh token"))
 		return
@@ -507,7 +449,7 @@ func (s *Server) handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.Token
 	r := s.issueTokens(true, rq.Scope, rq.ClientID, storedRefreshToken.Username, "")
 
 	// delete used refresh token
-	delete(s.refreshTokens, refreshToken.SignatureString())
+	delete(s.RefreshTokens, refreshToken.SignatureString())
 
 	// write response
 	_ = oauth2.WriteTokenResponse(w, r)
@@ -528,7 +470,7 @@ func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get client
-	client, found := s.clients[req.ClientID]
+	client, found := s.Clients[req.ClientID]
 	if !found {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
@@ -541,14 +483,14 @@ func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse token
-	token, err := hmacsha.Parse(s.config.Secret, req.Token)
+	token, err := hmacsha.Parse(s.Config.Secret, req.Token)
 	if err != nil {
 		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
 	}
 
 	// check access token
-	if accessToken, found := s.accessTokens[token.SignatureString()]; found {
+	if accessToken, found := s.AccessTokens[token.SignatureString()]; found {
 		// check owner
 		if accessToken.ClientID != req.ClientID {
 			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
@@ -556,11 +498,11 @@ func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// revoke token
-		s.revokeToken(client, s.accessTokens, token.SignatureString())
+		s.revokeToken(req.ClientID, s.AccessTokens, token.SignatureString())
 	}
 
 	// check refresh token
-	if refreshToken, found := s.refreshTokens[token.SignatureString()]; found {
+	if refreshToken, found := s.RefreshTokens[token.SignatureString()]; found {
 		// check owner
 		if refreshToken.ClientID != req.ClientID {
 			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
@@ -568,7 +510,7 @@ func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// revoke token
-		s.revokeToken(client, s.refreshTokens, token.SignatureString())
+		s.revokeToken(req.ClientID, s.RefreshTokens, token.SignatureString())
 	}
 
 	// write header
@@ -590,7 +532,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get client
-	client, found := s.clients[req.ClientID]
+	client, found := s.Clients[req.ClientID]
 	if !found {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
@@ -603,7 +545,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse token
-	token, err := hmacsha.Parse(s.config.Secret, req.Token)
+	token, err := hmacsha.Parse(s.Config.Secret, req.Token)
 	if err != nil {
 		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
@@ -613,7 +555,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	res := &introspection.Response{}
 
 	// check access token
-	if accessToken, found := s.accessTokens[token.SignatureString()]; found {
+	if accessToken, found := s.AccessTokens[token.SignatureString()]; found {
 		// check owner
 		if accessToken.ClientID != req.ClientID {
 			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
@@ -630,7 +572,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check refresh token
-	if refreshToken, found := s.refreshTokens[token.SignatureString()]; found {
+	if refreshToken, found := s.RefreshTokens[token.SignatureString()]; found {
 		// check owner
 		if refreshToken.ClientID != req.ClientID {
 			_ = oauth2.WriteError(w, oauth2.InvalidClient("wrong client"))
@@ -652,16 +594,16 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientID, username, code string) *oauth2.TokenResponse {
 	// generate access token
-	accessToken := s.config.MustGenerate()
+	accessToken := s.Config.MustGenerate()
 
 	// generate refresh token if requested
 	var refreshToken *hmacsha.Token
 	if issueRefreshToken {
-		refreshToken = s.config.MustGenerate()
+		refreshToken = s.Config.MustGenerate()
 	}
 
 	// prepare response
-	r := bearer.NewTokenResponse(accessToken.String(), int(s.config.AccessTokenLifespan/time.Second))
+	r := bearer.NewTokenResponse(accessToken.String(), int(s.Config.AccessTokenLifespan/time.Second))
 
 	// set granted scope
 	r.Scope = scope
@@ -672,22 +614,20 @@ func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientI
 	}
 
 	// save access token
-	s.accessTokens[accessToken.SignatureString()] = &Credential{
+	s.AccessTokens[accessToken.SignatureString()] = &Credential{
 		ClientID:  clientID,
 		Username:  username,
-		Signature: accessToken.SignatureString(),
-		ExpiresAt: time.Now().Add(s.config.AccessTokenLifespan),
+		ExpiresAt: time.Now().Add(s.Config.AccessTokenLifespan),
 		Scope:     scope,
 		Code:      code,
 	}
 
 	// save refresh token if available
 	if refreshToken != nil {
-		s.refreshTokens[refreshToken.SignatureString()] = &Credential{
+		s.RefreshTokens[refreshToken.SignatureString()] = &Credential{
 			ClientID:  clientID,
 			Username:  username,
-			Signature: refreshToken.SignatureString(),
-			ExpiresAt: time.Now().Add(s.config.RefreshTokenLifespan),
+			ExpiresAt: time.Now().Add(s.Config.RefreshTokenLifespan),
 			Scope:     scope,
 			Code:      code,
 		}
@@ -696,7 +636,7 @@ func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientI
 	return r
 }
 
-func (s *Server) revokeToken(client *Entity, list map[string]*Credential, signature string) {
+func (s *Server) revokeToken(clientID string, list map[string]*Credential, signature string) {
 	// get token
 	token, ok := list[signature]
 	if !ok {
@@ -704,7 +644,7 @@ func (s *Server) revokeToken(client *Entity, list map[string]*Credential, signat
 	}
 
 	// check client id
-	if token.ClientID != client.ID {
+	if token.ClientID != clientID {
 		return
 	}
 

@@ -15,7 +15,7 @@ import (
 )
 
 func TestClientError(t *testing.T) {
-	withServer(func(base string, src *server.Server) {
+	withServer(func(base string, srv *server.Server) {
 		client := New(Config{
 			BaseURI:       base,
 			TokenEndpoint: "/foo",
@@ -39,26 +39,23 @@ func TestClientAuthenticate(t *testing.T) {
 	withServer(func(base string, srv *server.Server) {
 		client := New(Default(base))
 
-		srv.AddClient(&server.Entity{
-			ID:           "c1",
+		srv.Clients["c1"] = &server.Entity{
 			Secret:       server.MustHash("secret"),
 			Confidential: true,
-		})
+		}
 
-		srv.AddUser(&server.Entity{
-			ID:           "u1",
+		srv.Users["u1"] = &server.Entity{
 			Secret:       server.MustHash("secret"),
 			Confidential: true,
-		})
+		}
 
-		authorizationCode := srv.Config().MustGenerate()
+		authorizationCode := srv.Config.MustGenerate()
 
-		srv.AddAuthorizationCode(&server.Credential{
+		srv.AuthorizationCodes[authorizationCode.SignatureString()] = &server.Credential{
 			ClientID:  "c1",
 			Username:  "ui",
-			Signature: authorizationCode.SignatureString(),
 			ExpiresAt: time.Now().Add(time.Hour),
-		})
+		}
 
 		// unknown client
 		trs, err := client.Authenticate(oauth2.TokenRequest{
@@ -146,11 +143,10 @@ func TestClientIntrospect(t *testing.T) {
 	withServer(func(base string, srv *server.Server) {
 		client := New(Default(base))
 
-		srv.AddClient(&server.Entity{
-			ID:           "c1",
+		srv.Clients["c1"] = &server.Entity{
 			Secret:       server.MustHash("secret"),
 			Confidential: true,
-		})
+		}
 
 		trs, err := client.Authenticate(oauth2.TokenRequest{
 			GrantType:    oauth2.ClientCredentialsGrantType,
@@ -174,7 +170,7 @@ func TestClientIntrospect(t *testing.T) {
 
 		// unknown token
 		irs, err = client.Introspect(introspection.Request{
-			Token:        srv.Config().MustGenerate().String(),
+			Token:        srv.Config.MustGenerate().String(),
 			ClientID:     "c1",
 			ClientSecret: "secret",
 		})
@@ -211,11 +207,10 @@ func TestClientRevoke(t *testing.T) {
 	withServer(func(base string, srv *server.Server) {
 		client := New(Default(base))
 
-		srv.AddClient(&server.Entity{
-			ID:           "c1",
+		srv.Clients["c1"] = &server.Entity{
 			Secret:       server.MustHash("secret"),
 			Confidential: true,
-		})
+		}
 
 		trs, err := client.Authenticate(oauth2.TokenRequest{
 			GrantType:    oauth2.ClientCredentialsGrantType,
@@ -238,7 +233,7 @@ func TestClientRevoke(t *testing.T) {
 
 		// unknown token
 		err = client.Revoke(revocation.Request{
-			Token:        srv.Config().MustGenerate().String(),
+			Token:        srv.Config.MustGenerate().String(),
 			ClientID:     "c1",
 			ClientSecret: "secret",
 		})
