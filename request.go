@@ -17,8 +17,6 @@ type TokenRequest struct {
 	RefreshToken string
 	RedirectURI  string
 	Code         string
-
-	HTTP *http.Request
 }
 
 // ParseTokenRequest parses an incoming request and returns a TokenRequest.
@@ -87,7 +85,6 @@ func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 		RefreshToken: refreshToken,
 		RedirectURI:  redirectURIString,
 		Code:         code,
-		HTTP:         r,
 	}, nil
 }
 
@@ -99,8 +96,6 @@ type AuthorizationRequest struct {
 	ClientID     string
 	RedirectURI  string
 	State        string
-
-	HTTP *http.Request
 }
 
 // ParseAuthorizationRequest parses an incoming request and returns an
@@ -154,6 +149,5 @@ func ParseAuthorizationRequest(r *http.Request) (*AuthorizationRequest, error) {
 		ClientID:     clientID,
 		RedirectURI:  redirectURIString,
 		State:        state,
-		HTTP:         r,
 	}, nil
 }

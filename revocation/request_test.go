@@ -33,7 +33,6 @@ func TestParseRequestMinimal(t *testing.T) {
 	assert.Equal(t, "", req.TokenTypeHint)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "", req.ClientSecret)
-	assert.Equal(t, r, req.HTTP)
 }
 
 func TestParseRequestFull(t *testing.T) {
@@ -48,7 +47,6 @@ func TestParseRequestFull(t *testing.T) {
 	assert.Equal(t, "refresh_token", req.TokenTypeHint)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "bar", req.ClientSecret)
-	assert.Equal(t, r, req.HTTP)
 }
 
 func TestParseRequestErrors(t *testing.T) {

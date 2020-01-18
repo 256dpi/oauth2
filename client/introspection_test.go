@@ -38,6 +38,5 @@ func TestIntrospectionRequestBuild(t *testing.T) {
 
 	rr2, err := introspection.ParseRequest(req)
 	assert.NoError(t, err)
-	rr2.HTTP = nil
 	assert.Equal(t, rr1, *rr2)
 }

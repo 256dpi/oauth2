@@ -53,6 +53,5 @@ func TestTokenRequestBuild(t *testing.T) {
 
 	tr2, err := oauth2.ParseTokenRequest(req)
 	assert.NoError(t, err)
-	tr2.HTTP = nil
 	assert.Equal(t, tr1, *tr2)
 }
