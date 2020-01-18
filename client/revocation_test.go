@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/256dpi/oauth2/revocation"
+	"github.com/256dpi/oauth2"
 )
 
 func TestRevocationRequestValues(t *testing.T) {
-	rr := revocation.Request{}
+	rr := oauth2.RevocationRequest{}
 	assert.Equal(t, url.Values{}, RevocationRequestValues(rr))
 
-	rr = revocation.Request{
+	rr = oauth2.RevocationRequest{
 		Token:         "token",
 		TokenTypeHint: "hint",
 		ClientID:      "client-id",
@@ -26,7 +26,7 @@ func TestRevocationRequestValues(t *testing.T) {
 }
 
 func TestRevocationRequestBuild(t *testing.T) {
-	rr1 := revocation.Request{
+	rr1 := oauth2.RevocationRequest{
 		Token:         "token",
 		TokenTypeHint: "hint",
 		ClientID:      "client-id",
@@ -36,7 +36,7 @@ func TestRevocationRequestBuild(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "http://auth.server/revoke", req.URL.String())
 
-	rr2, err := revocation.ParseRequest(req)
+	rr2, err := oauth2.ParseRevocationRequest(req)
 	assert.NoError(t, err)
 	assert.Equal(t, rr1, *rr2)
 }

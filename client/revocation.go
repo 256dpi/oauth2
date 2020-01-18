@@ -5,11 +5,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/256dpi/oauth2/revocation"
+	"github.com/256dpi/oauth2"
 )
 
 // RevocationRequestValues will return the form values for the provided request.
-func RevocationRequestValues(r revocation.Request) url.Values {
+func RevocationRequestValues(r oauth2.RevocationRequest) url.Values {
 	// prepare slice
 	slice := []string{
 		r.Token,
@@ -33,7 +33,7 @@ func RevocationRequestValues(r revocation.Request) url.Values {
 }
 
 // BuildRevocationRequest will build the provided request.
-func BuildRevocationRequest(uri string, r revocation.Request) (*http.Request, error) {
+func BuildRevocationRequest(uri string, r oauth2.RevocationRequest) (*http.Request, error) {
 	// prepare body
 	body := strings.NewReader(RevocationRequestValues(r).Encode())
 

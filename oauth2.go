@@ -50,6 +50,24 @@ func KnownResponseType(str string) bool {
 	return false
 }
 
+// The known OAuth2 token types.
+const (
+	AccessToken  = "access_token"
+	RefreshToken = "refresh_token"
+)
+
+// KnownTokenType returns true if the token type is a known token type
+// (e.g. access token or refresh token).
+func KnownTokenType(str string) bool {
+	switch str {
+	case AccessToken,
+		RefreshToken:
+		return true
+	}
+
+	return false
+}
+
 // Write will encode the specified object as json and write a response to the
 // response writer as specified by the OAuth2 spec.
 func Write(w http.ResponseWriter, obj interface{}, status int) error {

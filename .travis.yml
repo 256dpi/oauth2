@@ -13,8 +13,6 @@ script:
   - go test -coverprofile=bearer.coverprofile ./bearer
   - go test -coverprofile=client.coverprofile ./client
   - go test -coverprofile=hmacsha.coverprofile ./hmacsha
-  - go test -coverprofile=introspection.coverprofile ./introspection
-  - go test -coverprofile=revocation.coverprofile ./revocation
   - go test -coverprofile=server.coverprofile ./server
   - go test -coverprofile=spec.coverprofile ./spec
   - $HOME/gopath/bin/gover

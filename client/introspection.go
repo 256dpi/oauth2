@@ -8,11 +8,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/256dpi/oauth2/introspection"
+	"github.com/256dpi/oauth2"
 )
 
 // IntrospectionRequestValues will return the form values for the provided request.
-func IntrospectionRequestValues(r introspection.Request) url.Values {
+func IntrospectionRequestValues(r oauth2.IntrospectionRequest) url.Values {
 	// prepare slice
 	slice := []string{
 		r.Token,
@@ -36,7 +36,7 @@ func IntrospectionRequestValues(r introspection.Request) url.Values {
 }
 
 // BuildIntrospectionRequest will build the provided request.
-func BuildIntrospectionRequest(uri string, r introspection.Request) (*http.Request, error) {
+func BuildIntrospectionRequest(uri string, r oauth2.IntrospectionRequest) (*http.Request, error) {
 	// prepare body
 	body := strings.NewReader(IntrospectionRequestValues(r).Encode())
 
@@ -58,7 +58,7 @@ func BuildIntrospectionRequest(uri string, r introspection.Request) (*http.Reque
 }
 
 // ParseIntrospectionResponse will parse the provided response.
-func ParseIntrospectionResponse(res *http.Response) (*introspection.Response, error) {
+func ParseIntrospectionResponse(res *http.Response) (*oauth2.IntrospectionResponse, error) {
 	// read response
 	data, err := readAll(res, 1024)
 	if err != nil {
@@ -77,7 +77,7 @@ func ParseIntrospectionResponse(res *http.Response) (*introspection.Response, er
 	}
 
 	// decode introspection response
-	var irs introspection.Response
+	var irs oauth2.IntrospectionResponse
 	err = json.Unmarshal(data, &irs)
 	if err != nil {
 		return nil, err

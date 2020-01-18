@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/256dpi/oauth2/introspection"
+	"github.com/256dpi/oauth2"
 )
 
 func TestIntrospectionRequestValues(t *testing.T) {
-	rr := introspection.Request{}
+	rr := oauth2.IntrospectionRequest{}
 	assert.Equal(t, url.Values{}, IntrospectionRequestValues(rr))
 
-	rr = introspection.Request{
+	rr = oauth2.IntrospectionRequest{
 		Token:         "token",
 		TokenTypeHint: "hint",
 		ClientID:      "client-id",
@@ -26,7 +26,7 @@ func TestIntrospectionRequestValues(t *testing.T) {
 }
 
 func TestIntrospectionRequestBuild(t *testing.T) {
-	rr1 := introspection.Request{
+	rr1 := oauth2.IntrospectionRequest{
 		Token:         "token",
 		TokenTypeHint: "hint",
 		ClientID:      "client-id",
@@ -36,7 +36,7 @@ func TestIntrospectionRequestBuild(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "http://auth.server/introspect", req.URL.String())
 
-	rr2, err := introspection.ParseRequest(req)
+	rr2, err := oauth2.ParseIntrospectionRequest(req)
 	assert.NoError(t, err)
 	assert.Equal(t, rr1, *rr2)
 }

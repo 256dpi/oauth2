@@ -147,6 +147,16 @@ func UnsupportedResponseType(description string) *Error {
 	}
 }
 
+// UnsupportedTokenType constructs an error that indicates that the authorization
+// server does not support the introspection of the presented token type.
+func UnsupportedTokenType(description string) *Error {
+	return &Error{
+		Status:      http.StatusBadRequest,
+		Name:        "unsupported_token_type",
+		Description: description,
+	}
+}
+
 // AccessDenied constructs an error that indicates that the resource owner or
 // authorization server denied the request.
 func AccessDenied(description string) *Error {

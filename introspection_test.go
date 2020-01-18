@@ -1,7 +1,8 @@
-package revocation
+package oauth2
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,12 +23,12 @@ func TestKnownTokenType(t *testing.T) {
 	}
 }
 
-func TestParseRequestMinimal(t *testing.T) {
+func TestParseIntrospectionRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
 		"token": "foo",
 	})
 
-	req, err := ParseRequest(r)
+	req, err := ParseIntrospectionRequest(r)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", req.Token)
 	assert.Equal(t, "", req.TokenTypeHint)
@@ -35,13 +36,13 @@ func TestParseRequestMinimal(t *testing.T) {
 	assert.Equal(t, "", req.ClientSecret)
 }
 
-func TestParseRequestFull(t *testing.T) {
+func TestParseIntrospectionRequestFull(t *testing.T) {
 	r := newRequestWithAuth("foo", "bar", map[string]string{
 		"token":           "foo",
 		"token_type_hint": RefreshToken,
 	})
 
-	req, err := ParseRequest(r)
+	req, err := ParseIntrospectionRequest(r)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", req.Token)
 	assert.Equal(t, "refresh_token", req.TokenTypeHint)
@@ -49,7 +50,7 @@ func TestParseRequestFull(t *testing.T) {
 	assert.Equal(t, "bar", req.ClientSecret)
 }
 
-func TestParseRequestErrors(t *testing.T) {
+func TestParseIntrospectionRequestErrors(t *testing.T) {
 	r1, _ := http.NewRequest("GET", "", nil)
 	r2, _ := http.NewRequest("POST", "", nil)
 
@@ -78,18 +79,53 @@ func TestParseRequestErrors(t *testing.T) {
 	}
 
 	for _, i := range matrix {
-		req, err := ParseRequest(i.r)
+		req, err := ParseIntrospectionRequest(i.r)
 		assert.Nil(t, req)
 		assert.Error(t, err)
 		assert.Equal(t, i.e, err.Error())
 	}
 }
 
-func TestUnsupportedTokenType(t *testing.T) {
-	i := UnsupportedTokenType("foo")
+func TestWriteIntrospectionResponse(t *testing.T) {
+	res := NewIntrospectionResponse(true, "foo", "bar", "baz", "quz")
 
-	assert.Equal(t, "unsupported_token_type", i.Name)
-	assert.Equal(t, http.StatusBadRequest, i.Status)
-	assert.Equal(t, "", i.State)
-	assert.Equal(t, "foo", i.Description)
+	rec := httptest.NewRecorder()
+
+	err := WriteIntrospectionResponse(rec, res)
+	assert.Error(t, err)
+	assert.Equal(t, "unknown token type", err.Error())
+
+	res.TokenType = AccessToken
+
+	err = WriteIntrospectionResponse(rec, res)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, http.Header{
+		"Cache-Control": {"no-store"},
+		"Content-Type":  {"application/json;charset=UTF-8"},
+		"Pragma":        {"no-cache"},
+	}, rec.Header())
+	assert.JSONEq(t, `{
+		"active": true,
+		"scope": "foo",
+		"client_id": "bar",
+		"username": "baz",
+		"token_type": "access_token"
+	}`, rec.Body.String())
+
+	res = &IntrospectionResponse{}
+
+	rec = httptest.NewRecorder()
+
+	err = WriteIntrospectionResponse(rec, res)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, http.Header{
+		"Cache-Control": {"no-store"},
+		"Content-Type":  {"application/json;charset=UTF-8"},
+		"Pragma":        {"no-cache"},
+	}, rec.Header())
+	assert.JSONEq(t, `{
+		"active": false
+	}`, rec.Body.String())
 }

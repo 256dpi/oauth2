@@ -1,4 +1,4 @@
-package introspection
+package oauth2
 
 import (
 	"net/http"
@@ -7,27 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestKnownTokenType(t *testing.T) {
-	matrix := []struct {
-		gt string
-		kn bool
-	}{
-		{"foo", false},
-		{RefreshToken, true},
-		{AccessToken, true},
-	}
-
-	for _, i := range matrix {
-		assert.Equal(t, i.kn, KnownTokenType(i.gt))
-	}
-}
-
 func TestParseRequestMinimal(t *testing.T) {
 	r := newRequestWithAuth("foo", "", map[string]string{
 		"token": "foo",
 	})
 
-	req, err := ParseRequest(r)
+	req, err := ParseRevocationRequest(r)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", req.Token)
 	assert.Equal(t, "", req.TokenTypeHint)
@@ -41,7 +26,7 @@ func TestParseRequestFull(t *testing.T) {
 		"token_type_hint": RefreshToken,
 	})
 
-	req, err := ParseRequest(r)
+	req, err := ParseRevocationRequest(r)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", req.Token)
 	assert.Equal(t, "refresh_token", req.TokenTypeHint)
@@ -78,7 +63,7 @@ func TestParseRequestErrors(t *testing.T) {
 	}
 
 	for _, i := range matrix {
-		req, err := ParseRequest(i.r)
+		req, err := ParseRevocationRequest(i.r)
 		assert.Nil(t, req)
 		assert.Error(t, err)
 		assert.Equal(t, i.e, err.Error())

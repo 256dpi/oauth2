@@ -9,8 +9,6 @@ import (
 
 	"github.com/256dpi/oauth2"
 	"github.com/256dpi/oauth2/bearer"
-	"github.com/256dpi/oauth2/introspection"
-	"github.com/256dpi/oauth2/revocation"
 	"github.com/256dpi/oauth2/server"
 )
 
@@ -156,7 +154,7 @@ func TestClientIntrospect(t *testing.T) {
 		assert.NoError(t, err)
 
 		// invalid token
-		irs, err := client.Introspect(introspection.Request{
+		irs, err := client.Introspect(oauth2.IntrospectionRequest{
 			Token:        "foo",
 			ClientID:     "c1",
 			ClientSecret: "secret",
@@ -169,7 +167,7 @@ func TestClientIntrospect(t *testing.T) {
 		assert.Nil(t, irs)
 
 		// unknown token
-		irs, err = client.Introspect(introspection.Request{
+		irs, err = client.Introspect(oauth2.IntrospectionRequest{
 			Token:        srv.Config.MustGenerate().String(),
 			ClientID:     "c1",
 			ClientSecret: "secret",
@@ -178,7 +176,7 @@ func TestClientIntrospect(t *testing.T) {
 		assert.False(t, irs.Active)
 
 		// access token
-		irs, err = client.Introspect(introspection.Request{
+		irs, err = client.Introspect(oauth2.IntrospectionRequest{
 			Token:        trs.AccessToken,
 			ClientID:     "c1",
 			ClientSecret: "secret",
@@ -190,7 +188,7 @@ func TestClientIntrospect(t *testing.T) {
 		assert.NotZero(t, irs.ExpiresAt)
 
 		// refresh token
-		irs, err = client.Introspect(introspection.Request{
+		irs, err = client.Introspect(oauth2.IntrospectionRequest{
 			Token:        trs.RefreshToken,
 			ClientID:     "c1",
 			ClientSecret: "secret",
@@ -220,7 +218,7 @@ func TestClientRevoke(t *testing.T) {
 		assert.NoError(t, err)
 
 		// invalid token
-		err = client.Revoke(revocation.Request{
+		err = client.Revoke(oauth2.RevocationRequest{
 			Token:        "foo",
 			ClientID:     "c1",
 			ClientSecret: "secret",
@@ -232,7 +230,7 @@ func TestClientRevoke(t *testing.T) {
 		}, err)
 
 		// unknown token
-		err = client.Revoke(revocation.Request{
+		err = client.Revoke(oauth2.RevocationRequest{
 			Token:        srv.Config.MustGenerate().String(),
 			ClientID:     "c1",
 			ClientSecret: "secret",
@@ -240,7 +238,7 @@ func TestClientRevoke(t *testing.T) {
 		assert.NoError(t, err)
 
 		// access token
-		err = client.Revoke(revocation.Request{
+		err = client.Revoke(oauth2.RevocationRequest{
 			Token:        trs.AccessToken,
 			ClientID:     "c1",
 			ClientSecret: "secret",
@@ -248,7 +246,7 @@ func TestClientRevoke(t *testing.T) {
 		assert.NoError(t, err)
 
 		// refresh token
-		err = client.Revoke(revocation.Request{
+		err = client.Revoke(oauth2.RevocationRequest{
 			Token:        trs.RefreshToken,
 			ClientID:     "c1",
 			ClientSecret: "secret",

@@ -12,8 +12,6 @@ import (
 	"github.com/256dpi/oauth2"
 	"github.com/256dpi/oauth2/bearer"
 	"github.com/256dpi/oauth2/hmacsha"
-	"github.com/256dpi/oauth2/introspection"
-	"github.com/256dpi/oauth2/revocation"
 )
 
 // Config is used to configure a server.
@@ -457,15 +455,15 @@ func (s *Server) handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.Token
 
 func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse authorization request
-	req, err := revocation.ParseRequest(r)
+	req, err := oauth2.ParseRevocationRequest(r)
 	if err != nil {
 		_ = oauth2.WriteError(w, err)
 		return
 	}
 
 	// check token type hint
-	if req.TokenTypeHint != "" && !revocation.KnownTokenType(req.TokenTypeHint) {
-		_ = oauth2.WriteError(w, revocation.UnsupportedTokenType(""))
+	if req.TokenTypeHint != "" && !oauth2.KnownTokenType(req.TokenTypeHint) {
+		_ = oauth2.WriteError(w, oauth2.UnsupportedTokenType(""))
 		return
 	}
 
@@ -519,15 +517,15 @@ func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	// parse authorization request
-	req, err := introspection.ParseRequest(r)
+	req, err := oauth2.ParseIntrospectionRequest(r)
 	if err != nil {
 		_ = oauth2.WriteError(w, err)
 		return
 	}
 
 	// check token type hint
-	if req.TokenTypeHint != "" && !introspection.KnownTokenType(req.TokenTypeHint) {
-		_ = oauth2.WriteError(w, introspection.UnsupportedTokenType(""))
+	if req.TokenTypeHint != "" && !oauth2.KnownTokenType(req.TokenTypeHint) {
+		_ = oauth2.WriteError(w, oauth2.UnsupportedTokenType(""))
 		return
 	}
 
@@ -552,7 +550,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// prepare response
-	res := &introspection.Response{}
+	res := &oauth2.IntrospectionResponse{}
 
 	// check access token
 	if accessToken, found := s.AccessTokens[token.SignatureString()]; found {
@@ -567,7 +565,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 		res.Scope = accessToken.Scope.String()
 		res.ClientID = accessToken.ClientID
 		res.Username = accessToken.Username
-		res.TokenType = introspection.AccessToken
+		res.TokenType = oauth2.AccessToken
 		res.ExpiresAt = accessToken.ExpiresAt.Unix()
 	}
 
@@ -584,12 +582,12 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 		res.Scope = refreshToken.Scope.String()
 		res.ClientID = refreshToken.ClientID
 		res.Username = refreshToken.Username
-		res.TokenType = introspection.RefreshToken
+		res.TokenType = oauth2.RefreshToken
 		res.ExpiresAt = refreshToken.ExpiresAt.Unix()
 	}
 
 	// write response
-	_ = introspection.WriteResponse(w, res)
+	_ = oauth2.WriteIntrospectionResponse(w, res)
 }
 
 func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientID, username, code string) *oauth2.TokenResponse {

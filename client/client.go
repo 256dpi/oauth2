@@ -6,8 +6,6 @@ import (
 	"net/http"
 
 	"github.com/256dpi/oauth2"
-	"github.com/256dpi/oauth2/introspection"
-	"github.com/256dpi/oauth2/revocation"
 )
 
 // Config is used to configure a client.
@@ -75,7 +73,7 @@ func (c *Client) Authenticate(trq oauth2.TokenRequest) (*oauth2.TokenResponse, e
 
 // Introspect will send the provided introspection request and return the servers
 // response of an error if failed.
-func (c *Client) Introspect(irq introspection.Request) (*introspection.Response, error) {
+func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.IntrospectionResponse, error) {
 	// prepare endpoint
 	endpoint := c.config.BaseURI + c.config.IntrospectionEndpoint
 
@@ -107,7 +105,7 @@ func (c *Client) Introspect(irq introspection.Request) (*introspection.Response,
 
 // Revoke will send the provided revocation request and return and error if it
 // failed.
-func (c *Client) Revoke(rrq revocation.Request) error {
+func (c *Client) Revoke(rrq oauth2.RevocationRequest) error {
 	// prepare endpoint
 	endpoint := c.config.BaseURI + c.config.RevocationEndpoint
 
