@@ -10,7 +10,6 @@ install:
   - go get -t ./...
 script:
   - go test -coverprofile=oauth2.coverprofile
-  - go test -coverprofile=bearer.coverprofile ./bearer
   - go test -coverprofile=client.coverprofile ./client
   - go test -coverprofile=hmacsha.coverprofile ./hmacsha
   - go test -coverprofile=server.coverprofile ./server

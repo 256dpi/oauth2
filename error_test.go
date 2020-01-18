@@ -19,9 +19,13 @@ func TestErrorBuilders(t *testing.T) {
 		{InvalidClient("foo"), "invalid_client", http.StatusUnauthorized},
 		{InvalidGrant("foo"), "invalid_grant", http.StatusBadRequest},
 		{InvalidScope("foo"), "invalid_scope", http.StatusBadRequest},
+		{InvalidToken("foo"), "invalid_token", http.StatusUnauthorized},
 		{UnauthorizedClient("foo"), "unauthorized_client", http.StatusBadRequest},
 		{UnsupportedGrantType("foo"), "unsupported_grant_type", http.StatusBadRequest},
 		{UnsupportedResponseType("foo"), "unsupported_response_type", http.StatusBadRequest},
+		{UnsupportedTokenType("foo"), "unsupported_token_type", http.StatusBadRequest},
+		{ProtectedResource(), "", http.StatusUnauthorized},
+		{InsufficientScope("foo"), "insufficient_scope", http.StatusForbidden},
 		{AccessDenied("foo"), "access_denied", http.StatusForbidden},
 		{ServerError("foo"), "server_error", http.StatusInternalServerError},
 		{TemporarilyUnavailable("foo"), "temporarily_unavailable", http.StatusServiceUnavailable},
@@ -30,7 +34,6 @@ func TestErrorBuilders(t *testing.T) {
 	for _, i := range matrix {
 		assert.Equal(t, i.sta, i.err.Status, i.err.Name)
 		assert.Equal(t, i.cde, i.err.Name, i.err.Name)
-		assert.Equal(t, "foo", i.err.Description, i.err.Name)
 	}
 }
 
@@ -54,6 +57,26 @@ func TestErrorMap(t *testing.T) {
 		"error_description": "foo",
 		"error_uri":         "http://example.com",
 	}, err.Map())
+}
+
+func TestBearerErrorMap(t *testing.T) {
+	err := InvalidRequest("")
+	err.Realm = "bar"
+	err.Scope = "baz"
+
+	assert.Equal(t, map[string]string{
+		"error": "invalid_request",
+		"realm": "bar",
+		"scope": "baz",
+	}, err.Map())
+}
+
+func TestBearerErrorParams(t *testing.T) {
+	err := InvalidRequest("")
+	err.Realm = "bar"
+	err.Scope = "baz"
+
+	assert.Equal(t, `error="invalid_request", realm="bar", scope="baz"`, err.Params())
 }
 
 func TestWriteError(t *testing.T) {

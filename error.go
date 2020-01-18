@@ -3,6 +3,8 @@ package oauth2
 import (
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
 )
 
 // An Error represents an error object defined by the OAuth2 specification. All
@@ -11,6 +13,8 @@ import (
 type Error struct {
 	Name        string `json:"error"`
 	State       string `json:"state,omitempty"`
+	Scope       string `json:"scope,omitempty"`
+	Realm       string `json:"realm,omitempty"`
 	Description string `json:"error_description,omitempty"`
 	URI         string `json:"error_uri,omitempty"`
 
@@ -48,7 +52,9 @@ func (e *Error) Map() map[string]string {
 	m := make(map[string]string)
 
 	// add name
-	m["error"] = e.Name
+	if e.Name != "" {
+		m["error"] = e.Name
+	}
 
 	// add description
 	if e.Description != "" {
@@ -60,12 +66,38 @@ func (e *Error) Map() map[string]string {
 		m["state"] = e.State
 	}
 
+	// add scope if present
+	if e.Scope != "" {
+		m["scope"] = e.Scope
+	}
+
 	// add uri
 	if e.URI != "" {
 		m["error_uri"] = e.URI
 	}
 
+	// add realm if present
+	if e.Realm != "" {
+		m["realm"] = e.Realm
+	}
+
 	return m
+}
+
+// Params returns an string encoded representation of the error parameters.
+func (e *Error) Params() string {
+	// prepare params
+	var params []string
+
+	// add all params
+	for k, v := range e.Map() {
+		params = append(params, fmt.Sprintf(`%s="%s"`, k, v))
+	}
+
+	// sort params
+	sort.Strings(params)
+
+	return strings.Join(params, ", ")
 }
 
 // InvalidRequest constructs an error that indicates that the request is missing
@@ -115,6 +147,17 @@ func InvalidScope(description string) *Error {
 	}
 }
 
+// InvalidToken constructs and error that indicates that the access token
+// provided is expired, revoked, malformed, or invalid for
+// other reasons.
+func InvalidToken(description string) *Error {
+	return &Error{
+		Status:      http.StatusUnauthorized,
+		Name:        "invalid_token",
+		Description: description,
+	}
+}
+
 // UnauthorizedClient constructs an error that indicates that the authenticated
 // client is not authorized to use this authorization grant type or method to
 // request and access token.
@@ -154,6 +197,24 @@ func UnsupportedTokenType(description string) *Error {
 		Status:      http.StatusBadRequest,
 		Name:        "unsupported_token_type",
 		Description: description,
+	}
+}
+
+// ProtectedResource constructs and error that indicates that the requested
+// resource needs authentication.
+func ProtectedResource() *Error {
+	return &Error{
+		Status: http.StatusUnauthorized,
+	}
+}
+
+// InsufficientScope constructs and error that indicates that the request
+// requires higher privileges than provided by the access token.
+func InsufficientScope(necessaryScope string) *Error {
+	return &Error{
+		Status: http.StatusForbidden,
+		Name:   "insufficient_scope",
+		Scope:  necessaryScope,
 	}
 }
 

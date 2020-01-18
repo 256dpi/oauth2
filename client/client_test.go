@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/256dpi/oauth2"
-	"github.com/256dpi/oauth2/bearer"
 	"github.com/256dpi/oauth2/server"
 )
 
@@ -75,7 +74,7 @@ func TestClientAuthenticate(t *testing.T) {
 			ClientSecret: "secret",
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, bearer.TokenType, trs.TokenType)
+		assert.Equal(t, oauth2.BearerTokenType, trs.TokenType)
 		assert.NotEmpty(t, trs.AccessToken)
 		assert.NotEmpty(t, trs.RefreshToken)
 		assert.NotZero(t, trs.ExpiresIn)
@@ -103,7 +102,7 @@ func TestClientAuthenticate(t *testing.T) {
 			Password:     "secret",
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, bearer.TokenType, trs.TokenType)
+		assert.Equal(t, oauth2.BearerTokenType, trs.TokenType)
 		assert.NotEmpty(t, trs.AccessToken)
 		assert.NotEmpty(t, trs.RefreshToken)
 		assert.NotZero(t, trs.ExpiresIn)
@@ -130,7 +129,7 @@ func TestClientAuthenticate(t *testing.T) {
 			Code:         authorizationCode.String(),
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, bearer.TokenType, trs.TokenType)
+		assert.Equal(t, oauth2.BearerTokenType, trs.TokenType)
 		assert.NotEmpty(t, trs.AccessToken)
 		assert.NotEmpty(t, trs.RefreshToken)
 		assert.NotZero(t, trs.ExpiresIn)

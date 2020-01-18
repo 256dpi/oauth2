@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/256dpi/oauth2"
-	"github.com/256dpi/oauth2/bearer"
 	"github.com/256dpi/oauth2/hmacsha"
 )
 
@@ -91,35 +90,35 @@ func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required oaut
 	defer s.Mutex.Unlock()
 
 	// parse bearer token
-	tk, err := bearer.ParseToken(r)
+	tk, err := oauth2.ParseBearerToken(r)
 	if err != nil {
-		_ = bearer.WriteError(w, err)
+		_ = oauth2.WriteBearerError(w, err)
 		return false
 	}
 
 	// parse token
 	token, err := hmacsha.Parse(s.Config.Secret, tk)
 	if err != nil {
-		_ = bearer.WriteError(w, bearer.InvalidToken("malformed token"))
+		_ = oauth2.WriteBearerError(w, oauth2.InvalidToken("malformed token"))
 		return false
 	}
 
 	// get token
 	accessToken, found := s.AccessTokens[token.SignatureString()]
 	if !found {
-		_ = bearer.WriteError(w, bearer.InvalidToken("unknown token"))
+		_ = oauth2.WriteBearerError(w, oauth2.InvalidToken("unknown token"))
 		return false
 	}
 
 	// validate expiration
 	if accessToken.ExpiresAt.Before(time.Now()) {
-		_ = bearer.WriteError(w, bearer.InvalidToken("expired token"))
+		_ = oauth2.WriteBearerError(w, oauth2.InvalidToken("expired token"))
 		return false
 	}
 
 	// validate scope
 	if !accessToken.Scope.Includes(required) {
-		_ = bearer.WriteError(w, bearer.InsufficientScope(required.String()))
+		_ = oauth2.WriteBearerError(w, oauth2.InsufficientScope(required.String()))
 		return false
 	}
 
@@ -601,7 +600,7 @@ func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientI
 	}
 
 	// prepare response
-	r := bearer.NewTokenResponse(accessToken.String(), int(s.Config.AccessTokenLifespan/time.Second))
+	r := oauth2.NewBearerTokenResponse(accessToken.String(), int(s.Config.AccessTokenLifespan/time.Second))
 
 	// set granted scope
 	r.Scope = scope
