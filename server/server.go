@@ -132,11 +132,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer s.Mutex.Unlock()
 
 	// get path
-	path := strings.Trim(r.URL.Path, "/")
+	path := r.URL.Path
 
 	// get latest path segment
 	idx := strings.LastIndexByte(path, '/')
-	if idx > 0 {
+	if idx >= 0 {
 		path = path[idx+1:]
 	}
 
