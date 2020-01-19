@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/256dpi/oauth2"
-	"github.com/256dpi/oauth2/hmacsha"
 )
 
 // Config is used to configure a server.
@@ -36,8 +35,8 @@ func Default(secret []byte, allowed oauth2.Scope) Config {
 }
 
 // MustGenerate will generate a new token.
-func (c Config) MustGenerate() *hmacsha.Token {
-	return hmacsha.MustGenerate(c.Secret, c.KeyLength)
+func (c Config) MustGenerate() *oauth2.HS256Token {
+	return oauth2.MustGenerateHS256Token(c.Secret, c.KeyLength)
 }
 
 // Entity represents a client or resource owner.
@@ -97,7 +96,7 @@ func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required oaut
 	}
 
 	// parse token
-	token, err := hmacsha.Parse(s.Config.Secret, tk)
+	token, err := oauth2.ParseHS256Token(s.Config.Secret, tk)
 	if err != nil {
 		_ = oauth2.WriteBearerError(w, oauth2.InvalidToken("malformed token"))
 		return false
@@ -343,7 +342,7 @@ func (s *Server) handleClientCredentialsGrant(w http.ResponseWriter, rq *oauth2.
 
 func (s *Server) handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// parse authorization code
-	authorizationCode, err := hmacsha.Parse(s.Config.Secret, rq.Code)
+	authorizationCode, err := oauth2.ParseHS256Token(s.Config.Secret, rq.Code)
 	if err != nil {
 		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
@@ -406,7 +405,7 @@ func (s *Server) handleAuthorizationCodeGrant(w http.ResponseWriter, rq *oauth2.
 
 func (s *Server) handleRefreshTokenGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// parse refresh token
-	refreshToken, err := hmacsha.Parse(s.Config.Secret, rq.RefreshToken)
+	refreshToken, err := oauth2.ParseHS256Token(s.Config.Secret, rq.RefreshToken)
 	if err != nil {
 		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
@@ -480,7 +479,7 @@ func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse token
-	token, err := hmacsha.Parse(s.Config.Secret, req.Token)
+	token, err := oauth2.ParseHS256Token(s.Config.Secret, req.Token)
 	if err != nil {
 		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
@@ -542,7 +541,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse token
-	token, err := hmacsha.Parse(s.Config.Secret, req.Token)
+	token, err := oauth2.ParseHS256Token(s.Config.Secret, req.Token)
 	if err != nil {
 		_ = oauth2.WriteError(w, oauth2.InvalidRequest(err.Error()))
 		return
@@ -594,7 +593,7 @@ func (s *Server) issueTokens(issueRefreshToken bool, scope oauth2.Scope, clientI
 	accessToken := s.Config.MustGenerate()
 
 	// generate refresh token if requested
-	var refreshToken *hmacsha.Token
+	var refreshToken *oauth2.HS256Token
 	if issueRefreshToken {
 		refreshToken = s.Config.MustGenerate()
 	}

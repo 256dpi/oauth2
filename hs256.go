@@ -1,6 +1,4 @@
-// Package hmacsha provides a simple token implementation using the hmac-sha256
-// algorithm.
-package hmacsha
+package oauth2
 
 import (
 	"crypto/hmac"
@@ -8,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 )
@@ -17,30 +14,30 @@ var randSource = rand.Reader
 
 var b64 = base64.RawURLEncoding
 
-// Token implements a simple abstraction around generating tokens using the
-// hmac-sha256 algorithm.
-type Token struct {
+// HS256Token implements a simple abstraction around generating token
+// using the hmac-sha256 algorithm.
+type HS256Token struct {
 	Key       []byte
 	Signature []byte
 }
 
-// FromKey will return a new token that is constructed using the specified
-// secret and key.
+// HS256TokenFromKey will return a new hmac-sha256 token that is constructed
+// using the specified secret and key.
 //
 // Note: The secret and the token key should both at least have a length of 16
 // characters to be considered unguessable.
-func FromKey(secret []byte, key []byte) *Token {
+func HS256TokenFromKey(secret []byte, key []byte) *HS256Token {
 	// create hash
 	hash := hmac.New(sha256.New, secret)
 
 	// hash key - implementation does never return an error
-	hash.Write(key)
+	_, _ = hash.Write(key)
 
 	// get signature
 	signature := hash.Sum(nil)
 
 	// construct token
-	token := &Token{
+	token := &HS256Token{
 		Key:       key,
 		Signature: signature,
 	}
@@ -48,12 +45,12 @@ func FromKey(secret []byte, key []byte) *Token {
 	return token
 }
 
-// Generate will return a new token that is constructed using the specified
-// secret and random key of the specified length.
+// GenerateHS256Token will return a new hmac-sha256 token that is constructed
+// using the specified secret and random key of the specified length.
 //
 // Note: The secret and the to be generated token key should both at least have
 // a length of 16 characters to be considered unguessable.
-func Generate(secret []byte, length int) (*Token, error) {
+func GenerateHS256Token(secret []byte, length int) (*HS256Token, error) {
 	// prepare key
 	key := make([]byte, length)
 
@@ -63,17 +60,17 @@ func Generate(secret []byte, length int) (*Token, error) {
 		return nil, err
 	}
 
-	return FromKey(secret, key), nil
+	return HS256TokenFromKey(secret, key), nil
 }
 
-// MustGenerate will generate a token using Generate and panic instead of
-// returning an error.
+// MustGenerateHS256Token will generate a token using GenerateHS256Token and
+// panic instead of returning an error.
 //
 // Note: The cryptographically secure pseudo-random number generator provided
 // by the operating system may fail. However, such a fail would mean that
 // something seriously must be wrong with the machine running this code.
-func MustGenerate(secret []byte, length int) *Token {
-	token, err := Generate(secret, length)
+func MustGenerateHS256Token(secret []byte, length int) *HS256Token {
+	token, err := GenerateHS256Token(secret, length)
 	if err != nil {
 		panic(err)
 	}
@@ -81,8 +78,8 @@ func MustGenerate(secret []byte, length int) *Token {
 	return token
 }
 
-// Parse will parse a token that is in its string representation.
-func Parse(secret []byte, str string) (*Token, error) {
+// ParseHS256Token will parse a token that is in its string representation.
+func ParseHS256Token(secret []byte, str string) (*HS256Token, error) {
 	// split dot separated key and signature
 	s := strings.Split(str, ".")
 	if len(s) != 2 {
@@ -102,7 +99,7 @@ func Parse(secret []byte, str string) (*Token, error) {
 	}
 
 	// construct token
-	token := &Token{
+	token := &HS256Token{
 		Key:       key,
 		Signature: signature,
 	}
@@ -115,31 +112,31 @@ func Parse(secret []byte, str string) (*Token, error) {
 	return token, nil
 }
 
-// Valid returns true when the tokens key matches its signature.
-func (t *Token) Valid(secret []byte) bool {
-	return FromKey(secret, t.Key).Equal(t.Signature)
+// Valid returns true when the token's key matches its signature.
+func (t *HS256Token) Valid(secret []byte) bool {
+	return HS256TokenFromKey(secret, t.Key).Equal(t.Signature)
 }
 
 // Equal returns true then the specified signature is the same as the tokens
 // signature.
 //
 // Note: This method should be used over just comparing the byte slices as it
-// computed in constant time and limits certain attacks.
-func (t *Token) Equal(signature []byte) bool {
+// computed in constant time and limits time based attacks.
+func (t *HS256Token) Equal(signature []byte) bool {
 	return hmac.Equal(t.Signature, signature)
 }
 
 // KeyString returns a string (base64) representation of the key.
-func (t *Token) KeyString() string {
+func (t *HS256Token) KeyString() string {
 	return b64.EncodeToString(t.Key)
 }
 
 // SignatureString returns a string (base64) representation of the signature.
-func (t *Token) SignatureString() string {
+func (t *HS256Token) SignatureString() string {
 	return b64.EncodeToString(t.Signature)
 }
 
 // String returns a string representation of the whole token.
-func (t *Token) String() string {
-	return fmt.Sprintf("%s.%s", t.KeyString(), t.SignatureString())
+func (t *HS256Token) String() string {
+	return t.KeyString() + "." + t.SignatureString()
 }

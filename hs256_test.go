@@ -1,4 +1,4 @@
-package hmacsha
+package oauth2
 
 import (
 	"strings"
@@ -9,52 +9,52 @@ import (
 
 var testSecret = []byte("secret")
 
-func TestToken(t *testing.T) {
-	token1, err := Generate(testSecret, 16)
+func TestHS256Token(t *testing.T) {
+	token1, err := GenerateHS256Token(testSecret, 16)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token1.Key)
 	assert.NotEmpty(t, token1.Signature)
 	assert.NotEmpty(t, token1.String())
 
-	token2, err := Parse(testSecret, token1.String())
+	token2, err := ParseHS256Token(testSecret, token1.String())
 	assert.NoError(t, err)
 	assert.Equal(t, token1.Key, token2.Key)
 	assert.Equal(t, token1.Signature, token2.Signature)
 
-	token2, err = Parse(testSecret, token1.String()+"foo")
+	token2, err = ParseHS256Token(testSecret, token1.String()+"foo")
 	assert.Error(t, err)
 	assert.Nil(t, token2)
 }
 
-func TestParseToken(t *testing.T) {
-	token, err := Parse(testSecret, "")
+func TestParseHS256Token(t *testing.T) {
+	token, err := ParseHS256Token(testSecret, "")
 	assert.Error(t, err)
 	assert.Nil(t, token)
 
-	token, err = Parse(testSecret, "%.foo")
+	token, err = ParseHS256Token(testSecret, "%.foo")
 	assert.Error(t, err)
 	assert.Nil(t, token)
 
-	token, err = Parse(testSecret, "foo.%")
+	token, err = ParseHS256Token(testSecret, "foo.%")
 	assert.Error(t, err)
 	assert.Nil(t, token)
 }
 
-func TestGenerate(t *testing.T) {
-	token := MustGenerate(testSecret, 16)
+func TestGenerateHS256Token(t *testing.T) {
+	token := MustGenerateHS256Token(testSecret, 16)
 	assert.NotNil(t, token)
 }
 
-func TestGenerateError(t *testing.T) {
+func TestGenerateHS256TokenError(t *testing.T) {
 	currentSource := randSource
 	randSource = strings.NewReader("")
 
-	token, err := Generate(testSecret, 16)
+	token, err := GenerateHS256Token(testSecret, 16)
 	assert.Error(t, err)
 	assert.Nil(t, token)
 
 	assert.Panics(t, func() {
-		MustGenerate(testSecret, 16)
+		MustGenerateHS256Token(testSecret, 16)
 	})
 
 	randSource = currentSource
