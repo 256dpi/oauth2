@@ -30,11 +30,29 @@ func TestParseBearerToken(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, "", token)
 
+	req.Header.Set("Authorization", "Bearer")
+
+	token, err = ParseBearerToken(req)
+	assert.Error(t, err)
+	assert.Equal(t, "", token)
+
+	req.Header.Set("Authorization", "Bearer ")
+
+	token, err = ParseBearerToken(req)
+	assert.Error(t, err)
+	assert.Equal(t, "", token)
+
 	req.Header.Set("Authorization", "Bearer foo")
 
 	token, err = ParseBearerToken(req)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", token)
+
+	req.Header.Set("Authorization", "bearer bar")
+
+	token, err = ParseBearerToken(req)
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", token)
 }
 
 func TestWriteBearerError(t *testing.T) {
@@ -69,4 +87,19 @@ func TestWriteBearerErrorFallback(t *testing.T) {
 	assert.NoError(t, err2)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	assert.Empty(t, rec.Body.String())
+}
+
+func BenchmarkParseBearerToken(b *testing.B) {
+	req, _ := http.NewRequest("GET", "/foo", nil)
+	req.Header.Set("Authorization", "Bearer foo")
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err := ParseBearerToken(req)
+		if err != nil {
+			panic(err)
+		}
+	}
 }

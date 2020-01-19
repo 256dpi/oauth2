@@ -16,7 +16,7 @@ func NewBearerTokenResponse(token string, expiresIn int) *TokenResponse {
 }
 
 // ParseBearerToken parses and returns the bearer token from a request. It will
-// return an BearerError instance if the extraction failed.
+// return an Error if the extraction failed.
 //
 // Note: The spec also allows obtaining the bearer token from query parameters
 // and the request body (form data). This implementation only supports obtaining
@@ -29,20 +29,32 @@ func ParseBearerToken(r *http.Request) (string, error) {
 		return "", ProtectedResource()
 	}
 
-	// split header
-	s := strings.SplitN(h, " ", 2)
-	if len(s) != 2 || !strings.EqualFold(s[0], BearerAccessTokenType) {
+	// check length
+	if len(h) < len(BearerAccessTokenType)+2 {
 		return "", InvalidRequest("malformed authorization header")
 	}
 
-	return s[1], nil
+	// check type
+	if !strings.EqualFold(h[:len(BearerAccessTokenType)], BearerAccessTokenType) {
+		return "", InvalidRequest("malformed authorization header")
+	}
+
+	// check space
+	if h[len(BearerAccessTokenType):len(BearerAccessTokenType)+1] != " " {
+		return "", InvalidRequest("malformed authorization header")
+	}
+
+	// get token
+	token := h[len(BearerAccessTokenType)+1:]
+
+	return token, nil
 }
 
 // WriteBearerError will write the specified error to the response writer. The
 // function will fall back and write an internal server error if the specified
 // error is not known.
 //
-// Bearer Token Errors: ProtectedResource, InvalidRequest, InvalidToken,
+// Common bearer token errors: ProtectedResource, InvalidRequest, InvalidToken,
 // InsufficientScope, ServerError.
 func WriteBearerError(w http.ResponseWriter, err error) error {
 	// ensure complex error
