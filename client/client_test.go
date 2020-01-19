@@ -74,7 +74,7 @@ func TestClientAuthenticate(t *testing.T) {
 			ClientSecret: "secret",
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, oauth2.BearerTokenType, trs.TokenType)
+		assert.Equal(t, oauth2.BearerAccessTokenType, trs.TokenType)
 		assert.NotEmpty(t, trs.AccessToken)
 		assert.NotEmpty(t, trs.RefreshToken)
 		assert.NotZero(t, trs.ExpiresIn)
@@ -102,7 +102,7 @@ func TestClientAuthenticate(t *testing.T) {
 			Password:     "secret",
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, oauth2.BearerTokenType, trs.TokenType)
+		assert.Equal(t, oauth2.BearerAccessTokenType, trs.TokenType)
 		assert.NotEmpty(t, trs.AccessToken)
 		assert.NotEmpty(t, trs.RefreshToken)
 		assert.NotZero(t, trs.ExpiresIn)
@@ -129,7 +129,7 @@ func TestClientAuthenticate(t *testing.T) {
 			Code:         authorizationCode.String(),
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, oauth2.BearerTokenType, trs.TokenType)
+		assert.Equal(t, oauth2.BearerAccessTokenType, trs.TokenType)
 		assert.NotEmpty(t, trs.AccessToken)
 		assert.NotEmpty(t, trs.RefreshToken)
 		assert.NotZero(t, trs.ExpiresIn)

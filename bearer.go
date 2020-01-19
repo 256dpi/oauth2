@@ -5,14 +5,14 @@ import (
 	"strings"
 )
 
-// BearerTokenType is the bearer token type as defined by the OAuth2 Bearer
-// Token spec.
-const BearerTokenType = "bearer"
+// BearerAccessTokenType is the bearer access token type as defined by the
+// OAuth2 Bearer Token spec.
+const BearerAccessTokenType = "bearer"
 
 // NewBearerTokenResponse creates and returns a new token response that carries
-// a bearer token.
+// a bearer access token.
 func NewBearerTokenResponse(token string, expiresIn int) *TokenResponse {
-	return NewTokenResponse(BearerTokenType, token, expiresIn)
+	return NewTokenResponse(BearerAccessTokenType, token, expiresIn)
 }
 
 // ParseBearerToken parses and returns the bearer token from a request. It will
@@ -31,7 +31,7 @@ func ParseBearerToken(r *http.Request) (string, error) {
 
 	// split header
 	s := strings.SplitN(h, " ", 2)
-	if len(s) != 2 || !strings.EqualFold(s[0], BearerTokenType) {
+	if len(s) != 2 || !strings.EqualFold(s[0], BearerAccessTokenType) {
 		return "", InvalidRequest("malformed authorization header")
 	}
 
