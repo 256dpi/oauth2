@@ -37,12 +37,12 @@ func TestClientAuthenticate(t *testing.T) {
 		client := New(Default(base))
 
 		srv.Clients["c1"] = &server.Entity{
-			Secret:       server.MustHash("secret"),
+			Secret:       "secret",
 			Confidential: true,
 		}
 
 		srv.Users["u1"] = &server.Entity{
-			Secret:       server.MustHash("secret"),
+			Secret:       "secret",
 			Confidential: true,
 		}
 
@@ -141,7 +141,7 @@ func TestClientIntrospect(t *testing.T) {
 		client := New(Default(base))
 
 		srv.Clients["c1"] = &server.Entity{
-			Secret:       server.MustHash("secret"),
+			Secret:       "secret",
 			Confidential: true,
 		}
 
@@ -205,7 +205,7 @@ func TestClientRevoke(t *testing.T) {
 		client := New(Default(base))
 
 		srv.Clients["c1"] = &server.Entity{
-			Secret:       server.MustHash("secret"),
+			Secret:       "secret",
 			Confidential: true,
 		}
 

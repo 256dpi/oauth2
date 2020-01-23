@@ -41,7 +41,7 @@ func (c Config) MustGenerate() *oauth2.HS256Token {
 
 // Entity represents a client or resource owner.
 type Entity struct {
-	Secret       []byte
+	Secret       string
 	RedirectURI  string
 	Confidential bool
 }
@@ -211,7 +211,7 @@ func (s *Server) handleImplicitGrant(w http.ResponseWriter, username, password s
 
 	// validate user credentials
 	owner, found := s.Users[username]
-	if !found || !SameHash(owner.Secret, password) {
+	if !found || owner.Secret != password {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, true))
 		return
 	}
@@ -235,7 +235,7 @@ func (s *Server) handleAuthorizationCodeGrantAuthorization(w http.ResponseWriter
 
 	// validate user credentials
 	owner, found := s.Users[username]
-	if !found || !SameHash(owner.Secret, password) {
+	if !found || owner.Secret != password {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied("").SetRedirect(rq.RedirectURI, rq.State, false))
 		return
 	}
@@ -281,7 +281,7 @@ func (s *Server) tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate client
-	if client.Confidential && !SameHash(client.Secret, req.ClientSecret) {
+	if client.Confidential && client.Secret != req.ClientSecret {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
@@ -302,7 +302,7 @@ func (s *Server) tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleResourceOwnerPasswordCredentialsGrant(w http.ResponseWriter, rq *oauth2.TokenRequest) {
 	// authenticate resource owner
 	owner, found := s.Users[rq.Username]
-	if !found || !SameHash(owner.Secret, rq.Password) {
+	if !found || owner.Secret != rq.Password {
 		_ = oauth2.WriteError(w, oauth2.AccessDenied(""))
 		return
 	}
@@ -473,7 +473,7 @@ func (s *Server) revocationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate client
-	if client.Confidential && !SameHash(client.Secret, req.ClientSecret) {
+	if client.Confidential && client.Secret != req.ClientSecret {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}
@@ -535,7 +535,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// authenticate client
-	if client.Confidential && !SameHash(client.Secret, req.ClientSecret) {
+	if client.Confidential && client.Secret != req.ClientSecret {
 		_ = oauth2.WriteError(w, oauth2.InvalidClient("unknown client"))
 		return
 	}

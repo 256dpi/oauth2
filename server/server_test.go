@@ -18,19 +18,19 @@ func TestSpec(t *testing.T) {
 	server := New(serverConfig)
 
 	server.Clients["client1"] = &Entity{
-		Secret:       MustHash("foo"),
+		Secret:       "foo",
 		RedirectURI:  "http://example.com/callback1",
 		Confidential: true,
 	}
 
 	server.Clients["client2"] = &Entity{
-		Secret:       MustHash("foo"),
+		Secret:       "foo",
 		RedirectURI:  "http://example.com/callback2",
 		Confidential: false,
 	}
 
 	server.Users["user1"] = &Entity{
-		Secret: MustHash("foo"),
+		Secret: "foo",
 	}
 
 	unknownToken := serverConfig.MustGenerate()
