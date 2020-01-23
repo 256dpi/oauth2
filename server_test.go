@@ -8,13 +8,13 @@ import (
 	"github.com/256dpi/oauth2/oauth2test"
 )
 
-func TestSpec(t *testing.T) {
+func TestServer(t *testing.T) {
 	allowedScope := Scope{"foo", "bar"}
 	requiredScope := Scope{"foo"}
 
-	serverConfig := DefaultServerConfig([]byte("secret"), allowedScope)
+	config := DefaultServerConfig([]byte("secret"), allowedScope)
 
-	server := NewServer(serverConfig)
+	server := NewServer(config)
 
 	server.Clients["client1"] = &ServerEntity{
 		Secret:       "foo",
@@ -32,10 +32,10 @@ func TestSpec(t *testing.T) {
 		Secret: "foo",
 	}
 
-	unknownToken := serverConfig.MustGenerate()
-	validToken := serverConfig.MustGenerate()
-	expiredToken := serverConfig.MustGenerate()
-	insufficientToken := serverConfig.MustGenerate()
+	unknownToken := config.MustGenerate()
+	validToken := config.MustGenerate()
+	expiredToken := config.MustGenerate()
+	insufficientToken := config.MustGenerate()
 
 	server.AccessTokens[validToken.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
@@ -55,9 +55,9 @@ func TestSpec(t *testing.T) {
 		ExpiresAt: time.Now().Add(time.Hour),
 	}
 
-	unknownRefreshToken := serverConfig.MustGenerate()
-	validRefreshToken := serverConfig.MustGenerate()
-	expiredRefreshToken := serverConfig.MustGenerate()
+	unknownRefreshToken := config.MustGenerate()
+	validRefreshToken := config.MustGenerate()
+	expiredRefreshToken := config.MustGenerate()
 
 	server.RefreshTokens[validRefreshToken.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
@@ -71,8 +71,8 @@ func TestSpec(t *testing.T) {
 		ExpiresAt: time.Now().Add(-time.Hour),
 	}
 
-	unknownAuthorizationCode := serverConfig.MustGenerate()
-	expiredAuthorizationCode := serverConfig.MustGenerate()
+	unknownAuthorizationCode := config.MustGenerate()
+	expiredAuthorizationCode := config.MustGenerate()
 
 	server.AuthorizationCodes[expiredAuthorizationCode.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
@@ -88,57 +88,57 @@ func TestSpec(t *testing.T) {
 		}
 	})
 
-	specConfig := oauth2test.Default(handler)
+	spec := oauth2test.Default(handler)
 
-	specConfig.PasswordGrantSupport = true
-	specConfig.ClientCredentialsGrantSupport = true
-	specConfig.ImplicitGrantSupport = true
-	specConfig.AuthorizationCodeGrantSupport = true
-	specConfig.RefreshTokenGrantSupport = true
+	spec.PasswordGrantSupport = true
+	spec.ClientCredentialsGrantSupport = true
+	spec.ImplicitGrantSupport = true
+	spec.AuthorizationCodeGrantSupport = true
+	spec.RefreshTokenGrantSupport = true
 
-	specConfig.ConfidentialClientID = "client1"
-	specConfig.ConfidentialClientSecret = "foo"
-	specConfig.PublicClientID = "client2"
+	spec.ConfidentialClientID = "client1"
+	spec.ConfidentialClientSecret = "foo"
+	spec.PublicClientID = "client2"
 
-	specConfig.ResourceOwnerUsername = "user1"
-	specConfig.ResourceOwnerPassword = "foo"
+	spec.ResourceOwnerUsername = "user1"
+	spec.ResourceOwnerPassword = "foo"
 
-	specConfig.InvalidScope = "baz"
-	specConfig.ValidScope = "foo bar"
-	specConfig.ExceedingScope = "foo bar baz"
+	spec.InvalidScope = "baz"
+	spec.ValidScope = "foo bar"
+	spec.ExceedingScope = "foo bar baz"
 
-	specConfig.ExpectedExpiresIn = int(serverConfig.AccessTokenLifespan / time.Second)
+	spec.ExpectedExpiresIn = int(config.AccessTokenLifespan / time.Second)
 
-	specConfig.InvalidToken = "invalid"
-	specConfig.UnknownToken = unknownToken.String()
-	specConfig.ValidToken = validToken.String()
-	specConfig.ExpiredToken = expiredToken.String()
-	specConfig.InsufficientToken = insufficientToken.String()
+	spec.InvalidToken = "invalid"
+	spec.UnknownToken = unknownToken.String()
+	spec.ValidToken = validToken.String()
+	spec.ExpiredToken = expiredToken.String()
+	spec.InsufficientToken = insufficientToken.String()
 
-	specConfig.InvalidRedirectURI = "http://invalid.com"
-	specConfig.PrimaryRedirectURI = "http://example.com/callback1"
-	specConfig.SecondaryRedirectURI = "http://example.com/callback2"
+	spec.InvalidRedirectURI = "http://invalid.com"
+	spec.PrimaryRedirectURI = "http://example.com/callback1"
+	spec.SecondaryRedirectURI = "http://example.com/callback2"
 
-	specConfig.InvalidRefreshToken = "invalid"
-	specConfig.UnknownRefreshToken = unknownRefreshToken.String()
-	specConfig.ValidRefreshToken = validRefreshToken.String()
-	specConfig.ExpiredRefreshToken = expiredRefreshToken.String()
+	spec.InvalidRefreshToken = "invalid"
+	spec.UnknownRefreshToken = unknownRefreshToken.String()
+	spec.ValidRefreshToken = validRefreshToken.String()
+	spec.ExpiredRefreshToken = expiredRefreshToken.String()
 
-	specConfig.InvalidAuthorizationCode = "invalid"
-	specConfig.UnknownAuthorizationCode = unknownAuthorizationCode.String()
-	specConfig.ExpiredAuthorizationCode = expiredAuthorizationCode.String()
+	spec.InvalidAuthorizationCode = "invalid"
+	spec.UnknownAuthorizationCode = unknownAuthorizationCode.String()
+	spec.ExpiredAuthorizationCode = expiredAuthorizationCode.String()
 
-	specConfig.InvalidAuthorizationParams = map[string]string{
+	spec.InvalidAuthorizationParams = map[string]string{
 		"username": "user1",
 		"password": "invalid",
 	}
 
-	specConfig.ValidAuthorizationParams = map[string]string{
+	spec.ValidAuthorizationParams = map[string]string{
 		"username": "user1",
 		"password": "foo",
 	}
 
-	specConfig.CodeReplayMitigation = true
+	spec.CodeReplayMitigation = true
 
-	oauth2test.Run(t, specConfig)
+	oauth2test.Run(t, spec)
 }
