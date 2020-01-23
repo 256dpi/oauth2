@@ -1,35 +1,34 @@
-package server
+package oauth2
 
 import (
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/256dpi/oauth2"
 	"github.com/256dpi/oauth2/spec"
 )
 
 func TestSpec(t *testing.T) {
-	allowedScope := oauth2.Scope{"foo", "bar"}
-	requiredScope := oauth2.Scope{"foo"}
+	allowedScope := Scope{"foo", "bar"}
+	requiredScope := Scope{"foo"}
 
-	serverConfig := Default([]byte("secret"), allowedScope)
+	serverConfig := DefaultServerConfig([]byte("secret"), allowedScope)
 
-	server := New(serverConfig)
+	server := NewServer(serverConfig)
 
-	server.Clients["client1"] = &Entity{
+	server.Clients["client1"] = &ServerEntity{
 		Secret:       "foo",
 		RedirectURI:  "http://example.com/callback1",
 		Confidential: true,
 	}
 
-	server.Clients["client2"] = &Entity{
+	server.Clients["client2"] = &ServerEntity{
 		Secret:       "foo",
 		RedirectURI:  "http://example.com/callback2",
 		Confidential: false,
 	}
 
-	server.Users["user1"] = &Entity{
+	server.Users["user1"] = &ServerEntity{
 		Secret: "foo",
 	}
 
@@ -38,21 +37,21 @@ func TestSpec(t *testing.T) {
 	expiredToken := serverConfig.MustGenerate()
 	insufficientToken := serverConfig.MustGenerate()
 
-	server.AccessTokens[validToken.SignatureString()] = &Credential{
+	server.AccessTokens[validToken.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(time.Hour),
 	}
 
-	server.AccessTokens[expiredToken.SignatureString()] = &Credential{
+	server.AccessTokens[expiredToken.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(-time.Hour),
 	}
 
-	server.AccessTokens[insufficientToken.SignatureString()] = &Credential{
+	server.AccessTokens[insufficientToken.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
-		Scope:     oauth2.Scope{},
+		Scope:     Scope{},
 		ExpiresAt: time.Now().Add(time.Hour),
 	}
 
@@ -60,13 +59,13 @@ func TestSpec(t *testing.T) {
 	validRefreshToken := serverConfig.MustGenerate()
 	expiredRefreshToken := serverConfig.MustGenerate()
 
-	server.RefreshTokens[validRefreshToken.SignatureString()] = &Credential{
+	server.RefreshTokens[validRefreshToken.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(time.Hour),
 	}
 
-	server.RefreshTokens[expiredRefreshToken.SignatureString()] = &Credential{
+	server.RefreshTokens[expiredRefreshToken.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(-time.Hour),
@@ -75,7 +74,7 @@ func TestSpec(t *testing.T) {
 	unknownAuthorizationCode := serverConfig.MustGenerate()
 	expiredAuthorizationCode := serverConfig.MustGenerate()
 
-	server.AuthorizationCodes[expiredAuthorizationCode.SignatureString()] = &Credential{
+	server.AuthorizationCodes[expiredAuthorizationCode.SignatureString()] = &ServerCredential{
 		ClientID:  "client1",
 		Scope:     allowedScope,
 		ExpiresAt: time.Now().Add(-time.Hour),

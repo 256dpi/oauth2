@@ -10,8 +10,6 @@ install:
   - go get -t ./...
 script:
   - go test -coverprofile=oauth2.coverprofile
-  - go test -coverprofile=client.coverprofile ./client
-  - go test -coverprofile=server.coverprofile ./server
   - go test -coverprofile=spec.coverprofile ./spec
   - $HOME/gopath/bin/gover
   - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci

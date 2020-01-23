@@ -1,15 +1,11 @@
-// Package client implements a low-level OAuth2 client to perform the various
-// request/response flows against a OAuth2 authentication server.
-package client
+package oauth2
 
 import (
 	"net/http"
-
-	"github.com/256dpi/oauth2"
 )
 
-// Config is used to configure a client.
-type Config struct {
+// ClientConfig is used to configure a client.
+type ClientConfig struct {
 	BaseURI               string
 	TokenEndpoint         string
 	IntrospectionEndpoint string
@@ -18,8 +14,8 @@ type Config struct {
 }
 
 // Default will return a default configuration.
-func Default(baseURI string) Config {
-	return Config{
+func Default(baseURI string) ClientConfig {
+	return ClientConfig{
 		BaseURI:               baseURI,
 		TokenEndpoint:         "/oauth2/token",
 		IntrospectionEndpoint: "/oauth2/introspect",
@@ -29,17 +25,18 @@ func Default(baseURI string) Config {
 
 // Client is a low-level OAuth2 client.
 type Client struct {
-	config Config
+	config ClientConfig
 	client *http.Client
 }
 
-// New will create and return a new client.
-func New(config Config) *Client {
-	return NewWithClient(config, new(http.Client))
+// NewClient will create and return a new client.
+func NewClient(config ClientConfig) *Client {
+	return NewClientWithClient(config, new(http.Client))
 }
 
-// NewWithClient will create and return an new client using the provided client.
-func NewWithClient(config Config, client *http.Client) *Client {
+// NewClientWithClient will create and return an new client using the provided
+// client.
+func NewClientWithClient(config ClientConfig, client *http.Client) *Client {
 	// set default response limit
 	if config.ResponseLimit == 0 {
 		config.ResponseLimit = 2048
@@ -53,12 +50,12 @@ func NewWithClient(config Config, client *http.Client) *Client {
 
 // Authenticate will send the provided token request and return the servers
 // token response or an error if failed.
-func (c *Client) Authenticate(trq oauth2.TokenRequest) (*oauth2.TokenResponse, error) {
+func (c *Client) Authenticate(trq TokenRequest) (*TokenResponse, error) {
 	// prepare endpoint
 	endpoint := c.config.BaseURI + c.config.TokenEndpoint
 
 	// build request
-	req, err := oauth2.BuildTokenRequest(endpoint, trq)
+	req, err := BuildTokenRequest(endpoint, trq)
 	if err != nil {
 		return nil, err
 	}
@@ -74,11 +71,11 @@ func (c *Client) Authenticate(trq oauth2.TokenRequest) (*oauth2.TokenResponse, e
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return nil, oauth2.ParseRequestError(res, c.config.ResponseLimit)
+		return nil, ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	// parse response
-	trs, err := oauth2.ParseTokenResponse(res, c.config.ResponseLimit)
+	trs, err := ParseTokenResponse(res, c.config.ResponseLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +85,12 @@ func (c *Client) Authenticate(trq oauth2.TokenRequest) (*oauth2.TokenResponse, e
 
 // Introspect will send the provided introspection request and return the servers
 // response of an error if failed.
-func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.IntrospectionResponse, error) {
+func (c *Client) Introspect(irq IntrospectionRequest) (*IntrospectionResponse, error) {
 	// prepare endpoint
 	endpoint := c.config.BaseURI + c.config.IntrospectionEndpoint
 
 	// build request
-	req, err := oauth2.BuildIntrospectionRequest(endpoint, irq)
+	req, err := BuildIntrospectionRequest(endpoint, irq)
 	if err != nil {
 		return nil, err
 	}
@@ -109,11 +106,11 @@ func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.Introspect
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return nil, oauth2.ParseRequestError(res, c.config.ResponseLimit)
+		return nil, ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	// parse response
-	irs, err := oauth2.ParseIntrospectionResponse(res, c.config.ResponseLimit)
+	irs, err := ParseIntrospectionResponse(res, c.config.ResponseLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -123,12 +120,12 @@ func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.Introspect
 
 // Revoke will send the provided revocation request and return and error if it
 // failed.
-func (c *Client) Revoke(rrq oauth2.RevocationRequest) error {
+func (c *Client) Revoke(rrq RevocationRequest) error {
 	// prepare endpoint
 	endpoint := c.config.BaseURI + c.config.RevocationEndpoint
 
 	// build request
-	req, err := oauth2.BuildRevocationRequest(endpoint, rrq)
+	req, err := BuildRevocationRequest(endpoint, rrq)
 	if err != nil {
 		return err
 	}
@@ -144,7 +141,7 @@ func (c *Client) Revoke(rrq oauth2.RevocationRequest) error {
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return oauth2.ParseRequestError(res, c.config.ResponseLimit)
+		return ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	return nil
