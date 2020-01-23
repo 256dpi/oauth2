@@ -1,4 +1,4 @@
-package spec
+package oauth2test
 
 import (
 	"encoding/json"

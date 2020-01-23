@@ -1,4 +1,4 @@
-package spec
+package oauth2test
 
 import (
 	"encoding/base64"
@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-// A Request is a convenience wrapper to formulate test requests.
+// A Request is a convenience wrapper to specify test requests.
 type Request struct {
 	Method   string
 	Path     string

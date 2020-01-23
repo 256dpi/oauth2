@@ -1,14 +1,14 @@
-// Package spec implements reusable integration tests to test against any OAuth2
-// authentication server.
-package spec
+// Package oauth2test implements reusable integration tests to run against any
+// OAuth2 authentication server.
+package oauth2test
 
 import (
 	"net/http"
 	"testing"
 )
 
-// A Config declares the needed info for testing an OAuth2 authentication server.
-type Config struct {
+// Spec declares the needed info for testing an OAuth2 authentication server.
+type Spec struct {
 	// The server handler.
 	Handler http.Handler
 
@@ -104,9 +104,9 @@ type Config struct {
 	CodeReplayMitigation bool
 }
 
-// Default returns a common used configuration that can taken as a basis.
-func Default(handler http.Handler) *Config {
-	return &Config{
+// Default returns a common used spec that can be taken as a basis.
+func Default(handler http.Handler) *Spec {
+	return &Spec{
 		Handler:               handler,
 		TokenEndpoint:         "/oauth2/token",
 		AuthorizeEndpoint:     "/oauth2/authorize",
@@ -120,101 +120,101 @@ func Default(handler http.Handler) *Config {
 	}
 }
 
-// Run will run all tests using the specified config.
-func Run(t *testing.T, c *Config) {
-	// validate config
-	must(c.Handler != nil, "setting Handler is required")
-	must(c.TokenEndpoint != "", "setting TokenEndpoint is required")
-	must(c.AuthorizeEndpoint != "", "setting AuthorizeEndpoint is required")
-	must(c.ProtectedResource != "", "setting ProtectedResource is required")
-	must(c.ConfidentialClientID != "", "setting ConfidentialClientID is required")
-	must(c.ConfidentialClientSecret != "", "setting ConfidentialClientSecret is required")
-	must(c.PublicClientID != "", "setting PublicClientID is required")
-	must(c.InvalidScope != "", "setting InvalidScope is required")
-	must(c.ValidScope != "", "setting ValidScope is required")
-	must(c.ExceedingScope != "", "setting ExceedingScope is required")
-	must(c.InvalidToken != "", "setting InvalidToken is required")
-	must(c.ValidToken != "", "setting ValidToken is required")
-	must(c.UnknownToken != "", "setting UnknownToken is required")
-	must(c.ExpiredToken != "", "setting ExpiredToken is required")
+// Run will run all tests using the specified spec.
+func Run(t *testing.T, spec *Spec) {
+	// validate spec
+	must(spec.Handler != nil, "setting Handler is required")
+	must(spec.TokenEndpoint != "", "setting TokenEndpoint is required")
+	must(spec.AuthorizeEndpoint != "", "setting AuthorizeEndpoint is required")
+	must(spec.ProtectedResource != "", "setting ProtectedResource is required")
+	must(spec.ConfidentialClientID != "", "setting ConfidentialClientID is required")
+	must(spec.ConfidentialClientSecret != "", "setting ConfidentialClientSecret is required")
+	must(spec.PublicClientID != "", "setting PublicClientID is required")
+	must(spec.InvalidScope != "", "setting InvalidScope is required")
+	must(spec.ValidScope != "", "setting ValidScope is required")
+	must(spec.ExceedingScope != "", "setting ExceedingScope is required")
+	must(spec.InvalidToken != "", "setting InvalidToken is required")
+	must(spec.ValidToken != "", "setting ValidToken is required")
+	must(spec.UnknownToken != "", "setting UnknownToken is required")
+	must(spec.ExpiredToken != "", "setting ExpiredToken is required")
 
 	t.Run("ProtectedResourceTest", func(t *testing.T) {
-		ProtectedResourceTest(t, c)
+		ProtectedResourceTest(t, spec)
 	})
 
-	if c.PasswordGrantSupport || c.ClientCredentialsGrantSupport ||
-		c.AuthorizationCodeGrantSupport || c.RefreshTokenGrantSupport {
+	if spec.PasswordGrantSupport || spec.ClientCredentialsGrantSupport ||
+		spec.AuthorizationCodeGrantSupport || spec.RefreshTokenGrantSupport {
 		t.Run("TokenEndpointTest", func(t *testing.T) {
-			TokenEndpointTest(t, c)
+			TokenEndpointTest(t, spec)
 		})
 	}
 
-	if c.ImplicitGrantSupport || c.AuthorizationCodeGrantSupport {
-		must(c.InvalidRedirectURI != "", "setting InvalidRedirectURI is required")
-		must(c.PrimaryRedirectURI != "", "setting PrimaryRedirectURI is required")
-		must(c.SecondaryRedirectURI != "", "setting SecondaryRedirectURI is required")
+	if spec.ImplicitGrantSupport || spec.AuthorizationCodeGrantSupport {
+		must(spec.InvalidRedirectURI != "", "setting InvalidRedirectURI is required")
+		must(spec.PrimaryRedirectURI != "", "setting PrimaryRedirectURI is required")
+		must(spec.SecondaryRedirectURI != "", "setting SecondaryRedirectURI is required")
 
 		t.Run("AuthorizationEndpointTest", func(t *testing.T) {
-			AuthorizationEndpointTest(t, c)
+			AuthorizationEndpointTest(t, spec)
 		})
 	}
 
-	if c.PasswordGrantSupport {
-		must(c.ResourceOwnerUsername != "", "setting ResourceOwnerUsername is required")
-		must(c.ResourceOwnerPassword != "", "setting ResourceOwnerPassword is required")
+	if spec.PasswordGrantSupport {
+		must(spec.ResourceOwnerUsername != "", "setting ResourceOwnerUsername is required")
+		must(spec.ResourceOwnerPassword != "", "setting ResourceOwnerPassword is required")
 
 		t.Run("PasswordGrantTest", func(t *testing.T) {
-			PasswordGrantTest(t, c)
+			PasswordGrantTest(t, spec)
 		})
 	}
 
-	if c.ClientCredentialsGrantSupport {
+	if spec.ClientCredentialsGrantSupport {
 		t.Run("ClientCredentialsGrantTest", func(t *testing.T) {
-			ClientCredentialsGrantTest(t, c)
+			ClientCredentialsGrantTest(t, spec)
 		})
 	}
 
-	if c.ImplicitGrantSupport {
-		must(c.InvalidAuthorizationParams != nil || c.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
-		must(c.ValidAuthorizationParams != nil || c.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
+	if spec.ImplicitGrantSupport {
+		must(spec.InvalidAuthorizationParams != nil || spec.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
+		must(spec.ValidAuthorizationParams != nil || spec.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
 
 		t.Run("ImplicitGrantTest", func(t *testing.T) {
-			ImplicitGrantTest(t, c)
+			ImplicitGrantTest(t, spec)
 		})
 	}
 
-	if c.AuthorizationCodeGrantSupport {
-		must(c.InvalidAuthorizationParams != nil || c.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
-		must(c.ValidAuthorizationParams != nil || c.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
-		must(c.InvalidAuthorizationCode != "", "setting InvalidAuthorizationCode is required")
-		must(c.UnknownAuthorizationCode != "", "setting UnknownAuthorizationCode is required")
-		must(c.ExpiredAuthorizationCode != "", "setting ExpiredAuthorizationCode is required")
+	if spec.AuthorizationCodeGrantSupport {
+		must(spec.InvalidAuthorizationParams != nil || spec.InvalidAuthorizationHeaders != nil, "setting InvalidAuthorizationParams or InvalidAuthorizationHeaders is required")
+		must(spec.ValidAuthorizationParams != nil || spec.ValidAuthorizationHeaders != nil, "setting ValidAuthorizationParams ValidAuthorizationHeaders is required")
+		must(spec.InvalidAuthorizationCode != "", "setting InvalidAuthorizationCode is required")
+		must(spec.UnknownAuthorizationCode != "", "setting UnknownAuthorizationCode is required")
+		must(spec.ExpiredAuthorizationCode != "", "setting ExpiredAuthorizationCode is required")
 
 		t.Run("AuthorizationCodeGrantTest", func(t *testing.T) {
-			AuthorizationCodeGrantTest(t, c)
+			AuthorizationCodeGrantTest(t, spec)
 		})
 	}
 
-	if c.RefreshTokenGrantSupport {
-		must(c.InvalidRefreshToken != "", "setting InvalidRefreshToken is required")
-		must(c.UnknownRefreshToken != "", "setting UnknownRefreshToken is required")
-		must(c.ValidRefreshToken != "", "setting ValidRefreshToken is required")
-		must(c.ExpiredRefreshToken != "", "setting ExpiredRefreshToken is required")
+	if spec.RefreshTokenGrantSupport {
+		must(spec.InvalidRefreshToken != "", "setting InvalidRefreshToken is required")
+		must(spec.UnknownRefreshToken != "", "setting UnknownRefreshToken is required")
+		must(spec.ValidRefreshToken != "", "setting ValidRefreshToken is required")
+		must(spec.ExpiredRefreshToken != "", "setting ExpiredRefreshToken is required")
 
 		t.Run("RefreshTokenGrantTest", func(t *testing.T) {
-			RefreshTokenGrantTest(t, c)
+			RefreshTokenGrantTest(t, spec)
 		})
 	}
 
-	if c.IntrospectionEndpoint != "" {
+	if spec.IntrospectionEndpoint != "" {
 		t.Run("IntrospectionEndpointTest", func(t *testing.T) {
-			IntrospectionEndpointTest(t, c)
+			IntrospectionEndpointTest(t, spec)
 		})
 	}
 
-	if c.RevocationEndpoint != "" {
+	if spec.RevocationEndpoint != "" {
 		t.Run("RevocationEndpointTest", func(t *testing.T) {
-			RevocationEndpointTest(t, c)
+			RevocationEndpointTest(t, spec)
 		})
 	}
 }

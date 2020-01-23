@@ -1,4 +1,4 @@
-package spec
+package oauth2test
 
 import (
 	"net/http"
@@ -10,18 +10,18 @@ import (
 )
 
 // PasswordGrantTest tests the password grant.
-func PasswordGrantTest(t *testing.T, c *Config) {
+func PasswordGrantTest(t *testing.T, spec *Spec) {
 	// invalid client secret
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
 		Password: "invalid",
 		Form: map[string]string{
 			"grant_type": "password",
-			"username":   c.ResourceOwnerUsername,
-			"password":   c.ResourceOwnerPassword,
-			"scope":      c.ValidScope,
+			"username":   spec.ResourceOwnerUsername,
+			"password":   spec.ResourceOwnerPassword,
+			"scope":      spec.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -30,16 +30,16 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid username
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type": "password",
 			"username":   "invalid",
-			"password":   c.ResourceOwnerPassword,
-			"scope":      c.ValidScope,
+			"password":   spec.ResourceOwnerPassword,
+			"scope":      spec.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
@@ -48,16 +48,16 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid password
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type": "password",
-			"username":   c.ResourceOwnerUsername,
+			"username":   spec.ResourceOwnerUsername,
 			"password":   "invalid",
-			"scope":      c.ValidScope,
+			"scope":      spec.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
@@ -66,16 +66,16 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type": "password",
-			"username":   c.ResourceOwnerUsername,
-			"password":   c.ResourceOwnerPassword,
-			"scope":      c.InvalidScope,
+			"username":   spec.ResourceOwnerUsername,
+			"password":   spec.ResourceOwnerPassword,
+			"scope":      spec.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -84,16 +84,16 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	})
 
 	// exceeding scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type": "password",
-			"username":   c.ResourceOwnerUsername,
-			"password":   c.ResourceOwnerPassword,
-			"scope":      c.ExceedingScope,
+			"username":   spec.ResourceOwnerUsername,
+			"password":   spec.ResourceOwnerPassword,
+			"scope":      spec.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -104,22 +104,22 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	var accessToken, refreshToken string
 
 	// get access token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type": "password",
-			"username":   c.ResourceOwnerUsername,
-			"password":   c.ResourceOwnerPassword,
-			"scope":      c.ValidScope,
+			"username":   spec.ResourceOwnerUsername,
+			"password":   spec.ResourceOwnerPassword,
+			"scope":      spec.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"), debug(r))
-			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"), debug(r))
-			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
+			assert.Equal(t, spec.ValidScope, jsonFieldString(r, "scope"), debug(r))
+			assert.Equal(t, float64(spec.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
 
 			accessToken = jsonFieldString(r, "access_token")
 			assert.NotEmpty(t, accessToken, debug(r))
@@ -130,25 +130,25 @@ func PasswordGrantTest(t *testing.T, c *Config) {
 	})
 
 	// test access token
-	AccessTokenTest(t, c, accessToken)
+	AccessTokenTest(t, spec, accessToken)
 
 	// test refresh token if present
 	if refreshToken != "" {
-		RefreshTokenTest(t, c, refreshToken)
+		RefreshTokenTest(t, spec, refreshToken)
 	}
 }
 
 // ClientCredentialsGrantTest tests the client credentials grant.
-func ClientCredentialsGrantTest(t *testing.T, c *Config) {
+func ClientCredentialsGrantTest(t *testing.T, spec *Spec) {
 	// invalid client secret
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
 		Password: "invalid",
 		Form: map[string]string{
 			"grant_type": "client_credentials",
-			"scope":      c.ValidScope,
+			"scope":      spec.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -158,13 +158,13 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	})
 
 	// public client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.PublicClientID,
+		Path:     spec.TokenEndpoint,
+		Username: spec.PublicClientID,
 		Form: map[string]string{
 			"grant_type": "client_credentials",
-			"scope":      c.ValidScope,
+			"scope":      spec.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -174,14 +174,14 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type": "client_credentials",
-			"scope":      c.InvalidScope,
+			"scope":      spec.InvalidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -190,14 +190,14 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	})
 
 	// exceeding scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type": "client_credentials",
-			"scope":      c.ExceedingScope,
+			"scope":      spec.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -208,20 +208,20 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	var accessToken, refreshToken string
 
 	// get access token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type": "client_credentials",
-			"scope":      c.ValidScope,
+			"scope":      spec.ValidScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"), debug(r))
-			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"), debug(r))
-			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
+			assert.Equal(t, spec.ValidScope, jsonFieldString(r, "scope"), debug(r))
+			assert.Equal(t, float64(spec.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
 
 			accessToken = jsonFieldString(r, "access_token")
 			assert.NotEmpty(t, accessToken, debug(r))
@@ -232,28 +232,28 @@ func ClientCredentialsGrantTest(t *testing.T, c *Config) {
 	})
 
 	// test access token
-	AccessTokenTest(t, c, accessToken)
+	AccessTokenTest(t, spec, accessToken)
 
 	// test refresh token if present
 	if refreshToken != "" {
-		RefreshTokenTest(t, c, refreshToken)
+		RefreshTokenTest(t, spec, refreshToken)
 	}
 }
 
 // ImplicitGrantTest tests the implicit grant.
-func ImplicitGrantTest(t *testing.T, c *Config) {
+func ImplicitGrantTest(t *testing.T, spec *Spec) {
 	// invalid scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.ValidAuthorizationParams, map[string]string{
 			"response_type": "token",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.InvalidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.InvalidScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.ValidAuthorizationHeaders, nil),
+		Header: extend(spec.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "invalid_scope", fragment(r, "error"), debug(r))
@@ -262,17 +262,17 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	})
 
 	// exceeding scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.ValidAuthorizationParams, map[string]string{
 			"response_type": "token",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ExceedingScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ExceedingScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.ValidAuthorizationHeaders, nil),
+		Header: extend(spec.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "invalid_scope", fragment(r, "error"), debug(r))
@@ -281,14 +281,14 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	})
 
 	// access denied
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
+		Path:   spec.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "token",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ValidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ValidScope,
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -299,17 +299,17 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid password
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.InvalidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.InvalidAuthorizationParams, map[string]string{
 			"response_type": "token",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ValidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ValidScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.InvalidAuthorizationHeaders, nil),
+		Header: extend(spec.InvalidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "access_denied", fragment(r, "error"), debug(r))
@@ -320,22 +320,22 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	var accessToken string
 
 	// get access token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.ValidAuthorizationParams, map[string]string{
 			"response_type": "token",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ValidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ValidScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.ValidAuthorizationHeaders, nil),
+		Header: extend(spec.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "bearer", fragment(r, "token_type"), debug(r))
-			assert.Equal(t, c.ValidScope, fragment(r, "scope"), debug(r))
-			assert.Equal(t, strconv.Itoa(c.ExpectedExpiresIn), fragment(r, "expires_in"), debug(r))
+			assert.Equal(t, spec.ValidScope, fragment(r, "scope"), debug(r))
+			assert.Equal(t, strconv.Itoa(spec.ExpectedExpiresIn), fragment(r, "expires_in"), debug(r))
 			assert.Equal(t, "xyz", fragment(r, "state"), debug(r))
 			assert.Empty(t, fragment(r, "refresh_token"), debug(r))
 
@@ -345,23 +345,23 @@ func ImplicitGrantTest(t *testing.T, c *Config) {
 	})
 
 	// test access token
-	AccessTokenTest(t, c, accessToken)
+	AccessTokenTest(t, spec, accessToken)
 }
 
 // AuthorizationCodeGrantTest tests the authorization code grant.
-func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
+func AuthorizationCodeGrantTest(t *testing.T, spec *Spec) {
 	// invalid scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.ValidAuthorizationParams, map[string]string{
 			"response_type": "code",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.InvalidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.InvalidScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.ValidAuthorizationHeaders, nil),
+		Header: extend(spec.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "invalid_scope", query(r, "error"), debug(r))
@@ -370,17 +370,17 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// exceeding scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.ValidAuthorizationParams, map[string]string{
 			"response_type": "code",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ExceedingScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ExceedingScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.ValidAuthorizationHeaders, nil),
+		Header: extend(spec.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "invalid_scope", query(r, "error"), debug(r))
@@ -389,14 +389,14 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// access denied
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
+		Path:   spec.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "code",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ValidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ValidScope,
 			"state":         "xyz",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -407,17 +407,17 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid password
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.InvalidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.InvalidAuthorizationParams, map[string]string{
 			"response_type": "code",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ValidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ValidScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.InvalidAuthorizationHeaders, nil),
+		Header: extend(spec.InvalidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "access_denied", query(r, "error"), debug(r))
@@ -428,17 +428,17 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	var authorizationCode string
 
 	// get authorization code
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.ValidAuthorizationParams, map[string]string{
 			"response_type": "code",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ValidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ValidScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.ValidAuthorizationHeaders, nil),
+		Header: extend(spec.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "xyz", query(r, "state"), debug(r))
@@ -449,16 +449,16 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid client secret
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
 		Password: "invalid",
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
-			"code":         c.InvalidAuthorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
+			"scope":        spec.ValidScope,
+			"code":         spec.InvalidAuthorizationCode,
+			"redirect_uri": spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -467,16 +467,16 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid authorization code
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
-			"code":         c.InvalidAuthorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
+			"scope":        spec.ValidScope,
+			"code":         spec.InvalidAuthorizationCode,
+			"redirect_uri": spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -485,16 +485,16 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// unknown authorization code
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
-			"code":         c.UnknownAuthorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
+			"scope":        spec.ValidScope,
+			"code":         spec.UnknownAuthorizationCode,
+			"redirect_uri": spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -503,16 +503,16 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// expired authorization code
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
-			"code":         c.ExpiredAuthorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
+			"scope":        spec.ValidScope,
+			"code":         spec.ExpiredAuthorizationCode,
+			"redirect_uri": spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -521,15 +521,15 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// wrong client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.PublicClientID,
+		Path:     spec.TokenEndpoint,
+		Username: spec.PublicClientID,
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
+			"scope":        spec.ValidScope,
 			"code":         authorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
+			"redirect_uri": spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -538,16 +538,16 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// wrong redirect uri
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
+			"scope":        spec.ValidScope,
 			"code":         authorizationCode,
-			"redirect_uri": c.SecondaryRedirectURI,
+			"redirect_uri": spec.SecondaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -558,22 +558,22 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	var accessToken, refreshToken string
 
 	// get access token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
+			"scope":        spec.ValidScope,
 			"code":         authorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
+			"redirect_uri": spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"), debug(r))
-			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"), debug(r))
-			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
+			assert.Equal(t, spec.ValidScope, jsonFieldString(r, "scope"), debug(r))
+			assert.Equal(t, float64(spec.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
 
 			accessToken = jsonFieldString(r, "access_token")
 			assert.NotEmpty(t, accessToken, debug(r))
@@ -584,27 +584,27 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// test access token
-	AccessTokenTest(t, c, accessToken)
+	AccessTokenTest(t, spec, accessToken)
 
 	// test refresh token if present
 	if refreshToken != "" {
-		RefreshTokenTest(t, c, refreshToken)
+		RefreshTokenTest(t, spec, refreshToken)
 	}
 
 	/* code replay attack */
 
 	// get authorization code
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
-		Form: extend(c.ValidAuthorizationParams, map[string]string{
+		Path:   spec.AuthorizeEndpoint,
+		Form: extend(spec.ValidAuthorizationParams, map[string]string{
 			"response_type": "code",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
-			"scope":         c.ValidScope,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
+			"scope":         spec.ValidScope,
 			"state":         "xyz",
 		}),
-		Header: extend(c.ValidAuthorizationHeaders, nil),
+		Header: extend(spec.ValidAuthorizationHeaders, nil),
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusSeeOther, r.Code, debug(r))
 			assert.Equal(t, "xyz", query(r, "state"), debug(r))
@@ -615,22 +615,22 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// get access token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
+			"scope":        spec.ValidScope,
 			"code":         authorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
+			"redirect_uri": spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 			assert.Equal(t, "bearer", jsonFieldString(r, "token_type"), debug(r))
-			assert.Equal(t, c.ValidScope, jsonFieldString(r, "scope"), debug(r))
-			assert.Equal(t, float64(c.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
+			assert.Equal(t, spec.ValidScope, jsonFieldString(r, "scope"), debug(r))
+			assert.Equal(t, float64(spec.ExpectedExpiresIn), jsonFieldFloat(r, "expires_in"), debug(r))
 
 			accessToken = jsonFieldString(r, "access_token")
 			assert.NotEmpty(t, accessToken, debug(r))
@@ -641,16 +641,16 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// get access token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":   "authorization_code",
-			"scope":        c.ValidScope,
+			"scope":        spec.ValidScope,
 			"code":         authorizationCode,
-			"redirect_uri": c.PrimaryRedirectURI,
+			"redirect_uri": spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -659,11 +659,11 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 	})
 
 	// check if code replay mitigation is supported
-	if c.CodeReplayMitigation {
+	if spec.CodeReplayMitigation {
 		// check access token
-		Do(c.Handler, &Request{
+		Do(spec.Handler, &Request{
 			Method: "GET",
-			Path:   c.ProtectedResource,
+			Path:   spec.ProtectedResource,
 			Header: map[string]string{
 				"Authorization": "Bearer " + accessToken,
 			},
@@ -673,11 +673,11 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 		})
 
 		// check refresh token
-		Do(c.Handler, &Request{
+		Do(spec.Handler, &Request{
 			Method:   "POST",
-			Path:     c.TokenEndpoint,
-			Username: c.ConfidentialClientID,
-			Password: c.ConfidentialClientSecret,
+			Path:     spec.TokenEndpoint,
+			Username: spec.ConfidentialClientID,
+			Password: spec.ConfidentialClientSecret,
 			Form: map[string]string{
 				"grant_type":    "refresh_token",
 				"refresh_token": refreshToken,
@@ -691,16 +691,16 @@ func AuthorizationCodeGrantTest(t *testing.T, c *Config) {
 }
 
 // RefreshTokenGrantTest tests the refresh token grant.
-func RefreshTokenGrantTest(t *testing.T, c *Config) {
+func RefreshTokenGrantTest(t *testing.T, spec *Spec) {
 	// invalid client secret
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
 		Password: "invalid",
 		Form: map[string]string{
 			"grant_type":    "refresh_token",
-			"refresh_token": c.ValidRefreshToken,
+			"refresh_token": spec.ValidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -709,14 +709,14 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	})
 
 	// invalid refresh token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":    "refresh_token",
-			"refresh_token": c.InvalidRefreshToken,
+			"refresh_token": spec.InvalidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -725,14 +725,14 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	})
 
 	// unknown refresh token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":    "refresh_token",
-			"refresh_token": c.UnknownRefreshToken,
+			"refresh_token": spec.UnknownRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -741,14 +741,14 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	})
 
 	// expired refresh token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":    "refresh_token",
-			"refresh_token": c.ExpiredRefreshToken,
+			"refresh_token": spec.ExpiredRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -757,13 +757,13 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	})
 
 	// wrong client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.PublicClientID,
+		Path:     spec.TokenEndpoint,
+		Username: spec.PublicClientID,
 		Form: map[string]string{
 			"grant_type":    "refresh_token",
-			"refresh_token": c.ValidRefreshToken,
+			"refresh_token": spec.ValidRefreshToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -772,15 +772,15 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	})
 
 	// exceeding scope
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.TokenEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
 			"grant_type":    "refresh_token",
-			"refresh_token": c.ValidRefreshToken,
-			"scope":         c.ExceedingScope,
+			"refresh_token": spec.ValidRefreshToken,
+			"scope":         spec.ExceedingScope,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -789,5 +789,5 @@ func RefreshTokenGrantTest(t *testing.T, c *Config) {
 	})
 
 	// test refresh token
-	RefreshTokenTest(t, c, c.ValidRefreshToken)
+	RefreshTokenTest(t, spec, spec.ValidRefreshToken)
 }

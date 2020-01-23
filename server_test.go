@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/256dpi/oauth2/spec"
+	"github.com/256dpi/oauth2/oauth2test"
 )
 
 func TestSpec(t *testing.T) {
@@ -88,7 +88,7 @@ func TestSpec(t *testing.T) {
 		}
 	})
 
-	specConfig := spec.Default(handler)
+	specConfig := oauth2test.Default(handler)
 
 	specConfig.PasswordGrantSupport = true
 	specConfig.ClientCredentialsGrantSupport = true
@@ -140,5 +140,5 @@ func TestSpec(t *testing.T) {
 
 	specConfig.CodeReplayMitigation = true
 
-	spec.Run(t, specConfig)
+	oauth2test.Run(t, specConfig)
 }

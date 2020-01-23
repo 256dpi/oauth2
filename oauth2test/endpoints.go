@@ -1,4 +1,4 @@
-package spec
+package oauth2test
 
 import (
 	"net/http"
@@ -9,11 +9,11 @@ import (
 )
 
 // TokenEndpointTest executes general token endpoint tests.
-func TokenEndpointTest(t *testing.T, c *Config) {
+func TokenEndpointTest(t *testing.T, spec *Spec) {
 	// invalid request
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.TokenEndpoint,
+		Path:   spec.TokenEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -21,9 +21,9 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// unknown client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.TokenEndpoint,
+		Path:     spec.TokenEndpoint,
 		Username: "unknown",
 		Form: map[string]string{
 			"grant_type": "password",
@@ -35,14 +35,14 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// invalid grant type
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.TokenEndpoint,
+		Path:   spec.TokenEndpoint,
 		Form: map[string]string{
 			"grant_type": "invalid",
 		},
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -51,11 +51,11 @@ func TokenEndpointTest(t *testing.T, c *Config) {
 }
 
 // AuthorizationEndpointTest executes general authorization endpoint tests.
-func AuthorizationEndpointTest(t *testing.T, c *Config) {
+func AuthorizationEndpointTest(t *testing.T, spec *Spec) {
 	// invalid request
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
+		Path:   spec.AuthorizeEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -63,13 +63,13 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// invalid client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
+		Path:   spec.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "code",
 			"client_id":     "invalid",
-			"redirect_uri":  c.PrimaryRedirectURI,
+			"redirect_uri":  spec.PrimaryRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -79,13 +79,13 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// invalid redirect uri
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
+		Path:   spec.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "code",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.InvalidRedirectURI,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.InvalidRedirectURI,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -94,15 +94,15 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// invalid response type
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.AuthorizeEndpoint,
+		Path:   spec.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "invalid",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
 		},
-		Username: c.ConfidentialClientID,
+		Username: spec.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -110,15 +110,15 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// must respond to GET request
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "GET",
-		Path:   c.AuthorizeEndpoint,
+		Path:   spec.AuthorizeEndpoint,
 		Form: map[string]string{
 			"response_type": "token",
-			"client_id":     c.ConfidentialClientID,
-			"redirect_uri":  c.PrimaryRedirectURI,
+			"client_id":     spec.ConfidentialClientID,
+			"redirect_uri":  spec.PrimaryRedirectURI,
 		},
-		Username: c.ConfidentialClientID,
+		Username: spec.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.NotEqual(t, http.StatusNotFound, r.Code, debug(r))
 		},
@@ -126,11 +126,11 @@ func AuthorizationEndpointTest(t *testing.T, c *Config) {
 }
 
 // RevocationEndpointTest executes general token revocation tests.
-func RevocationEndpointTest(t *testing.T, c *Config) {
+func RevocationEndpointTest(t *testing.T, spec *Spec) {
 	// empty request
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.RevocationEndpoint,
+		Path:   spec.RevocationEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -138,11 +138,11 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// missing client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.RevocationEndpoint,
+		Path:   spec.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.ValidToken,
+			"token": spec.ValidToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -151,11 +151,11 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// missing token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.RevocationEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.RevocationEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -163,13 +163,13 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// invalid token type hint
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.RevocationEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.RevocationEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
-			"token":           c.ValidToken,
+			"token":           spec.ValidToken,
 			"token_type_hint": "invalid",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -179,11 +179,11 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// unknown client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.RevocationEndpoint,
+		Path:   spec.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.ValidToken,
+			"token": spec.ValidToken,
 		},
 		Username: "unknown",
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -194,13 +194,13 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// unauthenticated client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.RevocationEndpoint,
+		Path:   spec.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.ValidToken,
+			"token": spec.ValidToken,
 		},
-		Username: c.ConfidentialClientID,
+		Username: spec.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
 			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
@@ -209,13 +209,13 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// wrong client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.RevocationEndpoint,
+		Path:   spec.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.ValidToken,
+			"token": spec.ValidToken,
 		},
-		Username: c.PublicClientID,
+		Username: spec.PublicClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
 			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
@@ -223,14 +223,14 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// invalid token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.RevocationEndpoint,
+		Path:   spec.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.InvalidToken,
+			"token": spec.InvalidToken,
 		},
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -238,31 +238,31 @@ func RevocationEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// unknown token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.RevocationEndpoint,
+		Path:   spec.RevocationEndpoint,
 		Form: map[string]string{
-			"token": c.UnknownToken,
+			"token": spec.UnknownToken,
 		},
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 		},
 	})
 
 	// test existence and revocation
-	AccessTokenTest(t, c, c.ValidToken)
+	AccessTokenTest(t, spec, spec.ValidToken)
 
 	// revocation of refresh tokens is tested by RefreshTokenGrantTest
 }
 
 // IntrospectionEndpointTest executes general token introspection tests.
-func IntrospectionEndpointTest(t *testing.T, c *Config) {
+func IntrospectionEndpointTest(t *testing.T, spec *Spec) {
 	// wrong method
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "GET",
-		Path:   c.IntrospectionEndpoint,
+		Path:   spec.IntrospectionEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -270,9 +270,9 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// empty request
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.IntrospectionEndpoint,
+		Path:   spec.IntrospectionEndpoint,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -280,11 +280,11 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// missing client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.IntrospectionEndpoint,
+		Path:   spec.IntrospectionEndpoint,
 		Form: map[string]string{
-			"token": c.ValidToken,
+			"token": spec.ValidToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
@@ -293,11 +293,11 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// missing token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.IntrospectionEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.IntrospectionEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -305,13 +305,13 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// invalid token type hint
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.IntrospectionEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.IntrospectionEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
-			"token":           c.ValidToken,
+			"token":           spec.ValidToken,
 			"token_type_hint": "invalid",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -321,11 +321,11 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// unknown client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.IntrospectionEndpoint,
+		Path:   spec.IntrospectionEndpoint,
 		Form: map[string]string{
-			"token": c.ValidToken,
+			"token": spec.ValidToken,
 		},
 		Username: "unknown",
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -336,13 +336,13 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// unauthenticated client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.IntrospectionEndpoint,
+		Path:   spec.IntrospectionEndpoint,
 		Form: map[string]string{
-			"token": c.ValidToken,
+			"token": spec.ValidToken,
 		},
-		Username: c.ConfidentialClientID,
+		Username: spec.ConfidentialClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
 			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
@@ -351,13 +351,13 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// wrong client
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.IntrospectionEndpoint,
+		Path:   spec.IntrospectionEndpoint,
 		Form: map[string]string{
-			"token": c.ValidToken,
+			"token": spec.ValidToken,
 		},
-		Username: c.PublicClientID,
+		Username: spec.PublicClientID,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
 			assert.Equal(t, "invalid_client", jsonFieldString(r, "error"), debug(r))
@@ -365,14 +365,14 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// invalid token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.IntrospectionEndpoint,
+		Path:   spec.IntrospectionEndpoint,
 		Form: map[string]string{
-			"token": c.InvalidToken,
+			"token": spec.InvalidToken,
 		},
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusBadRequest, r.Code, debug(r))
 			assert.Equal(t, "invalid_request", jsonFieldString(r, "error"), debug(r))
@@ -380,27 +380,27 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 	})
 
 	// unknown token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "POST",
-		Path:   c.IntrospectionEndpoint,
+		Path:   spec.IntrospectionEndpoint,
 		Form: map[string]string{
-			"token": c.UnknownToken,
+			"token": spec.UnknownToken,
 		},
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusOK, r.Code, debug(r))
 		},
 	})
 
 	// valid access token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method:   "POST",
-		Path:     c.IntrospectionEndpoint,
-		Username: c.ConfidentialClientID,
-		Password: c.ConfidentialClientSecret,
+		Path:     spec.IntrospectionEndpoint,
+		Username: spec.ConfidentialClientID,
+		Password: spec.ConfidentialClientSecret,
 		Form: map[string]string{
-			"token":           c.ValidToken,
+			"token":           spec.ValidToken,
 			"token_type_hint": "access_token",
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
@@ -411,11 +411,11 @@ func IntrospectionEndpointTest(t *testing.T, c *Config) {
 }
 
 // ProtectedResourceTest validates authorization of the protected resource.
-func ProtectedResourceTest(t *testing.T, c *Config) {
+func ProtectedResourceTest(t *testing.T, spec *Spec) {
 	// missing token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "GET",
-		Path:   c.ProtectedResource,
+		Path:   spec.ProtectedResource,
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
 			assert.NotEmpty(t, auth(r, "realm"), debug(r))
@@ -424,9 +424,9 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 	})
 
 	// invalid header
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "GET",
-		Path:   c.ProtectedResource,
+		Path:   spec.ProtectedResource,
 		Header: map[string]string{
 			"Authorization": "invalid",
 		},
@@ -438,11 +438,11 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 	})
 
 	// invalid token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "GET",
-		Path:   c.ProtectedResource,
+		Path:   spec.ProtectedResource,
 		Header: map[string]string{
-			"Authorization": "Bearer " + c.InvalidToken,
+			"Authorization": "Bearer " + spec.InvalidToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -452,11 +452,11 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 	})
 
 	// unknown token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "GET",
-		Path:   c.ProtectedResource,
+		Path:   spec.ProtectedResource,
 		Header: map[string]string{
-			"Authorization": "Bearer " + c.UnknownToken,
+			"Authorization": "Bearer " + spec.UnknownToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -466,11 +466,11 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 	})
 
 	// expired token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "GET",
-		Path:   c.ProtectedResource,
+		Path:   spec.ProtectedResource,
 		Header: map[string]string{
-			"Authorization": "Bearer " + c.ExpiredToken,
+			"Authorization": "Bearer " + spec.ExpiredToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusUnauthorized, r.Code, debug(r))
@@ -480,11 +480,11 @@ func ProtectedResourceTest(t *testing.T, c *Config) {
 	})
 
 	// insufficient token
-	Do(c.Handler, &Request{
+	Do(spec.Handler, &Request{
 		Method: "GET",
-		Path:   c.ProtectedResource,
+		Path:   spec.ProtectedResource,
 		Header: map[string]string{
-			"Authorization": "Bearer " + c.InsufficientToken,
+			"Authorization": "Bearer " + spec.InsufficientToken,
 		},
 		Callback: func(r *httptest.ResponseRecorder, rq *http.Request) {
 			assert.Equal(t, http.StatusForbidden, r.Code, debug(r))
