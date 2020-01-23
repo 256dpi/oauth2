@@ -29,13 +29,19 @@ func Default(baseURI string) Config {
 // Client is a low-level OAuth2 client.
 type Client struct {
 	config Config
-	client http.Client
+	client *http.Client
 }
 
 // New will create and return a new client.
 func New(config Config) *Client {
+	return NewWithClient(config, new(http.Client))
+}
+
+// NewWithClient will create and return an new client using the provided client.
+func NewWithClient(config Config, client *http.Client) *Client {
 	return &Client{
 		config: config,
+		client: client,
 	}
 }
 
