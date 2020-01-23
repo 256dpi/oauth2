@@ -24,11 +24,9 @@ func TestClientError(t *testing.T) {
 			ClientID:     "secret",
 			ClientSecret: "secret",
 		})
-		assert.Equal(t, &Error{
-			Status: http.StatusNotFound,
-			Body:   "404 page not found\n",
-		}, err)
+		assert.Error(t, err)
 		assert.Nil(t, trs)
+		assert.Equal(t, "unexpected response: 404 Not Found", err.Error())
 	})
 }
 

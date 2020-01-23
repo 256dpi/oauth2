@@ -10,19 +10,8 @@ import (
 	"github.com/256dpi/oauth2"
 )
 
-// Error represents basic request errors.
-type Error struct {
-	Status int
-	Body   string
-}
-
-// Error implements the error interface.
-func (e *Error) Error() string {
-	return fmt.Sprintf("request error (%d): %s", e.Status, e.Body)
-}
-
 // ParseRequestError will try to parse an oauth2.Error from the provided
-// response. It will fallback to an Error containing the servers response.
+// response. It will fallback to an error containing the response status.
 func ParseRequestError(res *http.Response, limit int64) error {
 	// read full body
 	data, _ := ioutil.ReadAll(io.LimitReader(res.Body, limit))
@@ -34,8 +23,5 @@ func ParseRequestError(res *http.Response, limit int64) error {
 		return &oauthError
 	}
 
-	return &Error{
-		Status: res.StatusCode,
-		Body:   string(data),
-	}
+	return fmt.Errorf("unexpected response: %s", res.Status)
 }
