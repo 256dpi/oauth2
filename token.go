@@ -3,6 +3,7 @@ package oauth2
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 // A TokenRequest is typically returned by ParseTokenRequest and holds all
@@ -88,66 +89,79 @@ func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 	}, nil
 }
 
-// A AuthorizationRequest is typically returned by ParseAuthorizationRequest and
-// holds all information necessary to handle an authorization request.
-type AuthorizationRequest struct {
-	ResponseType string
-	Scope        Scope
-	ClientID     string
-	RedirectURI  string
-	State        string
+// A TokenResponse is typically constructed after a token request has been
+// authenticated and authorized to return an access token, a potential refresh
+// token and more detailed information.
+type TokenResponse struct {
+	TokenType    string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	Scope        Scope  `json:"scope,omitempty"`
+	State        string `json:"state,omitempty"`
+
+	RedirectURI string `json:"-"`
 }
 
-// ParseAuthorizationRequest parses an incoming request and returns an
-// AuthorizationRequest. The functions validates basic constraints given by the
-// OAuth2 spec.
-func ParseAuthorizationRequest(r *http.Request) (*AuthorizationRequest, error) {
-	// check method
-	if r.Method != "GET" && r.Method != "POST" {
-		return nil, InvalidRequest("invalid HTTP method")
+// NewTokenResponse constructs a TokenResponse.
+func NewTokenResponse(tokenType, accessToken string, expiresIn int) *TokenResponse {
+	return &TokenResponse{
+		TokenType:   tokenType,
+		AccessToken: accessToken,
+		ExpiresIn:   expiresIn,
+	}
+}
+
+// SetRedirect marks the response to be redirected by setting the redirect URI
+// and state.
+func (r *TokenResponse) SetRedirect(uri, state string) *TokenResponse {
+	r.RedirectURI = uri
+	r.State = state
+
+	return r
+}
+
+// Map returns a map of all fields that can be presented to the client. This
+// method can be used to construct query parameters or a fragment when
+// redirecting the token response.
+func (r *TokenResponse) Map() map[string]string {
+	m := make(map[string]string)
+
+	// add token type
+	m["token_type"] = r.TokenType
+
+	// add access token
+	m["access_token"] = r.AccessToken
+
+	// add expires in
+	m["expires_in"] = strconv.Itoa(r.ExpiresIn)
+
+	// add description
+	if r.RefreshToken != "" {
+		m["refresh_token"] = r.RefreshToken
 	}
 
-	// parse query params and body params to form
-	err := r.ParseForm()
-	if err != nil {
-		return nil, InvalidRequest("malformed query parameters or form data")
+	// add scope if present
+	if r.Scope != nil {
+		m["scope"] = r.Scope.String()
 	}
 
-	// get state
-	state := r.Form.Get("state")
-
-	// get response type
-	responseType := r.Form.Get("response_type")
-	if responseType == "" {
-		return nil, InvalidRequest("missing response type")
+	// add state if present
+	if r.State != "" {
+		m["state"] = r.State
 	}
 
-	// get scope
-	scope := ParseScope(r.Form.Get("scope"))
+	return m
+}
 
-	// get client id
-	clientID := r.Form.Get("client_id")
-	if clientID == "" {
-		return nil, InvalidRequest("missing client ID")
+// WriteTokenResponse will write the specified response to the response writer.
+// If the RedirectURI field is present on the response a redirection that
+// transmits the token in the fragment will be written instead.
+func WriteTokenResponse(w http.ResponseWriter, r *TokenResponse) error {
+	// write redirect if requested
+	if r.RedirectURI != "" {
+		return WriteRedirect(w, r.RedirectURI, r.Map(), true)
 	}
 
-	// get redirect uri
-	redirectURIString, err := url.QueryUnescape(r.Form.Get("redirect_uri"))
-	if err != nil || redirectURIString == "" {
-		return nil, InvalidRequest("missing redirect URI")
-	}
-
-	// parse redirect uri
-	redirectURI, err := url.ParseRequestURI(redirectURIString)
-	if err != nil || redirectURI.Fragment != "" {
-		return nil, InvalidRequest("invalid redirect URI")
-	}
-
-	return &AuthorizationRequest{
-		ResponseType: responseType,
-		Scope:        scope,
-		ClientID:     clientID,
-		RedirectURI:  redirectURIString,
-		State:        state,
-	}, nil
+	return Write(w, r, http.StatusOK)
 }

@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -99,65 +100,58 @@ func TestParseTokenRequestErrors(t *testing.T) {
 	}
 }
 
-func TestParseAuthorizationRequestMinimal(t *testing.T) {
-	r := newRequest(map[string]string{
-		"client_id":     "foo",
-		"response_type": TokenResponseType,
-		"redirect_uri":  "http://example.com",
-	})
-
-	req, err := ParseAuthorizationRequest(r)
-	assert.NoError(t, err)
-	assert.Equal(t, "token", req.ResponseType)
-	assert.Equal(t, Scope(nil), req.Scope)
-	assert.Equal(t, "foo", req.ClientID)
-	assert.Equal(t, "http://example.com", req.RedirectURI)
-	assert.Equal(t, "", req.State)
+func TestNewTokenResponse(t *testing.T) {
+	r := NewTokenResponse("foo", "bar", 1)
+	assert.Equal(t, "foo", r.TokenType)
+	assert.Equal(t, "bar", r.AccessToken)
+	assert.Equal(t, 1, r.ExpiresIn)
+	assert.Equal(t, map[string]string{
+		"token_type":   "foo",
+		"access_token": "bar",
+		"expires_in":   "1",
+	}, r.Map())
 }
 
-func TestParseAuthorizationRequestFull(t *testing.T) {
-	r := newRequest(map[string]string{
-		"client_id":     "foo",
-		"scope":         "foo bar",
-		"response_type": TokenResponseType,
-		"redirect_uri":  "http://example.com",
-		"state":         "baz",
-	})
+func TestTokenResponseMap(t *testing.T) {
+	r := NewTokenResponse("foo", "bar", 1)
+	r.RefreshToken = "baz"
+	r.Scope = Scope([]string{"qux"})
+	r.State = "quuz"
 
-	req, err := ParseAuthorizationRequest(r)
-	assert.NoError(t, err)
-	assert.Equal(t, "token", req.ResponseType)
-	assert.Equal(t, Scope([]string{"foo", "bar"}), req.Scope)
-	assert.Equal(t, "foo", req.ClientID)
-	assert.Equal(t, "http://example.com", req.RedirectURI)
-	assert.Equal(t, "baz", req.State)
+	assert.Equal(t, map[string]string{
+		"token_type":    "foo",
+		"access_token":  "bar",
+		"expires_in":    "1",
+		"refresh_token": "baz",
+		"scope":         "qux",
+		"state":         "quuz",
+	}, r.Map())
 }
 
-func TestParseAuthorizationRequestErrors(t *testing.T) {
-	r1, _ := http.NewRequest("PUT", "", nil)
-	r2, _ := http.NewRequest("POST", "", nil)
+func TestWriteTokenResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := NewTokenResponse("foo", "bar", 1)
 
-	matrix := []*http.Request{
-		r1,
-		r2,
-		newRequest(nil),
-		newRequest(map[string]string{
-			"response_type": TokenResponseType,
-		}),
-		newRequest(map[string]string{
-			"response_type": TokenResponseType,
-			"client_id":     "foo",
-		}),
-		newRequest(map[string]string{
-			"response_type": TokenResponseType,
-			"client_id":     "foo",
-			"redirect_uri":  "foo",
-		}),
-	}
+	err := WriteTokenResponse(w, r)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, `{
+		"token_type": "foo",
+		"access_token": "bar",
+		"expires_in": 1
+	}`, w.Body.String())
+}
 
-	for _, i := range matrix {
-		req, err := ParseAuthorizationRequest(i)
-		assert.Nil(t, req)
-		assert.Error(t, err)
-	}
+func TestRedirectTokenResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := NewTokenResponse("foo", "bar", 1)
+	r = r.SetRedirect("http://example.com?foo=bar", "baz")
+
+	err := WriteTokenResponse(w, r)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	assert.Equal(t,
+		"http://example.com?foo=bar#access_token=bar&expires_in=1&state=baz&token_type=foo",
+		w.Header().Get("Location"),
+	)
 }
