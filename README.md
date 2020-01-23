@@ -22,7 +22,7 @@ The library considers and implements the following specifications:
 
 ## Example
 
-The [server](https://github.com/256dpi/oauth2/blob/master/server/server.go) package implements a basic but feature-complete in-memory OAuth2 authentication server. The code can be used as a template to build a custom implementation of an OAuth2 compatible authentication server. 
+The test [server](https://github.com/256dpi/oauth2/blob/master/server.go) implements a basic but feature-complete in-memory OAuth2 authentication server. The code can be used as a template to build a custom implementation of an OAuth2 compatible authentication server.
 
 ## Installation
 
