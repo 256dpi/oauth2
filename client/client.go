@@ -58,7 +58,7 @@ func (c *Client) Authenticate(trq oauth2.TokenRequest) (*oauth2.TokenResponse, e
 	endpoint := c.config.BaseURI + c.config.TokenEndpoint
 
 	// build request
-	req, err := BuildTokenRequest(endpoint, trq)
+	req, err := oauth2.BuildTokenRequest(endpoint, trq)
 	if err != nil {
 		return nil, err
 	}
@@ -74,11 +74,11 @@ func (c *Client) Authenticate(trq oauth2.TokenRequest) (*oauth2.TokenResponse, e
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return nil, ParseRequestError(res, c.config.ResponseLimit)
+		return nil, oauth2.ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	// parse response
-	trs, err := ParseTokenResponse(res, c.config.ResponseLimit)
+	trs, err := oauth2.ParseTokenResponse(res, c.config.ResponseLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.Introspect
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return nil, ParseRequestError(res, c.config.ResponseLimit)
+		return nil, oauth2.ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	// parse response
@@ -144,7 +144,7 @@ func (c *Client) Revoke(rrq oauth2.RevocationRequest) error {
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return ParseRequestError(res, c.config.ResponseLimit)
+		return oauth2.ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	return nil

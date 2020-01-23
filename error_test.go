@@ -118,3 +118,15 @@ func TestWriteErrorFallback(t *testing.T) {
 		"error": "server_error"
 	}`, rec.Body.String())
 }
+
+func TestParseRequestError(t *testing.T) {
+	it := InvalidToken("test")
+
+	rec := httptest.NewRecorder()
+	err := WriteError(rec, it)
+	assert.NoError(t, err)
+
+	err = ParseRequestError(rec.Result(), 2048)
+	assert.Error(t, err)
+	assert.Equal(t, it, err)
+}
