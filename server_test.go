@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/256dpi/oauth2/oauth2test"
+	"github.com/256dpi/oauth2/v2/oauth2test"
 )
 
 func TestServer(t *testing.T) {

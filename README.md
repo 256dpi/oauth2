@@ -29,7 +29,7 @@ The test [server](https://github.com/256dpi/oauth2/blob/master/server.go) implem
 Get the package using the go tool:
 
 ```bash
-$ go get -u github.com/256dpi/oauth2
+$ go get -u github.com/256dpi/oauth2/v2
 ```
 
 ## License
