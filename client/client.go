@@ -63,6 +63,9 @@ func (c *Client) Authenticate(trq oauth2.TokenRequest) (*oauth2.TokenResponse, e
 		return nil, err
 	}
 
+	// ensure body is closed
+	defer res.Body.Close()
+
 	// check status
 	if res.StatusCode != http.StatusOK {
 		return nil, ParseRequestError(res)
@@ -95,6 +98,9 @@ func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.Introspect
 		return nil, err
 	}
 
+	// ensure body is closed
+	defer res.Body.Close()
+
 	// check status
 	if res.StatusCode != http.StatusOK {
 		return nil, ParseRequestError(res)
@@ -126,6 +132,9 @@ func (c *Client) Revoke(rrq oauth2.RevocationRequest) error {
 	if err != nil {
 		return err
 	}
+
+	// ensure body is closed
+	defer res.Body.Close()
 
 	// check status
 	if res.StatusCode != http.StatusOK {
