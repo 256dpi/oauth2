@@ -3,6 +3,8 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"mime"
 	"net/http"
 	"net/url"
@@ -88,9 +90,9 @@ func BuildTokenRequest(uri string, r oauth2.TokenRequest) (*http.Request, error)
 }
 
 // ParseTokenResponse will parse the provided response.
-func ParseTokenResponse(res *http.Response) (*oauth2.TokenResponse, error) {
+func ParseTokenResponse(res *http.Response, limit int64) (*oauth2.TokenResponse, error) {
 	// read response
-	data, err := readAll(res, 1024)
+	data, err := ioutil.ReadAll(io.LimitReader(res.Body, limit))
 	if err != nil {
 		return nil, err
 	}

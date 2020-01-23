@@ -14,6 +14,7 @@ type Config struct {
 	TokenEndpoint         string
 	IntrospectionEndpoint string
 	RevocationEndpoint    string
+	ResponseLimit         int64
 }
 
 // Default will return a default configuration.
@@ -39,6 +40,11 @@ func New(config Config) *Client {
 
 // NewWithClient will create and return an new client using the provided client.
 func NewWithClient(config Config, client *http.Client) *Client {
+	// set default response limit
+	if config.ResponseLimit == 0 {
+		config.ResponseLimit = 2048
+	}
+
 	return &Client{
 		config: config,
 		client: client,
@@ -68,11 +74,11 @@ func (c *Client) Authenticate(trq oauth2.TokenRequest) (*oauth2.TokenResponse, e
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return nil, ParseRequestError(res)
+		return nil, ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	// parse response
-	trs, err := ParseTokenResponse(res)
+	trs, err := ParseTokenResponse(res, c.config.ResponseLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -103,11 +109,11 @@ func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.Introspect
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return nil, ParseRequestError(res)
+		return nil, ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	// parse response
-	irs, err := ParseIntrospectionResponse(res)
+	irs, err := ParseIntrospectionResponse(res, c.config.ResponseLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +144,7 @@ func (c *Client) Revoke(rrq oauth2.RevocationRequest) error {
 
 	// check status
 	if res.StatusCode != http.StatusOK {
-		return ParseRequestError(res)
+		return ParseRequestError(res, c.config.ResponseLimit)
 	}
 
 	return nil

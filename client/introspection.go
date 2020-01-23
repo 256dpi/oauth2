@@ -3,6 +3,8 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"mime"
 	"net/http"
 	"net/url"
@@ -58,9 +60,9 @@ func BuildIntrospectionRequest(uri string, r oauth2.IntrospectionRequest) (*http
 }
 
 // ParseIntrospectionResponse will parse the provided response.
-func ParseIntrospectionResponse(res *http.Response) (*oauth2.IntrospectionResponse, error) {
+func ParseIntrospectionResponse(res *http.Response, limit int64) (*oauth2.IntrospectionResponse, error) {
 	// read response
-	data, err := readAll(res, 1024)
+	data, err := ioutil.ReadAll(io.LimitReader(res.Body, limit))
 	if err != nil {
 		return nil, err
 	}

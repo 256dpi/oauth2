@@ -3,6 +3,8 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/256dpi/oauth2"
@@ -21,9 +23,9 @@ func (e *Error) Error() string {
 
 // ParseRequestError will try to parse an oauth2.Error from the provided
 // response. It will fallback to an Error containing the servers response.
-func ParseRequestError(res *http.Response) error {
+func ParseRequestError(res *http.Response, limit int64) error {
 	// read full body
-	data, _ := readAll(res, 512)
+	data, _ := ioutil.ReadAll(io.LimitReader(res.Body, limit))
 
 	// check oauth error
 	var oauthError oauth2.Error
