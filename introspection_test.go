@@ -3,6 +3,7 @@ package oauth2
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -113,4 +114,36 @@ func TestWriteIntrospectionResponse(t *testing.T) {
 	assert.JSONEq(t, `{
 		"active": false
 	}`, rec.Body.String())
+}
+
+func TestIntrospectionRequestValues(t *testing.T) {
+	rr := IntrospectionRequest{}
+	assert.Equal(t, url.Values{}, IntrospectionRequestValues(rr))
+
+	rr = IntrospectionRequest{
+		Token:         "token",
+		TokenTypeHint: "hint",
+		ClientID:      "client-id",
+		ClientSecret:  "client-secret",
+	}
+	assert.Equal(t, url.Values{
+		"token":           []string{"token"},
+		"token_type_hint": []string{"hint"},
+	}, IntrospectionRequestValues(rr))
+}
+
+func TestIntrospectionRequestBuild(t *testing.T) {
+	rr1 := IntrospectionRequest{
+		Token:         "token",
+		TokenTypeHint: "hint",
+		ClientID:      "client-id",
+		ClientSecret:  "client-secret",
+	}
+	req, err := BuildIntrospectionRequest("http://auth.server/introspect", rr1)
+	assert.NoError(t, err)
+	assert.Equal(t, "http://auth.server/introspect", req.URL.String())
+
+	rr2, err := ParseIntrospectionRequest(req)
+	assert.NoError(t, err)
+	assert.Equal(t, rr1, *rr2)
 }

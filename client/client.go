@@ -93,7 +93,7 @@ func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.Introspect
 	endpoint := c.config.BaseURI + c.config.IntrospectionEndpoint
 
 	// build request
-	req, err := BuildIntrospectionRequest(endpoint, irq)
+	req, err := oauth2.BuildIntrospectionRequest(endpoint, irq)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (c *Client) Introspect(irq oauth2.IntrospectionRequest) (*oauth2.Introspect
 	}
 
 	// parse response
-	irs, err := ParseIntrospectionResponse(res, c.config.ResponseLimit)
+	irs, err := oauth2.ParseIntrospectionResponse(res, c.config.ResponseLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (c *Client) Revoke(rrq oauth2.RevocationRequest) error {
 	endpoint := c.config.BaseURI + c.config.RevocationEndpoint
 
 	// build request
-	req, err := BuildRevocationRequest(endpoint, rrq)
+	req, err := oauth2.BuildRevocationRequest(endpoint, rrq)
 	if err != nil {
 		return err
 	}
