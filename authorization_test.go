@@ -35,7 +35,7 @@ func TestParseAuthorizationRequestFull(t *testing.T) {
 	req, err := ParseAuthorizationRequest(r)
 	assert.NoError(t, err)
 	assert.Equal(t, "token", req.ResponseType)
-	assert.Equal(t, Scope([]string{"foo", "bar"}), req.Scope)
+	assert.Equal(t, Scope{"foo", "bar"}, req.Scope)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "http://example.com", req.RedirectURI)
 	assert.Equal(t, "baz", req.State)

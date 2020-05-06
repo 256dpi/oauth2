@@ -43,7 +43,7 @@ func TestParseTokenRequestFull(t *testing.T) {
 	assert.Equal(t, "password", req.GrantType)
 	assert.Equal(t, "foo", req.ClientID)
 	assert.Equal(t, "bar", req.ClientSecret)
-	assert.Equal(t, Scope([]string{"foo", "bar"}), req.Scope)
+	assert.Equal(t, Scope{"foo", "bar"}, req.Scope)
 	assert.Equal(t, "baz", req.Username)
 	assert.Equal(t, "qux", req.Password)
 	assert.Equal(t, "bla", req.RefreshToken)
@@ -116,7 +116,7 @@ func TestNewTokenResponse(t *testing.T) {
 func TestTokenResponseMap(t *testing.T) {
 	r := NewTokenResponse("foo", "bar", 1)
 	r.RefreshToken = "baz"
-	r.Scope = Scope([]string{"qux"})
+	r.Scope = Scope{"qux"}
 	r.State = "quuz"
 
 	assert.Equal(t, map[string]string{
