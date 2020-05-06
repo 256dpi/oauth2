@@ -55,7 +55,13 @@ func ParseTokenRequest(r *http.Request) (*TokenRequest, error) {
 	// get client id and secret
 	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
-		return nil, InvalidRequest("missing or invalid HTTP authorization header")
+		clientID = r.PostForm.Get("client_id")
+		clientSecret = r.PostForm.Get("client_secret")
+	}
+
+	// check client id
+	if clientID == "" {
+		return nil, InvalidRequest("missing client identification")
 	}
 
 	// get username and password

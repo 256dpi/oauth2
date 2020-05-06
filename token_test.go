@@ -51,6 +51,24 @@ func TestParseTokenRequestFull(t *testing.T) {
 	assert.Equal(t, "blaa", req.Code)
 }
 
+func TestParseTokenRequestNoAuth(t *testing.T) {
+	r := newRequest(map[string]string{
+		"grant_type":    PasswordGrantType,
+		"client_id":     "foo",
+		"client_secret": "bar",
+		"username":      "baz",
+		"password":      "qux",
+	})
+
+	req, err := ParseTokenRequest(r)
+	assert.NoError(t, err)
+	assert.Equal(t, "password", req.GrantType)
+	assert.Equal(t, "foo", req.ClientID)
+	assert.Equal(t, "bar", req.ClientSecret)
+	assert.Equal(t, "baz", req.Username)
+	assert.Equal(t, "qux", req.Password)
+}
+
 func TestParseTokenRequestErrors(t *testing.T) {
 	r1, _ := http.NewRequest("GET", "", nil)
 	r2, _ := http.NewRequest("POST", "", nil)
@@ -75,7 +93,7 @@ func TestParseTokenRequestErrors(t *testing.T) {
 			r: newRequest(map[string]string{
 				"grant_type": PasswordGrantType,
 			}),
-			e: "invalid_request: missing or invalid HTTP authorization header",
+			e: "invalid_request: missing client identification",
 		},
 		{
 			r: newRequestWithAuth("foo", "bar", map[string]string{
