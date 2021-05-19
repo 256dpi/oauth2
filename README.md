@@ -1,10 +1,8 @@
 # oauth2
 
-[![Build Status](https://travis-ci.org/256dpi/oauth2.svg?branch=master)](https://travis-ci.org/256dpi/oauth2)
-[![Coverage Status](https://coveralls.io/repos/github/256dpi/oauth2/badge.svg?branch=master)](https://coveralls.io/github/256dpi/oauth2?branch=master)
+[![Test](https://github.com/256dpi/oauth2/actions/workflows/test.yml/badge.svg)](https://github.com/256dpi/oauth2/actions/workflows/test.yml)
 [![GoDoc](https://godoc.org/github.com/256dpi/oauth2?status.svg)](http://godoc.org/github.com/256dpi/oauth2)
 [![Release](https://img.shields.io/github/release/256dpi/oauth2.svg)](https://github.com/256dpi/oauth2/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/256dpi/oauth2)](http://goreportcard.com/report/256dpi/oauth2)
 
 **A fundamental and extendable OAuth2 library for Go.**
 
