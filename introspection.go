@@ -21,7 +21,7 @@ type IntrospectionRequest struct {
 }
 
 // ParseIntrospectionRequest parses an incoming request and returns an
-// IntrospectionRequest. The functions validates basic constraints given by the
+// IntrospectionRequest. The function validates basic constraints given by the
 // OAuth2 spec.
 func ParseIntrospectionRequest(r *http.Request) (*IntrospectionRequest, error) {
 	// check method

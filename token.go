@@ -27,7 +27,7 @@ type TokenRequest struct {
 }
 
 // ParseTokenRequest parses an incoming request and returns a TokenRequest.
-// The functions validates basic constraints given by the OAuth2 spec.
+// The function validates basic constraints given by the OAuth2 spec.
 //
 // Note: Obtaining the client id and secret from the request body (form data)
 // is not implemented by default due to security considerations.

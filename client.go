@@ -34,7 +34,7 @@ func NewClient(config ClientConfig) *Client {
 	return NewClientWithClient(config, new(http.Client))
 }
 
-// NewClientWithClient will create and return an new client using the provided
+// NewClientWithClient will create and return a new client using the provided
 // client.
 func NewClientWithClient(config ClientConfig, client *http.Client) *Client {
 	// set default response limit
@@ -83,8 +83,8 @@ func (c *Client) Authenticate(trq TokenRequest) (*TokenResponse, error) {
 	return trs, nil
 }
 
-// Introspect will send the provided introspection request and return the servers
-// response of an error if failed.
+// Introspect will send the provided introspection request and return the server
+// response or an error if failed.
 func (c *Client) Introspect(irq IntrospectionRequest) (*IntrospectionResponse, error) {
 	// prepare endpoint
 	endpoint := c.config.BaseURI + c.config.IntrospectionEndpoint

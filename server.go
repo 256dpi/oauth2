@@ -129,7 +129,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// get path
 	path := r.URL.Path
 
-	// get latest path segment
+	// get last path segment
 	idx := strings.LastIndexByte(path, '/')
 	if idx >= 0 {
 		path = path[idx+1:]

@@ -117,7 +117,7 @@ func (t *HS256Token) Valid(secret []byte) bool {
 	return HS256TokenFromKey(secret, t.Key).Equal(t.Signature)
 }
 
-// Equal returns true then the specified signature is the same as the tokens
+// Equal returns true then the specified signature is the same as the token
 // signature.
 //
 // Note: This method should be used over just comparing the byte slices as it

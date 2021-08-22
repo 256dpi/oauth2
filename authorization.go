@@ -16,7 +16,7 @@ type AuthorizationRequest struct {
 }
 
 // ParseAuthorizationRequest parses an incoming request and returns an
-// AuthorizationRequest. The functions validates basic constraints given by the
+// AuthorizationRequest. The function validates basic constraints given by the
 // OAuth2 spec.
 func ParseAuthorizationRequest(r *http.Request) (*AuthorizationRequest, error) {
 	// check method

@@ -87,7 +87,7 @@ func (e *Error) Map() map[string]string {
 	return m
 }
 
-// Params returns an string encoded representation of the error parameters.
+// Params returns a string encoded representation of the error parameters.
 func (e *Error) Params() string {
 	// prepare params
 	var params []string
@@ -278,7 +278,7 @@ func WriteError(w http.ResponseWriter, err error) error {
 }
 
 // ParseRequestError will try to parse an oauth2.Error from the provided
-// response. It will fallback to an error containing the response status.
+// response. It will fall back to an error containing the response status.
 func ParseRequestError(res *http.Response, limit int64) error {
 	// read full body
 	data, _ := ioutil.ReadAll(io.LimitReader(res.Body, limit))

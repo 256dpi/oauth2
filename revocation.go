@@ -16,7 +16,7 @@ type RevocationRequest struct {
 }
 
 // ParseRevocationRequest parses an incoming request and returns a
-// RevocationRequest. The functions validates basic constraints given by the
+// RevocationRequest. The function validates basic constraints given by the
 // OAuth2 spec.
 func ParseRevocationRequest(r *http.Request) (*RevocationRequest, error) {
 	// check method
