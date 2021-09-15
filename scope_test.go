@@ -48,8 +48,12 @@ func TestScopeEmpty(t *testing.T) {
 	assert.False(t, s1.Empty())
 }
 
-func TestScopeMarshalJSON(t *testing.T) {
+func TestScopeJSON(t *testing.T) {
 	s := Scope{"foo", "bar"}
-	buf, _ := s.MarshalJSON()
-	assert.Equal(t, `"foo bar"`, string(buf))
+	json := asJSON(s)
+	assert.Equal(t, `"foo bar"`, json)
+
+	s2 := Scope{}
+	fromJSON(json, &s2)
+	assert.Equal(t, s, s2)
 }

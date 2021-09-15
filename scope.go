@@ -65,3 +65,17 @@ func (s Scope) String() string {
 func (s Scope) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (s *Scope) UnmarshalJSON(buf []byte) error {
+	var str string
+	err := json.Unmarshal(buf, &str)
+	if err != nil {
+		return err
+	}
+
+	// set scope
+	*s = ParseScope(str)
+
+	return nil
+}

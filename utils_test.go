@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"encoding/json"
 	"net"
 	"net/http"
 	"net/url"
@@ -61,4 +62,19 @@ func withServer(cb func(string, *Server)) {
 	_ = lst.Close()
 
 	time.Sleep(time.Millisecond)
+}
+
+func asJSON(obj interface{}) string {
+	buf, err := json.Marshal(obj)
+	if err != nil {
+		panic(err)
+	}
+	return string(buf)
+}
+
+func fromJSON(str string, obj interface{}) {
+	err := json.Unmarshal([]byte(str), obj)
+	if err != nil {
+		panic(err)
+	}
 }
