@@ -62,7 +62,7 @@ func ParseIntrospectionRequest(r *http.Request) (*IntrospectionRequest, error) {
 // endpoint.
 type IntrospectionResponse struct {
 	Active     bool   `json:"active"`
-	Scope      string `json:"scope,omitempty"`
+	Scope      Scope  `json:"scope,omitempty"`
 	ClientID   string `json:"client_id,omitempty"`
 	Username   string `json:"username,omitempty"`
 	TokenType  string `json:"token_type,omitempty"`
@@ -78,7 +78,7 @@ type IntrospectionResponse struct {
 }
 
 // NewIntrospectionResponse constructs an IntrospectionResponse.
-func NewIntrospectionResponse(active bool, scope, clientID, username, tokenType string) *IntrospectionResponse {
+func NewIntrospectionResponse(active bool, scope Scope, clientID, username, tokenType string) *IntrospectionResponse {
 	return &IntrospectionResponse{
 		Active:    active,
 		Scope:     scope,

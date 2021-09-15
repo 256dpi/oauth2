@@ -112,7 +112,7 @@ func (s *Server) Authorize(w http.ResponseWriter, r *http.Request, required Scop
 
 	// validate scope
 	if !accessToken.Scope.Includes(required) {
-		_ = WriteBearerError(w, InsufficientScope(required.String()))
+		_ = WriteBearerError(w, InsufficientScope(required))
 		return false
 	}
 
@@ -555,7 +555,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 
 		// set response
 		res.Active = true
-		res.Scope = accessToken.Scope.String()
+		res.Scope = accessToken.Scope
 		res.ClientID = accessToken.ClientID
 		res.Username = accessToken.Username
 		res.TokenType = AccessToken
@@ -572,7 +572,7 @@ func (s *Server) introspectionEndpoint(w http.ResponseWriter, r *http.Request) {
 
 		// set response
 		res.Active = true
-		res.Scope = refreshToken.Scope.String()
+		res.Scope = refreshToken.Scope
 		res.ClientID = refreshToken.ClientID
 		res.Username = refreshToken.Username
 		res.TokenType = RefreshToken

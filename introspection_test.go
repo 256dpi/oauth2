@@ -73,7 +73,7 @@ func TestParseIntrospectionRequestErrors(t *testing.T) {
 }
 
 func TestWriteIntrospectionResponse(t *testing.T) {
-	res := NewIntrospectionResponse(true, "foo", "bar", "baz", "quz")
+	res := NewIntrospectionResponse(true, Scope{"foo"}, "bar", "baz", "quz")
 
 	rec := httptest.NewRecorder()
 

@@ -25,7 +25,7 @@ func TestErrorBuilders(t *testing.T) {
 		{UnsupportedResponseType("foo"), "unsupported_response_type", http.StatusBadRequest},
 		{UnsupportedTokenType("foo"), "unsupported_token_type", http.StatusBadRequest},
 		{ProtectedResource(), "", http.StatusUnauthorized},
-		{InsufficientScope("foo"), "insufficient_scope", http.StatusForbidden},
+		{InsufficientScope(Scope{"foo"}), "insufficient_scope", http.StatusForbidden},
 		{AccessDenied("foo"), "access_denied", http.StatusForbidden},
 		{ServerError("foo"), "server_error", http.StatusInternalServerError},
 		{TemporarilyUnavailable("foo"), "temporarily_unavailable", http.StatusServiceUnavailable},
@@ -62,7 +62,7 @@ func TestErrorMap(t *testing.T) {
 func TestBearerErrorMap(t *testing.T) {
 	err := InvalidRequest("")
 	err.Realm = "bar"
-	err.Scope = "baz"
+	err.Scope = Scope{"baz"}
 
 	assert.Equal(t, map[string]string{
 		"error": "invalid_request",
@@ -74,7 +74,7 @@ func TestBearerErrorMap(t *testing.T) {
 func TestBearerErrorParams(t *testing.T) {
 	err := InvalidRequest("")
 	err.Realm = "bar"
-	err.Scope = "baz"
+	err.Scope = Scope{"baz"}
 
 	assert.Equal(t, `error="invalid_request", realm="bar", scope="baz"`, err.Params())
 }

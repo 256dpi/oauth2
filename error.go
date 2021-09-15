@@ -16,7 +16,7 @@ import (
 type Error struct {
 	Name        string `json:"error"`
 	State       string `json:"state,omitempty"`
-	Scope       string `json:"scope,omitempty"`
+	Scope       Scope  `json:"scope,omitempty"`
 	Realm       string `json:"realm,omitempty"`
 	Description string `json:"error_description,omitempty"`
 	URI         string `json:"error_uri,omitempty"`
@@ -70,8 +70,8 @@ func (e *Error) Map() map[string]string {
 	}
 
 	// add scope if present
-	if e.Scope != "" {
-		m["scope"] = e.Scope
+	if len(e.Scope) > 0 {
+		m["scope"] = e.Scope.String()
 	}
 
 	// add uri
@@ -213,7 +213,7 @@ func ProtectedResource() *Error {
 
 // InsufficientScope constructs and error that indicates that the request
 // requires higher privileges than provided by the access token.
-func InsufficientScope(necessaryScope string) *Error {
+func InsufficientScope(necessaryScope Scope) *Error {
 	return &Error{
 		Status: http.StatusForbidden,
 		Name:   "insufficient_scope",
